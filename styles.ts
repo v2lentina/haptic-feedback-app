@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import {Platform, StyleSheet} from 'react-native';
 
 export const styles = StyleSheet.create({
     container: { flex: 1, alignItems: "center", padding: 20, paddingTop: 60 },
@@ -9,4 +9,32 @@ export const styles = StyleSheet.create({
     deviceBtn: { padding: 10, backgroundColor: "#ADD8E6", marginVertical: 5, borderRadius: 6 },
     deviceTxt: { fontSize: 16 },
     service: { fontSize: 14, color: "#444" },
+
+    // 👉 NEU HIER DRIN
+    label: {
+        fontSize: 16,
+        fontWeight: "600",
+        marginBottom: 6,
+    },
+    subLabel: {
+        fontSize: 14,
+        color: "#444",
+        marginBottom: 4,
+    },
+    time: {
+        fontSize: 48,
+        fontVariant: ["tabular-nums"],
+        fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace',
+        letterSpacing: 2,
+        marginBottom: 30,
+    },
 });
+
+export const input = {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 10,
+    width: 100,
+    textAlign: 'center' as const,
+    marginBottom: 20,
+};

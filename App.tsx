@@ -3,6 +3,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from './screens/Homescreen';
 import StopwatchScreen from './screens/Stopwatch';
+import Up from './screens/Up';
+import UpRd from './screens/UpRd';
 
 const Stack = createNativeStackNavigator();
 
@@ -12,6 +14,8 @@ export default function App() {
             <Stack.Navigator>
                 <Stack.Screen name="Home" component={HomeScreen} />
                 <Stack.Screen name="Stoppuhr" component={StopwatchScreen} />
+                <Stack.Screen name="Hochzählen" component={Up} />
+                <Stack.Screen name="Hochzählen in Runden" component={UpRd} />
             </Stack.Navigator>
         </NavigationContainer>
     );

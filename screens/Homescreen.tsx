@@ -161,6 +161,8 @@ export default function HomeScreen({ navigation }: any) {
         <View style={styles.container}>
             <Text style={styles.h1}>🧭 Wähle deinen Modus</Text>
             <Button title="⏱ Stoppuhr" onPress={() => navigation.navigate("Stoppuhr")} />
+            <Button title="⏫ Hochzählen" onPress={() => navigation.navigate("Hochzählen")} />
+            <Button title="⏫ Hochzählen in Runden" onPress={() => navigation.navigate("Hochzählen in Runden")} />
 
             {connected ? (
                 <>
