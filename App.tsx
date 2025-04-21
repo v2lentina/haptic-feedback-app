@@ -8,6 +8,7 @@ import UpRd from './screens/UpRd';
 import Down from './screens/Down';
 import DownRd from './screens/DownRd';
 import Interval from './screens/Interval';
+import Tabata from './screens/Tabata';
 
 const Stack = createNativeStackNavigator();
 
@@ -22,6 +23,7 @@ export default function App() {
                 <Stack.Screen name="Herunterzählen" component={Down} />
                 <Stack.Screen name="Herunterzählen in Runden" component={DownRd} />
                 <Stack.Screen name="Interval" component={Interval} />
+                <Stack.Screen name="Tabata" component={Tabata} />
 
             </Stack.Navigator>
         </NavigationContainer>

@@ -166,6 +166,7 @@ export default function HomeScreen({ navigation }: any) {
             <Button title="⏬️ Herunterzählen" onPress={() => navigation.navigate("Herunterzählen")} />
             <Button title="⏬️ Herunterzählen in Runden" onPress={() => navigation.navigate("Herunterzählen in Runden")} />
             <Button title="Interval" onPress={() => navigation.navigate("Interval")} />
+            <Button title="Tabata" onPress={() => navigation.navigate("Tabata")} />
 
             {connected ? (
                 <>
