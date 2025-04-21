@@ -5,6 +5,8 @@ import HomeScreen from './screens/Homescreen';
 import StopwatchScreen from './screens/Stopwatch';
 import Up from './screens/Up';
 import UpRd from './screens/UpRd';
+import Down from './screens/Down';
+import DownRd from './screens/DownRd';
 
 const Stack = createNativeStackNavigator();
 
@@ -16,6 +18,9 @@ export default function App() {
                 <Stack.Screen name="Stoppuhr" component={StopwatchScreen} />
                 <Stack.Screen name="Hochzählen" component={Up} />
                 <Stack.Screen name="Hochzählen in Runden" component={UpRd} />
+                <Stack.Screen name="Herunterzählen" component={Down} />
+                <Stack.Screen name="Herunterzählen in Runden" component={DownRd} />
+
             </Stack.Navigator>
         </NavigationContainer>
     );
