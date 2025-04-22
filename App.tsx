@@ -11,7 +11,8 @@ import Interval from './screens/Interval';
 import Tabata from './screens/Tabata';
 import F9Bad from './screens/F9Bad';
 import Amrap from './screens/Amrap';
-
+import Beeptest from './screens/Beeptest';
+import Custom from './screens/Custom';
 
 const Stack = createNativeStackNavigator();
 
@@ -29,8 +30,8 @@ export default function App() {
                 <Stack.Screen name="Tabata" component={Tabata} />
                 <Stack.Screen name="F9Bad" component={F9Bad} />
                 <Stack.Screen name="Amrap" component={Amrap} />
-
-
+                <Stack.Screen name="Beeptest" component={Beeptest} />
+                <Stack.Screen name="Custom" component={Custom} />
 
             </Stack.Navigator>
         </NavigationContainer>
