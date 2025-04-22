@@ -11,6 +11,7 @@ import Interval from './screens/Interval';
 import Tabata from './screens/Tabata';
 import F9Bad from './screens/F9Bad';
 import Amrap from './screens/Amrap';
+import Emom from './screens/Emom';
 import Beeptest from './screens/Beeptest';
 import Custom from './screens/Custom';
 
@@ -30,6 +31,7 @@ export default function App() {
                 <Stack.Screen name="Tabata" component={Tabata} />
                 <Stack.Screen name="F9Bad" component={F9Bad} />
                 <Stack.Screen name="Amrap" component={Amrap} />
+                <Stack.Screen name="Emom" component={Emom} />
                 <Stack.Screen name="Beeptest" component={Beeptest} />
                 <Stack.Screen name="Custom" component={Custom} />
 
