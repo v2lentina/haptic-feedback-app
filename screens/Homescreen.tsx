@@ -173,12 +173,12 @@ export default function HomeScreen({ navigation }: any) {
 
                 <View style={styles.grid}>
                     {[
-                        ["⏱ Stoppuhr", "⏫ Hochzählen"],
-                        ["🔁 Hoch in Runden", "⏬ Runterzählen"],
-                        ["🔂 Runter in Runden", "🔄 Interval"],
+                        ["⏱ Stoppuhr", "🔄 Interval"],
+                        ["⬆️ Hochzählen", "⬇️ Runterzählen"],
+                        ["🔃 Hoch in Runden", "🔃 Runter in Runden"],
                         ["🧨 Tabata", "🥊 F9Bad"],
                         ["🔥 Amrap", "⏰ Emom"],
-                        ["🐝 Beeptest", "🎛️ Custom"]
+                        ["🏃 Beeptest", "🎛️ Custom"]
                     ].map((row, rowIndex) => (
                         <View style={styles.row} key={rowIndex}>
                             {row.map((label) => (
