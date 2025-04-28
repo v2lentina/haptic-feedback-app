@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    View, Text, Button, FlatList, TouchableOpacity, ScrollView, StyleSheet
+    View, Text, TouchableOpacity, FlatList, Alert, ActivityIndicator, ScrollView
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Buffer } from 'buffer';
@@ -10,23 +10,19 @@ import { styles } from '../styles';
 const SERVICE_UUID = "19b10001-e8f2-537e-4f6c-d104768a1214";
 const CHAR_UUID = "19b10002-e8f2-537e-4f6c-d104768a1214";
 
-type DeviceInfo = {
-    id: string;
-    name: string | null;
-};
+type DeviceInfo = { id: string; name: string | null; };
 
 global.Buffer = global.Buffer || Buffer;
-
 const manager = new BleManager();
 
 export default function HomeScreen({ navigation }: any) {
     const [devices, setDevices] = useState<DeviceInfo[]>([]);
     const [connected, setConnected] = useState<Device | null>(null);
-    const [services, setServices] = useState<string[]>([]);
     const [scanning, setScanning] = useState(false);
     const [bleState, setBleState] = useState<State | null>(null);
     const [buzzing, setBuzzing] = useState(false);
     const [buzzInterval, setBuzzInterval] = useState<NodeJS.Timeout | null>(null);
+    const [scanCompleted, setScanCompleted] = useState(false);
 
     useEffect(() => {
         const sub = manager.onStateChange((state) => {
@@ -40,37 +36,30 @@ export default function HomeScreen({ navigation }: any) {
         try {
             const already = await manager.connectedDevices([SERVICE_UUID]);
             if (already.length) {
-                console.log("🔁 Bereits verbunden:", already[0].id);
                 return handleConnectedDevice(already[0]);
             }
-
             const lastId = await AsyncStorage.getItem("lastDeviceId");
             if (lastId) await connectToDevice(lastId);
         } catch (e) {
-            console.warn("Reconnect‑Fehler:", e);
+            console.warn("Reconnect-Fehler:", e);
         }
     }, []);
 
     const scanForDevices = () => {
         if (bleState !== "PoweredOn") return;
+        setScanCompleted(false);
         setScanning(true);
         setDevices([]);
-        console.log("🔍 Scanne nach Bangle‑Uhren …");
-
         manager.startDeviceScan([], { allowDuplicates: false }, (error, device) => {
             if (error || !device) return;
-
             if (device.serviceUUIDs?.includes(SERVICE_UUID)) {
-                setDevices((prev) =>
-                    prev.some((d) => d.id === device.id) ? prev : [...prev, { id: device.id, name: device.name }]
-                );
+                setDevices((prev) => prev.some((d) => d.id === device.id) ? prev : [...prev, { id: device.id, name: device.name }]);
             }
         });
-
         setTimeout(() => {
             manager.stopDeviceScan();
             setScanning(false);
-            console.log("🛑 Scan beendet.");
+            setScanCompleted(true);
         }, 6000);
     };
 
@@ -79,7 +68,7 @@ export default function HomeScreen({ navigation }: any) {
             const device = await manager.connectToDevice(id, { timeout: 8000 });
             await handleConnectedDevice(device);
         } catch (e) {
-            console.error("❌ Verbinden fehlgeschlagen:", e);
+            console.error("Verbindungsfehler:", e);
         }
     };
 
@@ -87,22 +76,16 @@ export default function HomeScreen({ navigation }: any) {
         await device.discoverAllServicesAndCharacteristics();
         await AsyncStorage.setItem("lastDeviceId", device.id);
         setConnected(device);
-
-        const list = await manager.servicesForDevice(device.id);
-        setServices(list.map((s) => s.uuid));
-
         const sub = device.onDisconnected(() => {
-            console.log("⚡︎ Verbindung verloren:", device.id);
             cleanup();
+            Alert.alert("Verbindung verloren", "Die Verbindung zur Uhr wurde unterbrochen.");
             sub.remove();
         });
     };
 
     const cleanup = async () => {
         if (connected) {
-            try {
-                await connected.cancelConnection();
-            } catch { }
+            try { await connected.cancelConnection(); } catch {}
         }
         if (buzzInterval) {
             clearInterval(buzzInterval);
@@ -110,125 +93,107 @@ export default function HomeScreen({ navigation }: any) {
         }
         setBuzzing(false);
         setConnected(null);
-        setServices([]);
+        setDevices([]);
         await AsyncStorage.removeItem("lastDeviceId");
     };
 
-    const sendVibration = async () => {
-        if (!connected) return;
-        try {
-            await manager.writeCharacteristicWithoutResponseForDevice(
-                connected.id,
-                SERVICE_UUID,
-                CHAR_UUID,
-                Buffer.from([1]).toString("base64")
-            );
-            console.log("✅ Buzz geschickt!");
-        } catch (e) {
-            console.error("❌ Schreibfehler:", e);
-        }
-    };
-
-    const toggleAutoBuzz = () => {
-        if (!connected) return;
-
-        if (buzzing) {
-            if (buzzInterval) clearInterval(buzzInterval);
-            setBuzzInterval(null);
-            setBuzzing(false);
-            console.log("⏹️ Auto-Buzz gestoppt");
-        } else {
-            const interval = setInterval(() => {
-                manager.writeCharacteristicWithoutResponseForDevice(
-                    connected.id,
-                    SERVICE_UUID,
-                    CHAR_UUID,
-                    Buffer.from([1]).toString("base64")
-                ).then(() => {
-                    console.log("🔁 Auto-Buzz!");
-                }).catch((e) => {
-                    console.error("❌ Auto-Buzz Fehler:", e);
-                });
-            }, 10000);
-
-            setBuzzInterval(interval);
-            setBuzzing(true);
-            console.log("▶️ Auto-Buzz gestartet");
-        }
-    };
+    const connectionStatus = connected
+        ? { color: '#34C759', text: `Verbunden mit ${connected.name ?? "Gerät"}` }
+        : scanning
+            ? { color: '#007AFF', text: 'Scannen...' }
+            : { color: '#8e8e93', text: 'Nicht verbunden' };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.h1}>🧭 Wähle deinen Modus</Text>
-            <Button title="⏱ Stoppuhr" onPress={() => navigation.navigate("Stoppuhr")} />
-            <Button title="⏫ Hochzählen" onPress={() => navigation.navigate("Hochzählen")} />
-            <Button title="⏫ Hochzählen in Runden" onPress={() => navigation.navigate("Hochzählen in Runden")} />
-            <Button title="⏬️ Herunterzählen" onPress={() => navigation.navigate("Herunterzählen")} />
-            <Button title="⏬️ Herunterzählen in Runden" onPress={() => navigation.navigate("Herunterzählen in Runden")} />
-            <Button title="Interval" onPress={() => navigation.navigate("Interval")} />
-            <Button title="Tabata" onPress={() => navigation.navigate("Tabata")} />
-            <Button title="F9Bad" onPress={() => navigation.navigate("F9Bad")} />
-            <Button title="Amrap" onPress={() => navigation.navigate("Amrap")} />
-            <Button title="Emom" onPress={() => navigation.navigate("Emom")} />
-            <Button title="Beeptest" onPress={() => navigation.navigate("Beeptest")} />
-            <Button title="Custom" onPress={() => navigation.navigate("Custom")} />
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+            <View style={styles.container}>
+                <View style={styles.connectionStatusRow}>
+                    <View style={[styles.statusDot, { backgroundColor: connectionStatus.color }]} />
+                    <Text style={styles.statusLabel}>{connectionStatus.text}</Text>
+                </View>
 
-            {connected ? (
-                <>
-                    <Text style={styles.connected}>
-                        Verbunden mit {connected.name ?? "Bangle"} ({connected.id})
-                    </Text>
+                {!connected && (
+                    <>
+                        {!scanning && (
+                            <TouchableOpacity style={styles.scanButton} onPress={scanForDevices}>
+                                <Text style={styles.scanButtonText}>Nach Gerät scannen</Text>
+                            </TouchableOpacity>
+                        )}
+                        {scanning && <ActivityIndicator size="small" color="#007AFF" style={{ marginVertical: 20 }} />}
 
-                    <Button title="Buzz senden" onPress={sendVibration} />
-                    <Button
-                        title={buzzing ? "Auto-Buzz stoppen" : "Auto-Buzz starten"}
-                        color={buzzing ? "#bb2222" : "#228B22"}
-                        onPress={toggleAutoBuzz}
-                    />
-
-                    <Button title="Trennen" color="#bb2222" onPress={cleanup} />
-
-                    <ScrollView style={{ marginTop: 15 }}>
-                        {services.map((s) => (
-                            <Text key={s} style={styles.service}>Service UUID: {s}</Text>
-                        ))}
-                    </ScrollView>
-                </>
-            ) : (
-                <>
-                    <Button
-                        title={scanning ? "Suche läuft…" : "Nach Uhr suchen"}
-                        onPress={scanForDevices}
-                        disabled={scanning}
-                    />
-
-                    {devices.length ? (
                         <FlatList
-                            style={{ marginTop: 20 }}
                             data={devices}
-                            keyExtractor={(d) => d.id}
+                            keyExtractor={(item) => item.id}
                             renderItem={({ item }) => (
                                 <TouchableOpacity
-                                    style={styles.deviceBtn}
+                                    style={styles.deviceCard}
                                     onPress={() => connectToDevice(item.id)}
                                 >
-                                    <Text style={styles.deviceTxt}>
-                                        {item.name ?? "Bangle"} ({item.id})
-                                    </Text>
+                                    <Text style={styles.deviceName}>{item.name ?? "Unbekanntes Gerät"}</Text>
+                                    <Text style={styles.deviceHint}>Zum Verbinden tippen</Text>
                                 </TouchableOpacity>
                             )}
+                            ListEmptyComponent={
+                                (!scanning && scanCompleted && devices.length === 0) ? (
+                                    <Text style={styles.hint}>Keine Geräte gefunden.</Text>
+                                ) : null
+                            }
+                            scrollEnabled={false}
+                            style={{ width: "100%", marginTop: 10 }}
                         />
-                    ) : (
-                        !scanning && <Text style={styles.hint}>Keine Bangle‑Uhr gefunden.</Text>
-                    )}
-                </>
-            )}
+                    </>
+                )}
 
-            {bleState !== "PoweredOn" && (
-                <Text style={styles.error}>
-                    Bluetooth {bleState === "PoweredOff" ? "ist aus" : "nicht bereit"}.
-                </Text>
-            )}
-        </View>
+                {connected && (
+                    <View style={styles.connectedActions}>
+                        <TouchableOpacity
+                            style={styles.scanButtonEx}
+                            onPress={() => {
+                                Alert.alert(
+                                    "Verbindung trennen",
+                                    "Möchtest du die Verbindung wirklich trennen?",
+                                    [
+                                        { text: "Abbrechen", style: "cancel" },
+                                        { text: "Trennen", style: "destructive", onPress: cleanup }
+                                    ]
+                                );
+                            }}
+                        >
+                            <Text style={styles.scanButtonText}>Verbindung trennen</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+
+                {bleState !== "PoweredOn" && (
+                    <Text style={styles.error}>
+                        Bluetooth {bleState === "PoweredOff" ? "ist aus" : "nicht bereit"}.
+                    </Text>
+                )}
+
+                <Text style={[styles.h1, { marginTop: 40 }]}>Wähle deinen Modus</Text>
+
+                <View style={styles.grid}>
+                    {[
+                        ["⏱ Stoppuhr", "⏫ Hochzählen"],
+                        ["🔁 Hoch in Runden", "⏬ Runterzählen"],
+                        ["🔂 Runter in Runden", "🔄 Interval"],
+                        ["🧨 Tabata", "🥊 F9Bad"],
+                        ["🔥 Amrap", "⏰ Emom"],
+                        ["🐝 Beeptest", "🎛️ Custom"]
+                    ].map((row, rowIndex) => (
+                        <View style={styles.row} key={rowIndex}>
+                            {row.map((label) => (
+                                <TouchableOpacity
+                                    key={label}
+                                    style={styles.gridBtn}
+                                    onPress={() => navigation.navigate(label)}
+                                >
+                                    <Text style={styles.gridBtnText}>{label}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    ))}
+                </View>
+            </View>
+        </ScrollView>
     );
 }
