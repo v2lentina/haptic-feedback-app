@@ -249,6 +249,12 @@ export const styles = StyleSheet.create({
         color: "#444",
         marginBottom: 4,
     },
+    subLabel2: {
+        fontSize: 14,
+        color: "#444",
+        marginBottom: 4,
+        textAlign: "center",
+    },
 
     time: {
         fontSize: 48,

@@ -1,138 +1,369 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, TextInput, Button, FlatList } from 'react-native';
+// Custom.tsx – komplette, funktionsfähige Fassung
+import React, { useState, useRef, useEffect } from 'react';
+import {
+    View, Text, TextInput, FlatList, Switch,
+    TouchableOpacity, TouchableWithoutFeedback, Keyboard,
+    Animated, Easing,
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Buffer } from 'buffer';
 import { BleManager } from 'react-native-ble-plx';
-import { input, styles } from '../styles';
+import * as Progress from 'react-native-progress';
+import { styles, input } from '../styles';
 
-const SERVICE_UUID = "19b10001-e8f2-537e-4f6c-d104768a1214";
-const CHAR_UUID = "19b10002-e8f2-537e-4f6c-d104768a1214";
+const SERVICE_UUID = '19b10001-e8f2-537e-4f6c-d104768a1214';
+const CHAR_UUID    = '19b10002-e8f2-537e-4f6c-d104768a1214';
+const manager      = new BleManager();
 
-const manager = new BleManager();
+type Kind = 'work' | 'rest';
+type Phase = { label: string; duration: number; kind: Kind };
 
-type Phase = {
-    label: string;
-    duration: number; // in seconds
-};
+const STORAGE_KEY = 'customTimer.phases';
 
 export default function Custom() {
-    const [phases, setPhases] = useState<Phase[]>([]);
-    const [label, setLabel] = useState("");
-    const [duration, setDuration] = useState("");
-    const [running, setRunning] = useState(false);
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [timeLeft, setTimeLeft] = useState(0);
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    /* ---------- Eingabe ---------- */
+    const [label, setLabel]   = useState('');
+    const [min,   setMin]     = useState('0');
+    const [sec,   setSec]     = useState('30');
+    const [kind,  setKind]    = useState<Kind>('work');        // neuer Toggle
+    const [editIdx, setEditIdx] = useState<number | null>(null);
 
+    const [phases, setPhases] = useState<Phase[]>([]);
+    const [prepEnabled, setPrepEnabled] = useState(true);
+
+    /* ---------- Timer ---------- */
+    const [started, setStarted] = useState(false);
+    const [running, setRunning] = useState(false);
+    const [paused,  setPaused]  = useState(false);
+    const [done,    setDone]    = useState(false);
+
+    const [countdown, setCountdown] = useState(10);
+    const [current,   setCurrent]   = useState(0);
+    const [timeLeft,  setLeft]      = useState(0);
+    const [phaseDur,  setPhaseDur]  = useState(1);
+
+    /* ---------- Animation ---------- */
+    const [circleKey, setCircleKey] = useState(0);
+    const bg = useRef(new Animated.Value(0)).current;
+    const [bgColorTarget, setBgColorTarget] = useState('#007AFF');   // work = blau, rest = grün
+
+    useEffect(() => {
+        Animated.timing(bg, {
+            toValue: running ? 1 : 0,
+            duration: 500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: false,
+        }).start();
+    }, [running, bgColorTarget]);
+
+    const backgroundColor = bg.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['#f5f5f5', bgColorTarget],
+    });
+    const textColor = bg.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['#000', '#fff'],
+    });
+
+    /* ---------- Persistenz ---------- */
+    useEffect(() => {
+        AsyncStorage.getItem(STORAGE_KEY).then(json => {
+            if (json) setPhases(JSON.parse(json));
+        });
+    }, []);
+
+    useEffect(() => {
+        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(phases));
+    }, [phases]);
+
+    /* ---------- BLE-Vibration ---------- */
     const vibrate = async () => {
-        const devices = await manager.connectedDevices([SERVICE_UUID]);
-        if (!devices.length) return;
-        const connected = devices[0];
+        const dev = await manager.connectedDevices([SERVICE_UUID]);
+        if (!dev.length) return;
         try {
             await manager.writeCharacteristicWithoutResponseForDevice(
-                connected.id,
-                SERVICE_UUID,
-                CHAR_UUID,
-                Buffer.from([1]).toString("base64")
+                dev[0].id, SERVICE_UUID, CHAR_UUID, Buffer.from([1]).toString('base64'),
             );
-        } catch (e) {
-            console.error("❌ Vibrationsfehler:", e);
-        }
+        } catch {/* ignore */}
     };
 
-    const addPhase = () => {
-        const sec = parseInt(duration);
-        if (!label || isNaN(sec) || sec <= 0) return;
-        setPhases([...phases, { label, duration: sec }]);
-        setLabel("");
-        setDuration("");
+    /* ---------- Helfer ---------- */
+    const format = (s: number) => {
+        const m = Math.floor(s / 60).toString().padStart(2,'0');
+        const ss= (s%60).toString().padStart(2,'0');
+        return `${m}:${ss}`;
     };
 
-    const start = () => {
-        if (phases.length === 0) return;
-        setRunning(true);
-        setCurrentIndex(0);
-        runPhase(0);
+    /* ---------- Phase speichern / bearbeiten ---------- */
+    const addOrUpdatePhase = () => {
+        const m = parseInt(min)||0, s=parseInt(sec)||0, total = m*60+s;
+        if (total<=0) return;
+
+        const data: Phase = {
+            label: label.trim() || `Phase ${editIdx!==null?editIdx+1:phases.length+1}`,
+            duration: total,
+            kind,
+        };
+
+        setPhases(p =>
+            editIdx === null
+                ? [...p, data]
+                : p.map((ph,i)=> i===editIdx ? data : ph)
+        );
+
+        // Felder zurücksetzen
+        setLabel('');
+        setMin('0');
+        setSec('30');
+        setKind('work');
+        setEditIdx(null);
     };
 
-    const runPhase = (index: number) => {
-        if (index >= phases.length) {
-            setRunning(false);
-            return;
-        }
+    const deletePhase = (idx: number) =>
+        setPhases(p => p.filter((_,i)=>i!==idx));
 
-        const current = phases[index];
+    const loadForEdit = (idx: number) => {
+        const p = phases[idx];
+        setEditIdx(idx);
+        setLabel(p.label);
+        setMin(String(Math.floor(p.duration/60)));
+        setSec(String(p.duration%60));
+        setKind(p.kind);
+    };
+
+    /* ---------- Timer-Logik ---------- */
+    const tickRef = useRef<NodeJS.Timeout|null>(null);
+    const prepRef = useRef<NodeJS.Timeout|null>(null);
+
+    const runPhase = (idx:number) => {
+        if (idx>=phases.length) { finish(); return; }
+
         vibrate();
-        setTimeLeft(current.duration);
-        setCurrentIndex(index);
+        const {duration, kind} = phases[idx];
+        setBgColorTarget(kind==='work' ? '#007AFF' : '#FF9500');
+        setCurrent(idx);
+        setPhaseDur(duration);
+        setLeft(duration);
+        setCircleKey(k=>k+1);
 
-        intervalRef.current = setInterval(() => {
-            setTimeLeft(prev => {
-                if (prev <= 1) {
-                    clearInterval(intervalRef.current!);
-                    runPhase(index + 1);
+        clearInterval(tickRef.current!);
+        tickRef.current = setInterval(()=>{
+            setLeft(t=>{
+                if(t<=1){
+                    clearInterval(tickRef.current!);
+                    setTimeout(()=>runPhase(idx+1),0);
                     return 0;
                 }
-                return prev - 1;
+                return t-1;
             });
-        }, 1000);
+        },1000);
     };
 
-    const reset = () => {
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        setRunning(false);
-        setCurrentIndex(0);
-        setTimeLeft(0);
+    const begin = () => { setRunning(true); runPhase(0); };
+
+    const start = () => {
+        if(!phases.length) return;
+        Keyboard.dismiss();
+        setStarted(true); setRunning(false); setPaused(false); setDone(false);
+        vibrate();
+
+        if(prepEnabled){
+            setCountdown(10);
+            prepRef.current = setInterval(()=>{
+                setCountdown(c=>{
+                    if(c===1){
+                        clearInterval(prepRef.current!);
+                        vibrate(); begin();
+                    }
+                    return c-1;
+                });
+            },1000);
+        } else { begin(); }
     };
+
+    const pause = () => { clearInterval(tickRef.current!); setRunning(false); setPaused(true); };
+    const resume= ()  => { setPaused(false); setRunning(true);
+        tickRef.current=setInterval(()=>{
+            setLeft(t=>{
+                if(t<=1){ clearInterval(tickRef.current!); setTimeout(()=>runPhase(current+1),0); return 0;}
+                return t-1;
+            });
+        },1000);
+    };
+
+    const resetAllState = () => {
+        clearInterval(tickRef.current!); clearInterval(prepRef.current!);
+        setStarted(false); setRunning(false); setPaused(false); setDone(false);
+        setCurrent(0); setLeft(0); setCountdown(10);
+    };
+    const finish = () => { setRunning(false); setDone(true); vibrate(); };
+
+    const clearPhases = () => setPhases([]);
+
+    /* ---------- Render ---------- */
+    const progress = 1-timeLeft/phaseDur;
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.h1}>🔧 Custom Mode</Text>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <Animated.View style={[styles.stopwatchContainer,{backgroundColor}]}>
+                <View style={{flex:1,justifyContent:'center',alignItems:'center'}}>
 
-            {!running ? (
-                <>
-                    <View style={{ flexDirection: "row", marginBottom: 10 }}>
-                        <TextInput
-                            value={label}
-                            onChangeText={setLabel}
-                            placeholder="Name"
-                            style={[input, { flex: 2 }]}
-                        />
-                        <TextInput
-                            value={duration}
-                            onChangeText={setDuration}
-                            keyboardType="numeric"
-                            placeholder="Sek"
-                            style={[input, { flex: 1, marginLeft: 5 }]}
-                        />
-                    </View>
-                    <Button title="➕ Phase hinzufügen" onPress={addPhase} />
+                    {/* ---------- SETUP ---------- */}
+                    {!started ? (
+                        <>
+                            <Text style={[styles.h1,{marginBottom:10}]}>Custom Timer</Text>
 
-                    <FlatList
-                        data={phases}
-                        keyExtractor={(_, i) => i.toString()}
-                        renderItem={({ item, index }) => (
-                            <Text>
-                                {index + 1}. {item.label} – {item.duration}s
-                            </Text>
-                        )}
-                        style={{ marginVertical: 20 }}
-                    />
+                            {/* Eingabe */}
+                            <View style={{flexDirection:'row',marginBottom:20}}>
+                                <View style={{alignItems:'center',marginHorizontal:8}}>
+                                    <Text style={[styles.subLabel,{color:'#666'}]}>Name</Text>
+                                    <TextInput value={label} onChangeText={setLabel}
+                                               placeholder="Push-Ups"
+                                               style={[input,{width:140,height:60,fontSize:24}]}/>
+                                </View>
+                                <View style={{alignItems:'center',marginHorizontal:8}}>
+                                    <Text style={[styles.subLabel,{color:'#666'}]}>Min</Text>
+                                    <TextInput value={min} onChangeText={setMin} keyboardType="numeric"
+                                               style={[input,{width:70,height:60,fontSize:24,textAlign:'center'}]}/>
+                                </View>
+                                <View style={{alignItems:'center',marginHorizontal:8}}>
+                                    <Text style={[styles.subLabel,{color:'#666'}]}>Sek</Text>
+                                    <TextInput value={sec} onChangeText={setSec} keyboardType="numeric"
+                                               style={[input,{width:70,height:60,fontSize:24,textAlign:'center'}]}/>
+                                </View>
+                            </View>
 
-                    <Button title="▶️ Start" onPress={start} disabled={phases.length === 0} />
-                </>
-            ) : (
-                <>
-                    <Text style={{ fontSize: 24, marginBottom: 10 }}>
-                        {phases[currentIndex]?.label}
-                    </Text>
-                    <Text style={styles.time}>
-                        {timeLeft}s
-                    </Text>
-                    <View style={{ marginTop: 30 }}>
-                        <Button title="⏹️ Stoppen" onPress={reset} color="#bb2222" />
-                    </View>
-                </>
-            )}
-        </View>
+                            {/* Work / Rest Toggle */}
+                            <View style={{flexDirection:'row',alignItems:'center',marginBottom:15}}>
+                                <Text style={[styles.subLabel,{color:'#666',marginRight:10}]}>Pause?</Text>
+                                <Switch value={kind==='rest'} onValueChange={v=>setKind(v?'rest':'work')} />
+                            </View>
+
+                            {/* Add / Update Button */}
+                            <TouchableOpacity style={styles.startButton} onPress={addOrUpdatePhase}>
+                                <Text style={styles.buttonText}>
+                                    {editIdx===null?'➕ Phase hinzufügen':'💾 Phase aktualisieren'}
+                                </Text>
+                            </TouchableOpacity>
+
+                            {/* Liste */}
+                            <FlatList
+                                data={phases}
+                                keyExtractor={(_,i)=>i.toString()}
+                                style={{ marginVertical: 20, maxHeight: 180, alignSelf: 'stretch' }}
+                                renderItem={({ item, index }) => (
+                                    <View
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            marginVertical: 2,
+                                            width: '100%',
+                                        }}>
+                                        {/* kompletter Text als EIN template-String */}
+                                        <Text
+                                            style={{
+                                                flex: 1,
+                                                fontSize: 16,
+                                                marginRight: 6,
+                                            }}
+                                            numberOfLines={1}
+                                            ellipsizeMode="tail">
+                                            {`${index + 1}. ${item.kind === 'rest' ? '🟠' : '🔵'} ${item.label} – ${format(
+                                                item.duration,
+                                            )}`}
+                                        </Text>
+
+                                        {/* Edit-Icon */}
+                                        <TouchableOpacity
+                                            onPress={() => loadForEdit(index)}
+                                            style={{ width: 28, alignItems: 'center' }}>
+                                            <Text style={{ fontSize: 18 }}>📝</Text>
+                                        </TouchableOpacity>
+
+                                        {/* Delete-Icon */}
+                                        <TouchableOpacity
+                                            onPress={() => deletePhase(index)}
+                                            style={{ width: 28, alignItems: 'center' }}>
+                                            <Text style={{ fontSize: 18 }}>🗑</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
+                            />
+
+                            {/* Vorbereitung & Buttons */}
+                            <View style={{flexDirection:'row',alignItems:'center',marginBottom:20}}>
+                                <Text style={[styles.subLabel,{color:'#666',marginRight:10}]}>10 s Vorbereitung</Text>
+                                <Switch value={prepEnabled} onValueChange={setPrepEnabled}/>
+                            </View>
+
+                            <TouchableOpacity
+                                style={[styles.startButton,{opacity:phases.length?1:0.4}]}
+                                onPress={start} disabled={!phases.length}>
+                                <Text style={styles.buttonText}>Start</Text>
+                            </TouchableOpacity>
+
+                            {phases.length>0 && (
+                                <TouchableOpacity style={[styles.stopButton,{marginTop:12}]} onPress={clearPhases}>
+                                    <Text style={styles.buttonText}>Alles löschen</Text>
+                                </TouchableOpacity>
+                            )}
+                        </>
+                    ) : (
+                        /* ---------- TIMER ---------- */
+                        <>
+                            {(running||paused) ? (
+                                <>
+                                    <Text style={[styles.subLabel,{color:'#fff',marginBottom:8}]}>
+                                        Phase {current+1}/{phases.length}: {phases[current]?.label}
+                                    </Text>
+
+                                    <View style={styles.progressContainer}>
+                                        <Progress.Circle key={circleKey} size={250} progress={progress}
+                                                         color="#fff" borderWidth={4} thickness={8}
+                                                         unfilledColor="rgba(255,255,255,0.2)" animated direction="clockwise"/>
+                                        <View style={styles.timerOverlay}>
+                                            <Animated.Text style={[styles.time,{color:textColor}]}>
+                                                {format(timeLeft)}
+                                            </Animated.Text>
+                                        </View>
+                                    </View>
+
+                                    <View style={{flexDirection:'row',marginTop:30,gap:20}}>
+                                        <TouchableOpacity style={styles.stopButton} onPress={resetAllState}>
+                                            <Text style={styles.buttonText}>Abbrechen</Text>
+                                        </TouchableOpacity>
+                                        {running ? (
+                                            <TouchableOpacity style={styles.pauseButton} onPress={pause}>
+                                                <Text style={styles.buttonText}>Pause</Text>
+                                            </TouchableOpacity>
+                                        ) : (
+                                            <TouchableOpacity style={styles.startButton} onPress={resume}>
+                                                <Text style={styles.buttonText}>Weiter</Text>
+                                            </TouchableOpacity>
+                                        )}
+                                    </View>
+                                </>
+                            ) : done ? (
+                                <>
+                                    <Animated.Text style={[styles.time,{color:textColor,marginBottom:20}]}>
+                                        ✅ Fertig!
+                                    </Animated.Text>
+                                    <TouchableOpacity style={styles.startButton} onPress={resetAllState}>
+                                        <Text style={styles.buttonText}>Neu starten</Text>
+                                    </TouchableOpacity>
+                                </>
+                            ) : (
+                                <>
+                                    <Animated.Text style={[styles.time,{color:textColor}]}>
+                                        {countdown}
+                                    </Animated.Text>
+                                    <Text style={styles.subLabel}>Vorbereitung</Text>
+                                </>
+                            )}
+                        </>
+                    )}
+                </View>
+            </Animated.View>
+        </TouchableWithoutFeedback>
     );
 }

@@ -32,7 +32,7 @@ export default function App() {
                 <Stack.Screen name="🥊 F9Bad" component={F9Bad} />
                 <Stack.Screen name="🔥 Amrap" component={Amrap} />
                 <Stack.Screen name="⏰ Emom" component={Emom} />
-                <Stack.Screen name="🏃 Beeptestt" component={Beeptest} />
+                <Stack.Screen name="🏃 Beeptest" component={Beeptest} />
                 <Stack.Screen name="🎛️ Custom" component={Custom} />
 
             </Stack.Navigator>
