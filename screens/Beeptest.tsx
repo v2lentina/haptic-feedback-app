@@ -1,143 +1,234 @@
+// Beeptest.tsx --------------------------------------------------------------
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, Button } from 'react-native';
+import {
+    View, Text, TouchableOpacity,
+    TouchableWithoutFeedback, Animated, Easing, Keyboard,
+} from 'react-native';
 import { Buffer } from 'buffer';
 import { BleManager } from 'react-native-ble-plx';
+import * as Progress from 'react-native-progress';
 import { styles } from '../styles';
 
-const SERVICE_UUID = "19b10001-e8f2-537e-4f6c-d104768a1214";
-const CHAR_UUID = "19b10002-e8f2-537e-4f6c-d104768a1214";
+const SERVICE_UUID = '19b10001-e8f2-537e-4f6c-d104768a1214';
+const CHAR_UUID    = '19b10002-e8f2-537e-4f6c-d104768a1214';
+const manager      = new BleManager();
 
-const manager = new BleManager();
-
+/* ------- Level-Tabelle (m/s → Pace in ms) ----------------------------- */
 const levelData = [
-    { level: 1, runs: 7, pace: 9000 },
-    { level: 2, runs: 8, pace: 8700 },
-    { level: 3, runs: 8, pace: 8400 },
-    { level: 4, runs: 9, pace: 8100 },
-    { level: 5, runs: 9, pace: 7800 },
-    { level: 6, runs: 10, pace: 7500 },
-    { level: 7, runs: 10, pace: 7200 },
-    { level: 8, runs: 11, pace: 6900 },
-    { level: 9, runs: 11, pace: 6600 },
+    { level: 1,  runs: 7,  pace: 9000 },
+    { level: 2,  runs: 8,  pace: 8700 },
+    { level: 3,  runs: 8,  pace: 8400 },
+    { level: 4,  runs: 9,  pace: 8100 },
+    { level: 5,  runs: 9,  pace: 7800 },
+    { level: 6,  runs: 10, pace: 7500 },
+    { level: 7,  runs: 10, pace: 7200 },
+    { level: 8,  runs: 11, pace: 6900 },
+    { level: 9,  runs: 11, pace: 6600 },
     { level: 10, runs: 12, pace: 6300 },
 ];
 
 export default function Beeptest() {
-    const [level, setLevel] = useState(1);
-    const [run, setRun] = useState(1);
-    const [running, setRunning] = useState(false);
-    const [done, setDone] = useState(false);
-    const [timeLeft, setTimeLeft] = useState(0);
+    /* ---------- State ---------- */
+    const [level, setLevel]       = useState(1);
+    const [runState, setRunState] = useState(1);           // UI-Run
+    const [running, setRunning]   = useState(false);
+    const [done, setDone]         = useState(false);
+    const [timeLeft, setLeft]     = useState(0);           // ms
 
-    const runTimeout = useRef<NodeJS.Timeout | null>(null);
-    const clockInterval = useRef<NodeJS.Timeout | null>(null);
-    const currentLevelIndex = useRef(0);
-    const currentRun = useRef(1);
-    const runStartTime = useRef<number>(0);
+    /* ---------- Refs ----------- */
+    const timeoutRef     = useRef<NodeJS.Timeout|null>(null);
+    const clockRef       = useRef<NodeJS.Timeout|null>(null);
+    const idxRef         = useRef(0);                      // Level-Index
+    const runRef         = useRef(1);                      // aktueller Run
+    const runStartRef    = useRef<number>(0);
 
+    /* ---------- Hintergrund-Anim ---------- */
+    const bg = useRef(new Animated.Value(0)).current;      // 0 idle · 1 running
+    const [circleKey, setCircleKey] = useState(0);
+
+    useEffect(() => {
+        Animated.timing(bg, {
+            toValue: running ? 1 : 0,
+            duration: 500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: false,
+        }).start();
+    }, [running]);
+
+    const backgroundColor = bg.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['#f5f5f5', '#007AFF'],
+    });
+    const textColor = bg.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['#000', '#fff'],
+    });
+
+    /* ---------- Vibrate ---------- */
     const vibrate = async (times = 1) => {
-        const devices = await manager.connectedDevices([SERVICE_UUID]);
-        if (!devices.length) return;
-        const connected = devices[0];
+        const dev = await manager.connectedDevices([SERVICE_UUID]);
+        if (!dev.length) return;
         try {
             for (let i = 0; i < times; i++) {
                 await manager.writeCharacteristicWithoutResponseForDevice(
-                    connected.id,
-                    SERVICE_UUID,
-                    CHAR_UUID,
-                    Buffer.from([1]).toString("base64")
+                    dev[0].id, SERVICE_UUID, CHAR_UUID, Buffer.from([1]).toString('base64'),
                 );
-                if (i < times - 1) await new Promise(res => setTimeout(res, 300));
+                if (i < times - 1) await new Promise(r => setTimeout(r, 300));
             }
-        } catch (e) {
-            console.error("❌ Vibrationsfehler:", e);
-        }
+        } catch { /* silent */ }
     };
 
+    /* ---------- Helper ---------- */
+    const fmt = (ms: number) => {
+        const s  = Math.floor(ms / 1000).toString().padStart(2, '0');
+        const hs = Math.floor((ms % 1000) / 10).toString().padStart(2, '0');
+        return `${s}.${hs}`;
+    };
+
+    /* ---------- Steuer-Logik ---------- */
     const start = () => {
+        Keyboard.dismiss();
+        idxRef.current = 0;
+        runRef.current = 1;
         setLevel(1);
-        setRun(1);
-        currentRun.current = 1;
-        currentLevelIndex.current = 0;
+        setRunState(1);
         setDone(false);
         setRunning(true);
         nextRun();
     };
 
     const nextRun = () => {
-        const current = levelData[currentLevelIndex.current];
+        const cur = levelData[idxRef.current];
 
+        /* Start eines Runs */
         vibrate(1);
-        runStartTime.current = Date.now();
-        setTimeLeft(current.pace);
+        runStartRef.current = Date.now();
+        setLeft(cur.pace);
+        setCircleKey(k => k + 1);           // Progress neu mounten
 
-        // Laufuhr
-        if (clockInterval.current) clearInterval(clockInterval.current);
-        clockInterval.current = setInterval(() => {
-            const remaining = current.pace - (Date.now() - runStartTime.current);
-            setTimeLeft(Math.max(0, remaining));
-        }, 100);
+        /* Laufende Uhr */
+        clearInterval(clockRef.current!);
+        clockRef.current = setInterval(() => {
+            const left = Math.max(0, cur.pace - (Date.now() - runStartRef.current));
+            setLeft(left);
+        }, 50);
 
-        runTimeout.current = setTimeout(() => {
-            if (currentRun.current < current.runs) {
-                currentRun.current++;
-                setRun(currentRun.current);
+        /* Timeout für Run-Ende */
+        clearTimeout(timeoutRef.current!);
+        timeoutRef.current = setTimeout(() => {
+            if (runRef.current < cur.runs) {
+                /* gleicher Level – nächster Run */
+                runRef.current += 1;
+                setRunState(runRef.current);
                 nextRun();
             } else {
-                vibrate(2); // Levelwechsel
-                currentLevelIndex.current++;
-                if (currentLevelIndex.current >= levelData.length) {
+                /* Levelwechsel */
+                vibrate(2);
+                if (idxRef.current >= levelData.length - 1) {
                     stop();
                     return;
                 }
-                const next = levelData[currentLevelIndex.current];
-                setLevel(next.level);
-                currentRun.current = 1;
-                setRun(1);
+                idxRef.current += 1;
+                const nxt = levelData[idxRef.current];
+                setLevel(nxt.level);
+                runRef.current = 1;
+                setRunState(1);
                 nextRun();
             }
-        }, current.pace);
+        }, cur.pace);
     };
 
     const stop = () => {
-        if (runTimeout.current) clearTimeout(runTimeout.current);
-        if (clockInterval.current) clearInterval(clockInterval.current);
+        clearTimeout(timeoutRef.current!);
+        clearInterval(clockRef.current!);
+        setCircleKey(k => k + 1);          // detach Progress → kein Anim-Crash
         setRunning(false);
         setDone(true);
     };
 
-    const formatMs = (ms: number) => {
-        const sec = Math.floor(ms / 1000).toString().padStart(2, '0');
-        const msLeft = Math.floor((ms % 1000) / 10).toString().padStart(2, '0');
-        return `${sec}.${msLeft}`;
-    };
+    /* ---------- Progress ---------- */
+    const pace = running ? levelData[idxRef.current].pace : 1;
+    const progress = running ? 1 - timeLeft / pace : 0;
 
+    /* =========================== UI =========================== */
     return (
-        <View style={styles.container}>
-            <Text style={styles.h1}>🏃 Beep Test</Text>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <Animated.View style={[styles.stopwatchContainer, { backgroundColor }]}>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
 
-            {!running && !done ? (
-                <>
-                    <Text>20 m Shuttle Run, steigendem Tempo</Text>
-                    <Button title="Start" onPress={start} />
-                </>
-            ) : done ? (
-                <>
-                    <Text style={{ fontSize: 24, marginVertical: 20 }}>✅ Beendet</Text>
-                    <Text style={{ fontSize: 20 }}>Level {level} – Lauf {run}</Text>
-                    <Button title="Neu starten" onPress={start} />
-                </>
-            ) : (
-                <>
-                    <Text style={{ fontSize: 20 }}>⏱ Zeit bis nächster Beep:</Text>
-                    <Text style={styles.time}>{formatMs(timeLeft)}</Text>
-                    <Text style={{ fontSize: 22, marginTop: 20 }}>Level {level}</Text>
-                    <Text style={{ fontSize: 18 }}>Lauf {run} von {levelData[currentLevelIndex.current].runs}</Text>
-                    <View style={{ marginTop: 30 }}>
-                        <Button title="🛑 Stoppen" onPress={stop} color="#bb2222" />
-                    </View>
-                </>
-            )}
-        </View>
+                    {/* -------------- Setup -------------- */}
+                    {!running && !done && (
+                        <>
+                            <Text style={[styles.h1, { marginBottom: 6 }]}>🏃 Beep-Test</Text>
+                            <Text style={[styles.subLabel, { color: '#666', marginBottom: 30, textAlign: 'center' }]}>
+                                20 m Shuttle-Run mit steigendem Tempo
+                            </Text>
+
+                            <TouchableOpacity style={styles.startButton} onPress={start}>
+                                <Text style={styles.buttonText}>Start</Text>
+                            </TouchableOpacity>
+
+                            <Text
+                                style={[
+                                    styles.subLabel,
+                                    { color: '#666', marginTop: 24, fontSize: 13, textAlign: 'center' },
+                                ]}>
+                                Laufe 20 m hin- und her.{'\n'}
+                                <Text style={{ fontWeight: '600' }}>Wende beim Beep.</Text>{'\n'}
+                                Tempo steigt pro Level.
+                            </Text>
+                        </>
+                    )}
+
+                    {/* -------------- Ergebnis -------------- */}
+                    {done && (
+                        <>
+                            <Animated.Text style={[styles.time, { color: textColor, marginBottom: 20 }]}>
+                                ✅ Beendet
+                            </Animated.Text>
+                            <Text style={[styles.subLabel]}>
+                                Level {level} – Lauf {runState}
+                            </Text>
+                            <TouchableOpacity style={styles.startButton} onPress={start}>
+                                <Text style={styles.buttonText}>Neu starten</Text>
+                            </TouchableOpacity>
+                        </>
+                    )}
+
+                    {/* -------------- Laufender Test -------------- */}
+                    {running && (
+                        <>
+                            <Text style={[styles.subLabel, { color: '#fff', marginBottom: 8 }]}>
+                                Level {level} – Lauf {runState} / {levelData[idxRef.current].runs}
+                            </Text>
+
+                            {/* Progress-Ring nur im Laufbetrieb */}
+                            <View style={styles.progressContainer}>
+                                <Progress.Circle
+                                    key={circleKey}
+                                    size={250}
+                                    progress={progress}
+                                    color="#fff"
+                                    borderWidth={4}
+                                    thickness={8}
+                                    unfilledColor="rgba(255,255,255,0.2)"
+                                    animated
+                                    direction="clockwise"
+                                />
+                                <View style={styles.timerOverlay}>
+                                    <Animated.Text style={[styles.time, { color: textColor }]}>
+                                        {fmt(timeLeft)}
+                                    </Animated.Text>
+                                </View>
+                            </View>
+
+                            <TouchableOpacity style={[styles.stopButton, { marginTop: 40 }]} onPress={stop}>
+                                <Text style={styles.buttonText}>Stoppen</Text>
+                            </TouchableOpacity>
+                        </>
+                    )}
+                </View>
+            </Animated.View>
+        </TouchableWithoutFeedback>
     );
 }

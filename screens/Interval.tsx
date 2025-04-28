@@ -1,206 +1,323 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, TextInput, Button, Switch } from 'react-native';
+// Interval.tsx -------------------------------------------------------------
+import React, { useState, useRef, useEffect } from 'react';
+import {
+    View, Text, TextInput, Switch, TouchableOpacity,
+    TouchableWithoutFeedback, Animated, Easing, Keyboard,
+} from 'react-native';
 import { Buffer } from 'buffer';
 import { BleManager } from 'react-native-ble-plx';
-import { input, styles } from '../styles';
+import * as Progress from 'react-native-progress';
+import { styles, input } from '../styles';
 
-const SERVICE_UUID = "19b10001-e8f2-537e-4f6c-d104768a1214";
-const CHAR_UUID = "19b10002-e8f2-537e-4f6c-d104768a1214";
+const SERVICE_UUID = '19b10001-e8f2-537e-4f6c-d104768a1214';
+const CHAR_UUID    = '19b10002-e8f2-537e-4f6c-d104768a1214';
+const manager      = new BleManager();
 
-const manager = new BleManager();
+/* Farbcodes */
+const WORK_COLOR  = '#007AFF'; // blau
+const REST_COLOR  = '#FF9500'; // orange
+const IDLE_COLOR  = '#f5f5f5';
+
+type PhaseType = 'work' | 'rest';
 
 export default function Interval() {
-    const [workMin, setWorkMin] = useState("0");
-    const [workSec, setWorkSec] = useState("5");
-    const [restMin, setRestMin] = useState("0");
-    const [restSec, setRestSec] = useState("3");
-    const [rounds, setRounds] = useState("3");
+    /* ---------------------- Eingabe ---------------------- */
+    const [workMin, setWorkMin] = useState('0');
+    const [workSec, setWorkSec] = useState('20');
+    const [restMin, setRestMin] = useState('0');
+    const [restSec, setRestSec] = useState('10');
+    const [rounds,   setRounds] = useState('8');
+    const [countDownMode, setCountDown] = useState(false);
+
+    /* ---------------------- Timer-State ------------------ */
+    const [prepEnabled, setPrepEnabled] = useState(true);
     const [countdown, setCountdown] = useState(10);
-    const [running, setRunning] = useState(false);
-    const [time, setTime] = useState(0);
-    const [inRest, setInRest] = useState(false);
-    const [done, setDone] = useState(false);
-    const [countDownMode, setCountDownMode] = useState(false); // false = hochzählen
 
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
-    const startTimeRef = useRef<number>(0);
+    const [started,  setStarted]  = useState(false);
+    const [running,  setRunning]  = useState(false);
+    const [paused,   setPaused]   = useState(false);
+    const [done,     setDone]     = useState(false);
 
+    const [inRest,   setInRest]   = useState(false);
     const [currentRound, setCurrentRound] = useState(1);
-    const roundRef = useRef(1); // <- NEU!
+    const [timeValue, setTimeValue] = useState(0);     // ms (up oder down)
+
+    /* ---------------------- Refs ------------------------- */
+    const phaseStartRef = useRef<number>(0);
+    const tickRef       = useRef<NodeJS.Timeout|null>(null);
+    const prepRef       = useRef<NodeJS.Timeout|null>(null);
+    const roundRef      = useRef(1);
+    const curPhaseDur   = useRef(1); // ms
+
+    /* ------------------- Hintergrund-Anim ---------------- */
+    const bgAnim = useRef(new Animated.Value(0)).current; // 0 idle, 1 work, 2 rest
+    const [circleKey, setCircleKey] = useState(0);
+
+    useEffect(() => {
+        const val = running ? (inRest ? 2 : 1) : 0;
+        Animated.timing(bgAnim, {
+            toValue: val,
+            duration: 500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: false,
+        }).start();
+    }, [running, inRest]);
+
+    const backgroundColor = bgAnim.interpolate({
+        inputRange: [0, 1, 2],
+        outputRange: [IDLE_COLOR, WORK_COLOR, REST_COLOR],
+    });
+    const textColor = bgAnim.interpolate({
+        inputRange: [0, 1, 2],
+        outputRange: ['#000', '#fff', '#fff'],
+    });
+
+    /* -------------------- Vibrate ------------------------ */
     const vibrate = async () => {
-        const devices = await manager.connectedDevices([SERVICE_UUID]);
-        if (!devices.length) return;
-        const connected = devices[0];
+        const dev = await manager.connectedDevices([SERVICE_UUID]);
+        if (!dev.length) return;
         try {
             await manager.writeCharacteristicWithoutResponseForDevice(
-                connected.id,
-                SERVICE_UUID,
-                CHAR_UUID,
-                Buffer.from([1]).toString("base64")
+                dev[0].id, SERVICE_UUID, CHAR_UUID, Buffer.from([1]).toString('base64'),
             );
-        } catch (e) {
-            console.error("❌ Vibrationsfehler:", e);
-        }
+        } catch { /* ignore */ }
     };
 
-    const start = () => {
-        setCountdown(10);
-        setDone(false);
-        const prep = setInterval(() => {
-            setCountdown(c => {
-                if (c === 1) {
-                    clearInterval(prep);
-                    vibrate();
-                    startIntervalCycle();
-                }
-                return c - 1;
-            });
-        }, 1000);
+    /* -------------------- Helfer ------------------------- */
+    const format = (ms:number) => {
+        const total = Math.max(0, Math.floor(ms/10)); // → hundredths
+        const m  = Math.floor(total/6000).toString().padStart(2,'0');
+        const s  = Math.floor(total/100 % 60).toString().padStart(2,'0');
+        const hs = (total%100).toString().padStart(2,'0');
+        return `${m}:${s}.${hs}`;
     };
 
-    const startIntervalCycle = () => {
-        setRunning(true);
-        setInRest(false);
-        setCurrentRound(1);
-        handlePhase("work");
+    const getDuration = (phase:PhaseType) => {
+        const min = phase==='work' ? parseInt(workMin)||0 : parseInt(restMin)||0;
+        const sec = phase==='work' ? parseInt(workSec)||0 : parseInt(restSec)||0;
+        return (min*60 + sec)*1000;
     };
 
-    const handlePhase = (phase: "work" | "rest") => {
-        const isWork = phase === "work";
-        const min = isWork ? parseInt(workMin) || 0 : parseInt(restMin) || 0;
-        const sec = isWork ? parseInt(workSec) || 0 : parseInt(restSec) || 0;
-        const duration = (min * 60 + sec) * 1000;
-        const totalRounds = parseInt(rounds);
-
-        startTimeRef.current = Date.now();
-        setInRest(!isWork);
-        if (!countDownMode) setTime(0);
+    /* -------------------- Timer-Logik -------------------- */
+    const runPhase = (phase:PhaseType) => {
+        curPhaseDur.current = getDuration(phase);
+        setInRest(phase==='rest');
+        setCircleKey(k=>k+1);
         vibrate();
 
-        intervalRef.current = setInterval(() => {
-            const elapsed = Date.now() - startTimeRef.current;
-            const remaining = duration - elapsed;
-            setTime(countDownMode ? remaining : elapsed);
+        if (!countDownMode) setTimeValue(0);               // hochzählen
+        else                setTimeValue(curPhaseDur.current); // runterzählen
 
-            if (elapsed >= duration) {
-                clearInterval(intervalRef.current!);
+        phaseStartRef.current = Date.now();
+        clearInterval(tickRef.current!);
+        tickRef.current = setInterval(()=>{
+            const elapsed = Date.now()-phaseStartRef.current;
+            const left    = curPhaseDur.current - elapsed;
 
-                if (isWork) {
-                    if (roundRef.current >= totalRounds) {
-                        vibrate();
-                        setRunning(false);
-                        setDone(true);
-                    } else {
-                        setTimeout(() => handlePhase("rest"), 10);
+            setTimeValue(countDownMode ? left : elapsed);
+
+            if(elapsed>=curPhaseDur.current){
+                clearInterval(tickRef.current!);
+
+                if(phase==='work'){
+                    if(roundRef.current >= parseInt(rounds)){
+                        finish();
+                    }else{
+                        runPhase('rest');
                     }
-                } else {
-                    roundRef.current += 1;
+                }else{
+                    roundRef.current +=1;
                     setCurrentRound(roundRef.current);
-                    setTimeout(() => handlePhase("work"), 10);
+                    runPhase('work');
                 }
             }
-        }, 50);
+        },50);
     };
 
-    const reset = () => {
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        setRunning(false);
-        setDone(false);
-        setCountdown(10);
-        setTime(0);
-        setCurrentRound(1);
-        roundRef.current = 1;
-        setInRest(false);
+    const begin = ()=>{ setRunning(true); runPhase('work'); };
+
+    const start = ()=>{
+        if( parseInt(rounds)<=0 || getDuration('work')<=0 ) return;
+
+        Keyboard.dismiss();
+        setStarted(true); setRunning(false); setPaused(false); setDone(false);
+        roundRef.current=1; setCurrentRound(1);
+        vibrate();
+
+        if(prepEnabled){
+            setCountdown(10);
+            prepRef.current = setInterval(()=>{
+                setCountdown(c=>{
+                    if(c===1){
+                        clearInterval(prepRef.current!); vibrate(); begin();
+                    }
+                    return c-1;
+                });
+            },1000);
+        }else{ begin(); }
     };
 
-    const formatTime = (ms: number) => {
-        const totalSec = Math.max(0, Math.floor(ms / 1000));
-        const min = Math.floor(totalSec / 60).toString().padStart(2, '0');
-        const sec = (totalSec % 60).toString().padStart(2, '0');
-        const hundredths = Math.floor((ms % 1000) / 10).toString().padStart(2, '0');
-        return `${min}:${sec}.${hundredths}`;
+    const pause = ()=>{
+        clearInterval(tickRef.current!);
+        setRunning(false); setPaused(true);
     };
 
+    const resume = ()=>{
+        setPaused(false); setRunning(true);
+        const already = countDownMode
+            ? curPhaseDur.current - timeValue
+            : timeValue;
+        phaseStartRef.current = Date.now()-already;
+        tickRef.current = setInterval(()=>{
+            const elapsed = Date.now()-phaseStartRef.current;
+            const left    = curPhaseDur.current - elapsed;
+            setTimeValue(countDownMode ? left : elapsed);
+            if(elapsed>=curPhaseDur.current){
+                clearInterval(tickRef.current!);
+                if(inRest){
+                    roundRef.current +=1; setCurrentRound(roundRef.current);
+                    runPhase('work');
+                }else{
+                    if(roundRef.current>=parseInt(rounds)) finish();
+                    else runPhase('rest');
+                }
+            }
+        },50);
+    };
+
+    const reset = ()=>{
+        clearInterval(tickRef.current!); clearInterval(prepRef.current!);
+        setStarted(false); setRunning(false); setPaused(false); setDone(false);
+        setCountdown(10); setTimeValue(0); setInRest(false); roundRef.current=1; setCurrentRound(1);
+    };
+
+    const finish=()=>{ setRunning(false); setDone(true); vibrate(); };
+
+    /* ------------- Progress (0-1) ------------- */
+    const prog = running||paused
+        ? (countDownMode
+            ? 1 - Math.max(0,timeValue)/curPhaseDur.current
+            : Math.min(timeValue/curPhaseDur.current,1))
+        : 0;
+
+    /* --------------------- UI ------------------ */
     return (
-        <View style={styles.container}>
-            <Text style={styles.h1}>⏱ Intervalltraining</Text>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <Animated.View style={[styles.stopwatchContainer,{backgroundColor}]}>
+                <View style={{flex:1,justifyContent:'center',alignItems:'center'}}>
 
-            {!running && !done ? (
-                <>
-                    <Text style={styles.label}>Arbeitszeit:</Text>
-                    <View style={{ flexDirection: "row", marginBottom: 10 }}>
-                        <TextInput
-                            value={workMin}
-                            onChangeText={setWorkMin}
-                            keyboardType="numeric"
-                            style={input}
-                            placeholder="Min"
-                        />
-                        <TextInput
-                            value={workSec}
-                            onChangeText={setWorkSec}
-                            keyboardType="numeric"
-                            style={input}
-                            placeholder="Sec"
-                        />
-                    </View>
+                    {/* ---------- SETUP ---------- */}
+                    {!started ? (
+                        <>
+                            <Text style={[styles.h1,{marginBottom:20}]}>Intervall</Text>
 
-                    <Text style={styles.label}>Pausenzeit:</Text>
-                    <View style={{ flexDirection: "row", marginBottom: 10 }}>
-                        <TextInput
-                            value={restMin}
-                            onChangeText={setRestMin}
-                            keyboardType="numeric"
-                            style={input}
-                            placeholder="Min"
-                        />
-                        <TextInput
-                            value={restSec}
-                            onChangeText={setRestSec}
-                            keyboardType="numeric"
-                            style={input}
-                            placeholder="Sec"
-                        />
-                    </View>
+                            {/* Arbeits­zeit */}
+                            <Text style={[styles.subLabel,{color:'#666'}]}>Arbeitszeit</Text>
+                            <View style={{flexDirection:'row',marginBottom:16}}>
+                                <View style={{alignItems:'center',marginHorizontal:10}}>
+                                    <Text style={[styles.subLabel,{color:'#666'}]}>Min</Text>
+                                    <TextInput value={workMin} onChangeText={setWorkMin} keyboardType="numeric"
+                                               style={[input,{width:80,height:60,fontSize:24,textAlign:'center'}]}/>
+                                </View>
+                                <View style={{alignItems:'center',marginHorizontal:10}}>
+                                    <Text style={[styles.subLabel,{color:'#666'}]}>Sek</Text>
+                                    <TextInput value={workSec} onChangeText={setWorkSec} keyboardType="numeric"
+                                               style={[input,{width:80,height:60,fontSize:24,textAlign:'center'}]}/>
+                                </View>
+                            </View>
 
-                    <Text style={styles.label}>Anzahl Runden:</Text>
-                    <TextInput
-                        value={rounds}
-                        onChangeText={setRounds}
-                        keyboardType="numeric"
-                        style={input}
-                        placeholder="3"
-                    />
+                            {/* Pause­zeit */}
+                            <Text style={[styles.subLabel,{color:'#666'}]}>Pausenzeit</Text>
+                            <View style={{flexDirection:'row',marginBottom:16}}>
+                                <View style={{alignItems:'center',marginHorizontal:10}}>
+                                    <Text style={[styles.subLabel,{color:'#666'}]}>Min</Text>
+                                    <TextInput value={restMin} onChangeText={setRestMin} keyboardType="numeric"
+                                               style={[input,{width:80,height:60,fontSize:24,textAlign:'center'}]}/>
+                                </View>
+                                <View style={{alignItems:'center',marginHorizontal:10}}>
+                                    <Text style={[styles.subLabel,{color:'#666'}]}>Sek</Text>
+                                    <TextInput value={restSec} onChangeText={setRestSec} keyboardType="numeric"
+                                               style={[input,{width:80,height:60,fontSize:24,textAlign:'center'}]}/>
+                                </View>
+                            </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
-                        <Text>Zählrichtung: </Text>
-                        <Text>{countDownMode ? "⬇️ runter" : "⬆️ hoch"}</Text>
-                        <Switch value={countDownMode} onValueChange={setCountDownMode} />
-                    </View>
+                            {/* Runden */}
+                            <Text style={[styles.subLabel,{color:'#666'}]}>Runden</Text>
+                            <TextInput value={rounds} onChangeText={setRounds} keyboardType="numeric"
+                                       style={[input,{width:100,height:60,fontSize:24,textAlign:'center',marginBottom:20}]}/>
 
-                    <Button title="Start" onPress={start} />
-                </>
-            ) : done ? (
-                <>
-                    <Text style={{ fontSize: 24, marginVertical: 20 }}>✅ Training abgeschlossen!</Text>
-                    <Button title="Neu starten" onPress={reset} />
-                </>
-            ) : (
-                <>
-                    <Text style={styles.time}>{formatTime(time)}</Text>
-                    <Text style={{ fontSize: 18 }}>
-                        Runde {currentRound} von {rounds} – {inRest ? "Pause" : "Work"}
-                    </Text>
-                    <Button title="Abbrechen" onPress={reset} color="#bb2222" />
-                </>
-            )}
+                            {/* Count-Direction */}
+                            <View style={{flexDirection:'row',alignItems:'center',marginBottom:12}}>
+                                <Text style={[styles.subLabel,{color:'#666',marginRight:8}]}>Zählrichtung</Text>
+                                <Switch value={countDownMode} onValueChange={setCountDown}/>
+                                <Text style={[styles.subLabel,{marginLeft:8}]}>{countDownMode?'⬇️':'⬆️'}</Text>
+                            </View>
 
-            {!running && countdown < 10 && countdown > 0 && (
-                <>
-                    <Text style={{ fontSize: 20, marginBottom: 10 }}>Vorbereitung …</Text>
-                    <Text style={{ fontSize: 48 }}>{countdown}</Text>
-                </>
-            )}
-        </View>
+                            {/* Vorbereitung */}
+                            <View style={{flexDirection:'row',alignItems:'center',marginBottom:30}}>
+                                <Text style={[styles.subLabel,{color:'#666',marginRight:10}]}>10 s Vorbereitung</Text>
+                                <Switch value={prepEnabled} onValueChange={setPrepEnabled}/>
+                            </View>
+
+                            <TouchableOpacity style={styles.startButton} onPress={start}>
+                                <Text style={styles.buttonText}>Start</Text>
+                            </TouchableOpacity>
+                        </>
+                    ) : (
+                        /* ---------- TIMER ---------- */
+                        <>
+                            {(running||paused) ? (
+                                <>
+                                    <Text style={[styles.subLabel,{color:'#fff',marginBottom:8}]}>
+                                        Runde {currentRound}/{rounds} – {inRest?'Pause':'Work'}
+                                    </Text>
+
+                                    <View style={styles.progressContainer}>
+                                        <Progress.Circle key={circleKey} size={250} progress={prog}
+                                                         color="#fff" borderWidth={4} thickness={8}
+                                                         unfilledColor="rgba(255,255,255,0.2)" animated direction="clockwise" />
+                                        <View style={styles.timerOverlay}>
+                                            <Animated.Text style={[styles.time,{color:textColor}]}>
+                                                {format(timeValue)}
+                                            </Animated.Text>
+                                        </View>
+                                    </View>
+
+                                    <View style={{flexDirection:'row',marginTop:30,gap:20}}>
+                                        <TouchableOpacity style={styles.stopButton} onPress={reset}>
+                                            <Text style={styles.buttonText}>Abbrechen</Text>
+                                        </TouchableOpacity>
+                                        {running ? (
+                                            <TouchableOpacity style={styles.pauseButton} onPress={pause}>
+                                                <Text style={styles.buttonText}>Pause</Text>
+                                            </TouchableOpacity>
+                                        ) : (
+                                            <TouchableOpacity style={styles.startButton} onPress={resume}>
+                                                <Text style={styles.buttonText}>Weiter</Text>
+                                            </TouchableOpacity>
+                                        )}
+                                    </View>
+                                </>
+                            ) : done ? (
+                                <>
+                                    <Animated.Text style={[styles.time,{color:textColor,marginBottom:20}]}>
+                                        ✅ Fertig!
+                                    </Animated.Text>
+                                    <TouchableOpacity style={styles.startButton} onPress={reset}>
+                                        <Text style={styles.buttonText}>Neu starten</Text>
+                                    </TouchableOpacity>
+                                </>
+                            ) : (
+                                /* Vorbereitung */
+                                <>
+                                    <Animated.Text style={[styles.time,{color:textColor}]}>{countdown}</Animated.Text>
+                                    <Text style={styles.subLabel}>Vorbereitung</Text>
+                                </>
+                            )}
+                        </>
+                    )}
+                </View>
+            </Animated.View>
+        </TouchableWithoutFeedback>
     );
 }
