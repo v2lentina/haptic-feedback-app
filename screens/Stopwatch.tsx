@@ -1,7 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, TouchableOpacity, Animated, Easing, Platform } from 'react-native';
+import { View, TouchableOpacity, Animated, Easing } from 'react-native';
 import { styles } from '../styles';
 import * as Progress from 'react-native-progress';
+import { vibrate } from '../ble';
+
+const BUZZ_NORMAL = 3;
 
 export default function StopwatchScreen() {
     const [time, setTime] = useState(0);
@@ -33,6 +36,7 @@ export default function StopwatchScreen() {
     const start = () => {
         if (running) return;
         setRunning(true);
+        vibrate(BUZZ_NORMAL);
         startTimeRef.current = Date.now() - time;
         intervalRef.current = setInterval(() => {
             setTime(Date.now() - startTimeRef.current);
@@ -42,10 +46,10 @@ export default function StopwatchScreen() {
     const stop = () => {
         if (intervalRef.current) clearInterval(intervalRef.current);
         setRunning(false);
+        vibrate(BUZZ_NORMAL);
     };
 
     const reset = () => {
-        stop();
         setTime(0);
     };
 
