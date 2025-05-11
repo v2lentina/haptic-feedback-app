@@ -56,3 +56,15 @@ export function enqueueVibration(deviceId: string, payloadBase64: string) {
         .then(() => new Promise(res => setTimeout(res, 50)));
     return writeQueue;
 }
+
+export async function vibrate(code: number) {
+    const devs = await manager.connectedDevices([SERVICE_UUID]);
+    if (!devs.length) return;
+    const deviceId = devs[0].id;
+    const data = Buffer.from([code]).toString('base64');
+    try {
+        await enqueueVibration(deviceId, data);
+    } catch(e) {
+        console.warn('Buzz failed', e);
+    }
+}

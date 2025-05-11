@@ -4,15 +4,18 @@ import {
     View, Text, TextInput, Switch, TouchableOpacity,
     TouchableWithoutFeedback, Animated, Easing, Keyboard,
 } from 'react-native';
-import { Buffer } from 'buffer';
 import * as Progress from 'react-native-progress';
 import { styles, input } from '../styles';
-import { manager, SERVICE_UUID, CHAR_UUID, enqueueVibration } from '../ble';
+import {vibrate} from '../ble';
 
 /* Farbcodes */
 const WORK_COLOR  = '#007AFF'; // blau
 const REST_COLOR  = '#FF9500'; // orange
 const IDLE_COLOR  = '#f5f5f5';
+
+const BUZZ_SHORT = 1;
+const BUZZ_NORMAL = 3;
+const BUZZ_LONG = 4;
 
 type PhaseType = 'work' | 'rest';
 
@@ -68,33 +71,12 @@ export default function Interval() {
         outputRange: ['#000', '#fff', '#fff'],
     });
 
-    /* -------------------- Vibrate ------------------------ */
-
-    const vibrate = async () => {
-        // 1) Prüfen, ob Gerät verbunden
-        const devs = await manager.connectedDevices([SERVICE_UUID]);
-        if (!devs.length) return;
-        const deviceId = devs[0].id;
-
-        // 2) Daten-Paket zusammenbauen
-        const data = Buffer.from([1]).toString('base64');
-
-        // 3) WICHTIG: hier warten wir auf das ACK!
-        try {
-            await enqueueVibration(deviceId, data);
-            // console.log('Vibration vom Bangle quittiert – nächster Befehl kann los');
-        } catch (e) {
-            console.warn('Vibration fehlgeschlagen', e);
-        }
-    };
-
     /* -------------------- Helfer ------------------------- */
-    const format = (ms:number) => {
-        const total = Math.max(0, Math.floor(ms/10)); // → hundredths
-        const m  = Math.floor(total/6000).toString().padStart(2,'0');
-        const s  = Math.floor(total/100 % 60).toString().padStart(2,'0');
-        const hs = (total%100).toString().padStart(2,'0');
-        return `${m}:${s}.${hs}`;
+    const format = (ms: number) => {
+        const totalSec = Math.ceil(ms/1000);
+        const m = Math.floor(totalSec/60).toString().padStart(2,'0');
+        const s = (totalSec % 60).toString().padStart(2,'0');
+        return `${m}:${s}`;
     };
 
     const getDuration = (phase:PhaseType) => {
@@ -104,11 +86,12 @@ export default function Interval() {
     };
 
     /* -------------------- Timer-Logik -------------------- */
-    const runPhase = (phase:PhaseType) => {
+    const runPhase = (phase: PhaseType, doBuzz = true) => {
+        if (doBuzz) vibrate(BUZZ_NORMAL);
+
         curPhaseDur.current = getDuration(phase);
         setInRest(phase==='rest');
         setCircleKey(k=>k+1);
-        vibrate();
 
         if (!countDownMode) setTimeValue(0);               // hochzählen
         else                setTimeValue(curPhaseDur.current); // runterzählen
@@ -139,7 +122,7 @@ export default function Interval() {
         },50);
     };
 
-    const begin = ()=>{ setRunning(true); runPhase('work'); };
+    const begin = ()=>{ setRunning(true); runPhase('work', false); };
 
     const start = ()=>{
         if( parseInt(rounds)<=0 || getDuration('work')<=0 ) return;
@@ -147,19 +130,24 @@ export default function Interval() {
         Keyboard.dismiss();
         setStarted(true); setRunning(false); setPaused(false); setDone(false);
         roundRef.current=1; setCurrentRound(1);
-        vibrate();
 
         if(prepEnabled){
             setCountdown(10);
             prepRef.current = setInterval(()=>{
                 setCountdown(c=>{
-                    if(c===1){
-                        clearInterval(prepRef.current!); vibrate(); begin();
+                    const next = c - 1;
+                    if (next > 0 && next <= 3) {
+                        vibrate(BUZZ_SHORT);
                     }
-                    return c-1;
+                    if (next === 0) {
+                        clearInterval(prepRef.current!);
+                        vibrate(BUZZ_LONG);
+                        begin();
+                    }
+                    return next;
                 });
             },1000);
-        }else{ begin(); }
+        }else{ vibrate(BUZZ_LONG); begin(); }
     };
 
     const pause = ()=>{
@@ -196,7 +184,7 @@ export default function Interval() {
         setCountdown(10); setTimeValue(0); setInRest(false); roundRef.current=1; setCurrentRound(1);
     };
 
-    const finish=()=>{ setRunning(false); setDone(true); vibrate(); };
+    const finish=()=>{ setRunning(false); setDone(true); vibrate(BUZZ_NORMAL); };
 
     /* ------------- Progress (0-1) ------------- */
     const prog = running||paused
