@@ -23,7 +23,7 @@ export default function Up() {
 
     const BUZZ_SHORT = 1;
     const BUZZ_NORMAL = 3;
-    const BUZZ_LONG = 4;
+    const BUZZ_LONG = 5;
 
     useEffect(() => {
         Animated.timing(backgroundAnim, {
@@ -116,7 +116,7 @@ export default function Up() {
 
             if (elapsed + savedElapsedRef.current >= getTotalMillis()) {
                 clearInterval(intervalRef.current!);
-                vibrate(BUZZ_NORMAL);
+                vibrate(BUZZ_LONG);
                 setRunning(false);
                 setDone(true);
             }

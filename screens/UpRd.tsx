@@ -1,7 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Animated, Easing, Keyboard, TouchableWithoutFeedback, Switch } from 'react-native';
-import { Buffer } from 'buffer';
-import { manager, SERVICE_UUID, CHAR_UUID } from '../ble';
+import { vibrate } from '../ble';
 import { styles, input } from '../styles';
 import * as Progress from 'react-native-progress';
 
@@ -28,6 +27,10 @@ export default function UpRd() {
     const [circleKey, setCircleKey] = useState(0);
     const backgroundAnim = useRef(new Animated.Value(0)).current;
 
+    const BUZZ_SHORT = 1;
+    const BUZZ_NORMAL = 3;
+    const BUZZ_LONG = 5;
+
     useEffect(() => {
         Animated.timing(backgroundAnim, {
             toValue: running ? 1 : 0,
@@ -47,46 +50,33 @@ export default function UpRd() {
         outputRange: ['#000000', '#ffffff'],
     });
 
-    const vibrate = async () => {
-        const devices = await manager.connectedDevices([SERVICE_UUID]);
-        if (!devices.length) return;
-        const connected = devices[0];
-        try {
-            await manager.writeCharacteristicWithoutResponseForDevice(
-                connected.id,
-                SERVICE_UUID,
-                CHAR_UUID,
-                Buffer.from([1]).toString("base64")
-            );
-        } catch (e) {
-            console.error("❌ Vibrationsfehler:", e);
-        }
-    };
-
-    const start = () => {
+    const startTimer = () => {
         Keyboard.dismiss();
         setStarted(true);
 
-        vibrate(); // vibrieren beim Start
-
         if (preparationEnabled) {
             setCountdown(10);
-            const prep = setInterval(() => {
+            const prepInterval = setInterval(() => {
                 setCountdown((c) => {
-                    if (c === 1) {
-                        clearInterval(prep);
-                        vibrate();
-                        beginRoundTimer();
+                    const next = c - 1;
+                    if (next > 0 && next <= 3) {
+                        vibrate(BUZZ_SHORT);
                     }
-                    return c - 1;
+                    if (next === 0) {
+                        clearInterval(prepInterval);
+                        vibrate(BUZZ_LONG);
+                        beginCountUp();
+                    }
+                    return next;
                 });
             }, 1000);
         } else {
-            beginRoundTimer();
+            vibrate(BUZZ_LONG);
+            beginCountUp();
         }
     };
 
-    const beginRoundTimer = () => {
+    const beginCountUp = () => {
         setRunning(true);
         startTimeRef.current = Date.now();
         roundStartTimeRef.current = Date.now();
@@ -104,7 +94,7 @@ export default function UpRd() {
 
             if (currentRoundElapsed >= roundDurationMillisRef.current) {
                 if (currentRoundRef.current < parseInt(roundCount)) {
-                    vibrate();
+                    vibrate(BUZZ_NORMAL);
                     setCircleKey(k => k + 1);
                     currentRoundRef.current += 1;
                     setCurrentRound(currentRoundRef.current);
@@ -113,7 +103,7 @@ export default function UpRd() {
                     setTime(0);
                 } else {
                     clearInterval(intervalRef.current!);
-                    vibrate();
+                    vibrate(BUZZ_LONG);
                     setRunning(false);
                     setDone(true);
                 }
@@ -130,6 +120,7 @@ export default function UpRd() {
 
     const resume = () => {
         setRunning(true);
+        setPaused(false);
         roundStartTimeRef.current = Date.now();
 
         intervalRef.current = setInterval(() => {
@@ -140,7 +131,7 @@ export default function UpRd() {
 
             if (currentRoundElapsed >= roundDurationMillisRef.current) {
                 if (currentRoundRef.current < parseInt(roundCount)) {
-                    vibrate();
+                    vibrate(BUZZ_NORMAL);
                     setCircleKey(k => k + 1);
                     currentRoundRef.current += 1;
                     setCurrentRound(currentRoundRef.current);
@@ -149,7 +140,7 @@ export default function UpRd() {
                     setTime(0);
                 } else {
                     clearInterval(intervalRef.current!);
-                    vibrate();
+                    vibrate(BUZZ_NORMAL);
                     setRunning(false);
                     setDone(true);
                 }
@@ -228,13 +219,23 @@ export default function UpRd() {
                                 />
                             </View>
 
-                            <TouchableOpacity style={styles.startButton} onPress={start}>
+                            <TouchableOpacity style={styles.startButton} onPress={startTimer}>
                                 <Text style={styles.buttonText}>Start</Text>
                             </TouchableOpacity>
                         </>
                     ) : (
                         <>
-                            {running || paused ? (
+                            {done ? (
+                                <>
+                                    <Animated.Text style={[styles.time, { color: textColor, marginBottom: 20 }]}>
+                                        ✅ Fertig!
+                                    </Animated.Text>
+
+                                    <TouchableOpacity style={styles.startButton} onPress={reset}>
+                                        <Text style={styles.buttonText}>Neu starten</Text>
+                                    </TouchableOpacity>
+                                </>
+                            ) : running || paused ? (
                                 <>
                                     <Text style={[styles.subLabel, { color: '#fff', marginBottom: 8 }]}>
                                         Runde {currentRound} von {roundCount}
@@ -275,16 +276,6 @@ export default function UpRd() {
                                             </TouchableOpacity>
                                         )}
                                     </View>
-                                </>
-                            ) : done ? (
-                                <>
-                                    <Animated.Text style={[styles.time, { color: textColor, marginBottom: 20 }]}>
-                                        ✅ Fertig!
-                                    </Animated.Text>
-
-                                    <TouchableOpacity style={styles.startButton} onPress={reset}>
-                                        <Text style={styles.buttonText}>Neu starten</Text>
-                                    </TouchableOpacity>
                                 </>
                             ) : (
                                 <>
