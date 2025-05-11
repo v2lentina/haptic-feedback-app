@@ -1,9 +1,18 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Animated, Easing, Keyboard, TouchableWithoutFeedback, Switch } from 'react-native';
-import { Buffer } from 'buffer';
-import { manager, SERVICE_UUID, CHAR_UUID } from '../ble';
-import { styles, input } from '../styles';
+import {
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    Animated,
+    Easing,
+    Keyboard,
+    TouchableWithoutFeedback,
+    Switch,
+} from 'react-native';
+import { vibrate } from '../ble';
 import * as Progress from 'react-native-progress';
+import { styles, input } from '../styles';
 
 export default function Down() {
     const [countdown, setCountdown] = useState(10);
@@ -15,6 +24,9 @@ export default function Down() {
     const [durationMin, setDurationMin] = useState("0");
     const [durationSec, setDurationSec] = useState("10");
     const [preparationEnabled, setPreparationEnabled] = useState(true);
+
+    const BUZZ_SHORT = 1;
+    const BUZZ_LONG = 5;
 
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const startTimeRef = useRef<number>(0);
@@ -44,47 +56,26 @@ export default function Down() {
         outputRange: ['#000000', '#ffffff'],
     });
 
-    const vibrate = async () => {
-        const devices = await manager.connectedDevices([SERVICE_UUID]);
-        if (!devices.length) return;
-        const connected = devices[0];
-        try {
-            await manager.writeCharacteristicWithoutResponseForDevice(
-                connected.id,
-                SERVICE_UUID,
-                CHAR_UUID,
-                Buffer.from([1]).toString("base64")
-            );
-        } catch (e) {
-            console.error("❌ Vibrationsfehler:", e);
-        }
-    };
-
-    const startTimer = () => {
+    const start = () => {
         Keyboard.dismiss();
-        sessionId.current = Date.now();
         setStarted(true);
-
-        vibrate(); // direkt beim Start vibrieren
 
         if (preparationEnabled) {
             setCountdown(10);
-            const thisSession = sessionId.current;
-            const prepInterval = setInterval(() => {
-                setCountdown((c) => {
-                    if (sessionId.current !== thisSession) {
-                        clearInterval(prepInterval);
-                        return c;
-                    }
-                    if (c === 1) {
-                        clearInterval(prepInterval);
-                        vibrate();
+            const prep = setInterval(() => {
+                setCountdown(c => {
+                    const next = c - 1;
+                    if (next > 0 && next <= 3) vibrate(BUZZ_SHORT);
+                    if (next === 0) {
+                        clearInterval(prep);
+                        vibrate(BUZZ_LONG);
                         beginCountdown();
                     }
-                    return c - 1;
+                    return next;
                 });
             }, 1000);
         } else {
+            vibrate(BUZZ_LONG);
             beginCountdown();
         }
     };
@@ -95,23 +86,21 @@ export default function Down() {
         const totalMillis = (min * 60 + sec) * 1000;
         totalMillisRef.current = totalMillis;
         setRemaining(totalMillis);
-        setRunning(true);
-        startTimeRef.current = Date.now();
+        setCircleKey(k => k + 1);
         savedElapsedRef.current = 0;
+        startTimeRef.current = Date.now();
+        setRunning(true);
+        setPaused(false);
+        setDone(false);
 
-        const thisSession = sessionId.current;
         intervalRef.current = setInterval(() => {
             const elapsed = Date.now() - startTimeRef.current;
-            const newRemaining = Math.max(totalMillis - (elapsed + savedElapsedRef.current), 0);
-            if (sessionId.current !== thisSession) {
-                clearInterval(intervalRef.current!);
-                return;
-            }
-            setRemaining(newRemaining);
+            const left = Math.max(totalMillisRef.current - (elapsed + savedElapsedRef.current), 0);
+            setRemaining(left);
 
-            if (newRemaining <= 0) {
+            if (left <= 0) {
                 clearInterval(intervalRef.current!);
-                vibrate();
+                vibrate(BUZZ_LONG);
                 setRunning(false);
                 setDone(true);
             }
@@ -126,22 +115,18 @@ export default function Down() {
     };
 
     const resume = () => {
-        setRunning(true);
         startTimeRef.current = Date.now();
+        setRunning(true);
+        setPaused(false);
 
-        const thisSession = sessionId.current;
         intervalRef.current = setInterval(() => {
             const elapsed = Date.now() - startTimeRef.current;
-            const newRemaining = Math.max(totalMillisRef.current - (elapsed + savedElapsedRef.current), 0);
-            if (sessionId.current !== thisSession) {
-                clearInterval(intervalRef.current!);
-                return;
-            }
-            setRemaining(newRemaining);
+            const left = Math.max(totalMillisRef.current - (elapsed + savedElapsedRef.current), 0);
+            setRemaining(left);
 
-            if (newRemaining <= 0) {
+            if (left <= 0) {
                 clearInterval(intervalRef.current!);
-                vibrate();
+                vibrate(BUZZ_LONG);
                 setRunning(false);
                 setDone(true);
             }
@@ -149,7 +134,6 @@ export default function Down() {
     };
 
     const reset = () => {
-        if (intervalRef.current) clearInterval(intervalRef.current);
         if (intervalRef.current) clearInterval(intervalRef.current);
         sessionId.current = Date.now();
         setStarted(false);
@@ -169,8 +153,8 @@ export default function Down() {
         return `${min}:${sec}`;
     };
 
-    const progress = running && totalMillisRef.current > 0
-        ? 1 - Math.min((remaining + savedElapsedRef.current) / totalMillisRef.current, 1)
+    const progress = totalMillisRef.current > 0
+        ? 1 - Math.min(remaining / totalMillisRef.current, 1)
         : 0;
 
     return (
@@ -213,8 +197,18 @@ export default function Down() {
                                 />
                             </View>
 
-                            <TouchableOpacity style={styles.startButton} onPress={startTimer}>
+                            <TouchableOpacity style={styles.startButton} onPress={start}>
                                 <Text style={styles.buttonText}>Start</Text>
+                            </TouchableOpacity>
+                        </>
+                    ) : done ? (
+                        <>
+                            <Animated.Text style={[styles.time, { color: textColor, marginBottom: 20 }]}>
+                                ✅ Fertig!
+                            </Animated.Text>
+
+                            <TouchableOpacity style={styles.startButton} onPress={reset}>
+                                <Text style={styles.buttonText}>Neu starten</Text>
                             </TouchableOpacity>
                         </>
                     ) : (
@@ -229,9 +223,8 @@ export default function Down() {
                                             color="#ffffff"
                                             borderWidth={4}
                                             thickness={8}
-                                            showsText={false}
                                             unfilledColor="rgba(255,255,255,0.2)"
-                                            animated={true}
+                                            animated
                                             direction="clockwise"
                                         />
                                         <View style={styles.timerOverlay}>
@@ -256,16 +249,6 @@ export default function Down() {
                                             </TouchableOpacity>
                                         )}
                                     </View>
-                                </>
-                            ) : done ? (
-                                <>
-                                    <Animated.Text style={[styles.time, { color: textColor, marginBottom: 20 }]}>
-                                        ✅ Fertig!
-                                    </Animated.Text>
-
-                                    <TouchableOpacity style={styles.startButton} onPress={reset}>
-                                        <Text style={styles.buttonText}>Neu starten</Text>
-                                    </TouchableOpacity>
                                 </>
                             ) : (
                                 <>
