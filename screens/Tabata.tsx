@@ -10,8 +10,7 @@ import {
     Animated,
     Easing,
 } from 'react-native';
-import { Buffer } from 'buffer';
-import { manager, SERVICE_UUID, CHAR_UUID } from '../ble';
+import { vibrate } from '../ble';
 import * as Progress from 'react-native-progress';
 import { styles, input } from '../styles';
 
@@ -20,35 +19,28 @@ const TOTAL_ROUNDS = 8;
 const WORK_MS      = 20_000;   // 20 s
 const REST_MS      = 10_000;   // 10 s
 
+const BUZZ_SHORT  = 1;
+const BUZZ_NORMAL = 3;
+const BUZZ_LONG   = 5;
+
 export default function Tabata() {
-    /* ----------------------------------------------------------------- */
-    /*                            State                                  */
-    /* ----------------------------------------------------------------- */
     const [preparationEnabled, setPreparationEnabled] = useState(true);
-
-    const [countdown, setCountdown]   = useState(10);
-    const [started, setStarted]       = useState(false);
-    const [running, setRunning]       = useState(false);
-    const [paused, setPaused]         = useState(false);
-    const [done, setDone]             = useState(false);
-
-    const [inRest, setInRest]         = useState(false);
-    const [remaining, setRemaining]   = useState(0);
+    const [countdown, setCountdown] = useState(10);
+    const [started, setStarted] = useState(false);
+    const [running, setRunning] = useState(false);
+    const [paused, setPaused] = useState(false);
+    const [done, setDone] = useState(false);
+    const [inRest, setInRest] = useState(false);
+    const [remaining, setRemaining] = useState(0);
     const [currentRound, setCurrentRound] = useState(1);
 
-    /* ----------------------------------------------------------------- */
-    /*                            Refs                                   */
-    /* ----------------------------------------------------------------- */
-    const intervalRef      = useRef<NodeJS.Timeout | null>(null);
-    const phaseStartRef    = useRef<number>(0);
-    const currentRoundRef  = useRef<number>(1);
-    const currentPhaseMS   = useRef(WORK_MS);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const phaseStartRef = useRef<number>(0);
+    const currentRoundRef = useRef<number>(1);
+    const currentPhaseMS = useRef(WORK_MS);
 
-    /* ----------------------------------------------------------------- */
-    /*                    Animierter Hintergrund                         */
-    /* ----------------------------------------------------------------- */
-    // 0 = idle, 1 = work, 2 = rest
     const phaseAnim = useRef(new Animated.Value(0)).current;
+    const [circleKey, setCircleKey] = useState(0);
 
     useEffect(() => {
         const val = running ? (inRest ? 2 : 1) : 0;
@@ -69,31 +61,11 @@ export default function Tabata() {
         outputRange: ['#000', '#fff', '#fff'],
     });
 
-    /* Progress-Circle Key zum Remounten (verhindert 1 → 0 Anim-Sprung) */
-    const [circleKey, setCircleKey] = useState(0);
-
-    /* ----------------------------------------------------------------- */
-    /*                       Hilfs­funktionen                            */
-    /* ----------------------------------------------------------------- */
-    const vibrate = async () => {
-        const devices = await manager.connectedDevices([SERVICE_UUID]);
-        if (!devices.length) return;
-        try {
-            await manager.writeCharacteristicWithoutResponseForDevice(
-                devices[0].id,
-                SERVICE_UUID,
-                CHAR_UUID,
-                Buffer.from([1]).toString('base64'),
-            );
-        } catch (e) {
-            console.error('❌ Vibrationsfehler:', e);
-        }
-    };
-
     const formatTime = (ms: number) => {
-        const totalSec   = Math.ceil(ms / 1_000);
-        const sec        = totalSec.toString().padStart(2, '0');
-        return `${sec}`;
+        const totalSec = Math.ceil(ms / 1000);
+        const min = Math.floor(totalSec / 60).toString().padStart(2, '0');
+        const sec = (totalSec % 60).toString().padStart(2, '0');
+        return `${min}:${sec}`;
     };
 
     const progress =
@@ -101,50 +73,51 @@ export default function Tabata() {
             ? 1 - Math.min(remaining / currentPhaseMS.current, 1)
             : 0;
 
-    /* ----------------------------------------------------------------- */
-    /*                         Timer-Logik                               */
-    /* ----------------------------------------------------------------- */
     const start = () => {
         Keyboard.dismiss();
         setStarted(true);
-        vibrate();
 
         if (preparationEnabled) {
             setCountdown(10);
             const prep = setInterval(() => {
                 setCountdown(c => {
-                    if (c === 1) {
+                    const next = c - 1;
+                    if (next > 0 && next <= 3) vibrate(BUZZ_SHORT);
+                    if (next === 0) {
                         clearInterval(prep);
-                        vibrate();
+                        vibrate(BUZZ_LONG);
                         beginTabata();
                     }
-                    return c - 1;
+                    return next;
                 });
-            }, 1_000);
+            }, 1000);
         } else {
+            vibrate(BUZZ_LONG);
             beginTabata();
         }
     };
 
     const beginTabata = () => {
         setRunning(true);
+        setPaused(false);
+        setDone(false);
         currentRoundRef.current = 1;
         setCurrentRound(1);
         startPhase('work');
     };
 
     const startPhase = (phase: 'work' | 'rest') => {
-        setCircleKey(k => k + 1);           // neuer Progress-Ring
+        setCircleKey(k => k + 1);
         currentPhaseMS.current = phase === 'work' ? WORK_MS : REST_MS;
-        phaseStartRef.current  = Date.now();
+        phaseStartRef.current = Date.now();
         setRemaining(currentPhaseMS.current);
         setInRest(phase === 'rest');
         setPaused(false);
-        vibrate();
+        vibrate(phase === 'work' ? BUZZ_NORMAL : BUZZ_NORMAL);
 
         intervalRef.current = setInterval(() => {
             const elapsed = Date.now() - phaseStartRef.current;
-            const left    = Math.max(currentPhaseMS.current - elapsed, 0);
+            const left = Math.max(currentPhaseMS.current - elapsed, 0);
             setRemaining(left);
 
             if (left <= 0) {
@@ -152,7 +125,7 @@ export default function Tabata() {
 
                 if (phase === 'work') {
                     if (currentRoundRef.current >= TOTAL_ROUNDS) {
-                        vibrate();
+                        vibrate(BUZZ_LONG);
                         setRunning(false);
                         setDone(true);
                     } else {
@@ -177,20 +150,22 @@ export default function Tabata() {
         setRunning(true);
         setPaused(false);
         phaseStartRef.current = Date.now() - (currentPhaseMS.current - remaining);
+
         intervalRef.current = setInterval(() => {
             const elapsed = Date.now() - phaseStartRef.current;
-            const left    = Math.max(currentPhaseMS.current - elapsed, 0);
+            const left = Math.max(currentPhaseMS.current - elapsed, 0);
             setRemaining(left);
+
             if (left <= 0) {
                 clearInterval(intervalRef.current!);
-                // gleiche Logik wie oben
+
                 if (inRest) {
                     currentRoundRef.current += 1;
                     setCurrentRound(currentRoundRef.current);
                     startPhase('work');
                 } else {
                     if (currentRoundRef.current >= TOTAL_ROUNDS) {
-                        vibrate();
+                        vibrate(BUZZ_LONG);
                         setRunning(false);
                         setDone(true);
                     } else {
@@ -215,41 +190,42 @@ export default function Tabata() {
         setCircleKey(k => k + 1);
     };
 
-    /* ----------------------------------------------------------------- */
-    /*                              UI                                   */
-    /* ----------------------------------------------------------------- */
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <Animated.View style={[styles.stopwatchContainer, { backgroundColor }]}>
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     {!started ? (
-                        /* --------------------- Setup ------------------------- */
                         <>
                             <Text style={[styles.h1, { marginBottom: 14 }]}>🧨 Tabata</Text>
                             <Text style={[styles.subLabel, { color: '#666', marginBottom: 24 }]}>
                                 20 s Work · 10 s Rest · 8 Runden
                             </Text>
-
                             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 30 }}>
                                 <Text style={[styles.subLabel, { color: '#666', marginRight: 10 }]}>
                                     10s Vorbereitung
                                 </Text>
                                 <Switch value={preparationEnabled} onValueChange={setPreparationEnabled} />
                             </View>
-
                             <TouchableOpacity style={styles.startButton} onPress={start}>
                                 <Text style={styles.buttonText}>Start</Text>
                             </TouchableOpacity>
                         </>
+                    ) : done ? (
+                        <>
+                            <Animated.Text style={[styles.time, { color: textColor, marginBottom: 20 }]}>
+                                ✅ Fertig!
+                            </Animated.Text>
+                            <TouchableOpacity style={styles.startButton} onPress={reset}>
+                                <Text style={styles.buttonText}>Neu starten</Text>
+                            </TouchableOpacity>
+                        </>
                     ) : (
-                        /* ---------------- Running / Paused / Done ------------ */
                         <>
                             {running || paused ? (
                                 <>
                                     <Text style={[styles.subLabel, { color: '#fff', marginBottom: 8 }]}>
                                         Runde {currentRound} von {TOTAL_ROUNDS} – {inRest ? 'Pause' : 'Work'}
                                     </Text>
-
                                     <View style={styles.progressContainer}>
                                         <Progress.Circle
                                             key={circleKey}
@@ -268,12 +244,10 @@ export default function Tabata() {
                                             </Animated.Text>
                                         </View>
                                     </View>
-
                                     <View style={{ flexDirection: 'row', marginTop: 30, gap: 20 }}>
                                         <TouchableOpacity style={styles.stopButton} onPress={reset}>
                                             <Text style={styles.buttonText}>Abbrechen</Text>
                                         </TouchableOpacity>
-
                                         {running ? (
                                             <TouchableOpacity style={styles.pauseButton} onPress={pause}>
                                                 <Text style={styles.buttonText}>Pause</Text>
@@ -285,18 +259,7 @@ export default function Tabata() {
                                         )}
                                     </View>
                                 </>
-                            ) : done ? (
-                                /* ---------------- Finished ------------------------ */
-                                <>
-                                    <Animated.Text style={[styles.time, { color: textColor, marginBottom: 20 }]}>
-                                        ✅ Fertig!
-                                    </Animated.Text>
-                                    <TouchableOpacity style={styles.startButton} onPress={reset}>
-                                        <Text style={styles.buttonText}>Neu starten</Text>
-                                    </TouchableOpacity>
-                                </>
                             ) : (
-                                /* ---------------- Preparation --------------------- */
                                 <>
                                     <Animated.Text style={[styles.time, { color: textColor }]}>
                                         {countdown}
