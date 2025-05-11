@@ -7,7 +7,7 @@ import {
 import { Buffer } from 'buffer';
 import * as Progress from 'react-native-progress';
 import { styles, input } from '../styles';
-import { manager, SERVICE_UUID, CHAR_UUID } from '../ble';
+import { manager, SERVICE_UUID, CHAR_UUID, enqueueVibration } from '../ble';
 
 /* Farbcodes */
 const WORK_COLOR  = '#007AFF'; // blau
@@ -69,14 +69,23 @@ export default function Interval() {
     });
 
     /* -------------------- Vibrate ------------------------ */
+
     const vibrate = async () => {
-        const dev = await manager.connectedDevices([SERVICE_UUID]);
-        if (!dev.length) return;
+        // 1) Prüfen, ob Gerät verbunden
+        const devs = await manager.connectedDevices([SERVICE_UUID]);
+        if (!devs.length) return;
+        const deviceId = devs[0].id;
+
+        // 2) Daten-Paket zusammenbauen
+        const data = Buffer.from([1]).toString('base64');
+
+        // 3) WICHTIG: hier warten wir auf das ACK!
         try {
-            await manager.writeCharacteristicWithoutResponseForDevice(
-                dev[0].id, SERVICE_UUID, CHAR_UUID, Buffer.from([1]).toString('base64'),
-            );
-        } catch { /* ignore */ }
+            await enqueueVibration(deviceId, data);
+            // console.log('Vibration vom Bangle quittiert – nächster Befehl kann los');
+        } catch (e) {
+            console.warn('Vibration fehlgeschlagen', e);
+        }
     };
 
     /* -------------------- Helfer ------------------------- */

@@ -4,7 +4,8 @@ import React, {
 } from 'react';
 import { Alert } from 'react-native';
 import { manager, getLastDevice, saveLastDevice, clearLastDevice } from './ble.ts';
-import type { Device, State } from 'react-native-ble-plx';
+import type {Device, State, Subscription} from 'react-native-ble-plx';
+import { reconnecting } from './ble.ts';
 
 interface BleContextValue {
     bleState: State | null;
@@ -23,6 +24,7 @@ export function BleProvider({ children }: { children: ReactNode }) {
     const [devices, setDevices] = useState<Device[]>([]);
     const [connected, setConnected] = useState<Device | null>(null);
     const [scanning, setScanning] = useState(false);
+    const [disconnectSub, setDisconnectSub] = useState<Subscription | null>(null);
 
     // StateChange-Listener
     useEffect(() => {
@@ -72,11 +74,32 @@ export function BleProvider({ children }: { children: ReactNode }) {
         setConnected(device);
         await saveLastDevice(device.id);
         device.onDisconnected(() => {
+            if (!reconnecting) {
+                Alert.alert('Verbindung verloren', 'Die Uhr wurde getrennt.');
+            }            setConnected(null);
+            clearLastDevice();
+        });
+        if (disconnectSub) {
+            disconnectSub.remove();
+            setDisconnectSub(null);
+        }
+        await device.discoverAllServicesAndCharacteristics();
+        setConnected(device);
+        await saveLastDevice(device.id);
+
+        // neuen onDisconnected listener anlegen – genau einer!
+        const sub = device.onDisconnected(() => {
+            // Listener direkt wieder entfernen, damit er nicht mehrfach feuert
+            sub.remove();
+            setDisconnectSub(null);
+
             Alert.alert('Verbindung verloren', 'Die Uhr wurde getrennt.');
             setConnected(null);
             clearLastDevice();
         });
+        setDisconnectSub(sub);
     };
+
 
     const connect = useCallback(async (device: Device) => {
         try {
