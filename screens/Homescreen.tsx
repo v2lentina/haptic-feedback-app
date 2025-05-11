@@ -1,19 +1,25 @@
+// screens/HomeScreen.tsx
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    View, Text, TouchableOpacity, FlatList, Alert, ActivityIndicator, ScrollView
+    View,
+    Text,
+    TouchableOpacity,
+    FlatList,
+    Alert,
+    ActivityIndicator,
+    ScrollView
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Buffer } from 'buffer';
-import { BleManager, Device, State } from 'react-native-ble-plx';
+import { Device, State } from 'react-native-ble-plx';
 import { styles } from '../styles';
 
-const SERVICE_UUID = "19b10001-e8f2-537e-4f6c-d104768a1214";
-const CHAR_UUID = "19b10002-e8f2-537e-4f6c-d104768a1214";
+// Globale BLE-Instanz und Konstanten
+import { manager, SERVICE_UUID, CHAR_UUID } from '../ble';
 
 type DeviceInfo = { id: string; name: string | null; };
 
 global.Buffer = global.Buffer || Buffer;
-const manager = new BleManager();
 
 export default function HomeScreen({ navigation }: any) {
     const [devices, setDevices] = useState<DeviceInfo[]>([]);
@@ -53,7 +59,11 @@ export default function HomeScreen({ navigation }: any) {
         manager.startDeviceScan([], { allowDuplicates: false }, (error, device) => {
             if (error || !device) return;
             if (device.serviceUUIDs?.includes(SERVICE_UUID)) {
-                setDevices((prev) => prev.some((d) => d.id === device.id) ? prev : [...prev, { id: device.id, name: device.name }]);
+                setDevices((prev) =>
+                    prev.some((d) => d.id === device.id)
+                        ? prev
+                        : [...prev, { id: device.id, name: device.name }]
+                );
             }
         });
         setTimeout(() => {
@@ -108,7 +118,9 @@ export default function HomeScreen({ navigation }: any) {
             <View style={styles.container}>
                 <View style={styles.connectionStatusRow}>
                     <View style={[styles.statusDot, { backgroundColor: connectionStatus.color }]} />
-                    <Text style={styles.statusLabel}>{connectionStatus.text}</Text>
+                    <Text style={styles.statusLabel}>
+                        {connectionStatus.text}
+                    </Text>
                 </View>
 
                 {!connected && (
@@ -128,14 +140,16 @@ export default function HomeScreen({ navigation }: any) {
                                     style={styles.deviceCard}
                                     onPress={() => connectToDevice(item.id)}
                                 >
-                                    <Text style={styles.deviceName}>{item.name ?? "Unbekanntes Gerät"}</Text>
+                                    <Text style={styles.deviceName}>
+                                        {item.name ?? "Unbekanntes Gerät"}
+                                    </Text>
                                     <Text style={styles.deviceHint}>Zum Verbinden tippen</Text>
                                 </TouchableOpacity>
                             )}
                             ListEmptyComponent={
-                                (!scanning && scanCompleted && devices.length === 0) ? (
-                                    <Text style={styles.hint}>Keine Geräte gefunden.</Text>
-                                ) : null
+                                !scanning && scanCompleted && devices.length === 0
+                                    ? <Text style={styles.hint}>Keine Geräte gefunden.</Text>
+                                    : null
                             }
                             scrollEnabled={false}
                             style={{ width: "100%", marginTop: 10 }}

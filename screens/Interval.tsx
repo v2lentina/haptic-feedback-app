@@ -5,13 +5,9 @@ import {
     TouchableWithoutFeedback, Animated, Easing, Keyboard,
 } from 'react-native';
 import { Buffer } from 'buffer';
-import { BleManager } from 'react-native-ble-plx';
 import * as Progress from 'react-native-progress';
 import { styles, input } from '../styles';
-
-const SERVICE_UUID = '19b10001-e8f2-537e-4f6c-d104768a1214';
-const CHAR_UUID    = '19b10002-e8f2-537e-4f6c-d104768a1214';
-const manager      = new BleManager();
+import { manager, SERVICE_UUID, CHAR_UUID } from '../ble';
 
 /* Farbcodes */
 const WORK_COLOR  = '#007AFF'; // blau
