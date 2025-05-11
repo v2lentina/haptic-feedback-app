@@ -1,7 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Animated, Easing, Keyboard, TouchableWithoutFeedback, Switch } from 'react-native';
-import { Buffer } from 'buffer';
-import { manager, SERVICE_UUID, CHAR_UUID } from '../ble';
+import { vibrate } from '../ble';
 import { styles, input } from '../styles';
 import * as Progress from 'react-native-progress';
 
@@ -22,6 +21,10 @@ export default function Up() {
 
     const backgroundAnim = useRef(new Animated.Value(0)).current;
 
+    const BUZZ_SHORT = 1;
+    const BUZZ_NORMAL = 3;
+    const BUZZ_LONG = 4;
+
     useEffect(() => {
         Animated.timing(backgroundAnim, {
             toValue: running ? 1 : 0,
@@ -41,41 +44,28 @@ export default function Up() {
         outputRange: ['#000000', '#ffffff'],
     });
 
-    const vibrate = async () => {
-        const devices = await manager.connectedDevices([SERVICE_UUID]);
-        if (!devices.length) return;
-        const connected = devices[0];
-        try {
-            await manager.writeCharacteristicWithoutResponseForDevice(
-                connected.id,
-                SERVICE_UUID,
-                CHAR_UUID,
-                Buffer.from([1]).toString("base64")
-            );
-        } catch (e) {
-            console.error("❌ Vibrationsfehler:", e);
-        }
-    };
-
     const startTimer = () => {
         Keyboard.dismiss();
         setStarted(true);
-
-        vibrate(); // immer vibrieren bei Start
 
         if (preparationEnabled) {
             setCountdown(10);
             const prepInterval = setInterval(() => {
                 setCountdown((c) => {
-                    if (c === 1) {
+                    const next = c - 1;
+                    if (next > 0 && next <= 3) {
+                        vibrate(BUZZ_SHORT);
+                    }
+                    if (next === 0) {
                         clearInterval(prepInterval);
-                        vibrate();
+                        vibrate(BUZZ_LONG);
                         beginCountUp();
                     }
-                    return c - 1;
+                    return next;
                 });
             }, 1000);
         } else {
+            vibrate(BUZZ_LONG);
             beginCountUp();
         }
     };
@@ -91,7 +81,7 @@ export default function Up() {
 
             if (elapsed + savedElapsedRef.current >= getTotalMillis()) {
                 clearInterval(intervalRef.current!);
-                vibrate();
+                vibrate(BUZZ_NORMAL);
                 setRunning(false);
                 setDone(true);
             }
@@ -107,6 +97,17 @@ export default function Up() {
 
     const resume = () => {
         setRunning(true);
+        setPaused(false);
+        const totalElapsed = getTotalMillis() - savedElapsedRef.current;
+
+        if (totalElapsed <= 0) {
+            vibrate(BUZZ_NORMAL);
+            setDone(true);
+            setRunning(false);
+            return;
+        }
+
+        setRunning(true);
         startTimeRef.current = Date.now();
 
         intervalRef.current = setInterval(() => {
@@ -115,7 +116,7 @@ export default function Up() {
 
             if (elapsed + savedElapsedRef.current >= getTotalMillis()) {
                 clearInterval(intervalRef.current!);
-                vibrate();
+                vibrate(BUZZ_NORMAL);
                 setRunning(false);
                 setDone(true);
             }
@@ -194,7 +195,17 @@ export default function Up() {
                         </>
                     ) : (
                         <>
-                            {running || paused ? (
+                            {done ? (
+                                <>
+                                    <Animated.Text style={[styles.time, { color: textColor, marginBottom: 20 }]}>
+                                        ✅ Fertig!
+                                    </Animated.Text>
+
+                                    <TouchableOpacity style={styles.startButton} onPress={reset}>
+                                        <Text style={styles.buttonText}>Neu starten</Text>
+                                    </TouchableOpacity>
+                                </>
+                            ) : running || paused ? (
                                 <>
                                     <View style={styles.progressContainer}>
                                         <Progress.Circle
@@ -230,16 +241,6 @@ export default function Up() {
                                             </TouchableOpacity>
                                         )}
                                     </View>
-                                </>
-                            ) : done ? (
-                                <>
-                                    <Animated.Text style={[styles.time, { color: textColor, marginBottom: 20 }]}>
-                                        ✅ Fertig!
-                                    </Animated.Text>
-
-                                    <TouchableOpacity style={styles.startButton} onPress={reset}>
-                                        <Text style={styles.buttonText}>Neu starten</Text>
-                                    </TouchableOpacity>
                                 </>
                             ) : (
                                 <>
