@@ -14,7 +14,7 @@ import {getLastDevice, vibrate, softReconnect} from '../ble';
 import * as Progress from 'react-native-progress';
 import { styles, input } from '../styles';
 
-export default function Down() {
+export default function Down({ navigation }: { navigation: any }) {
     const [countdown, setCountdown] = useState(10);
     const [remaining, setRemaining] = useState(0);
     const [started, setStarted] = useState(false);
@@ -36,6 +36,13 @@ export default function Down() {
     const [circleKey, setCircleKey] = useState(0);
 
     const backgroundAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('beforeRemove', () => {
+            reset();
+        });
+        return unsubscribe;
+    }, [navigation]);
 
     useEffect(() => {
         Animated.timing(backgroundAnim, {

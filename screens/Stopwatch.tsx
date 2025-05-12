@@ -6,13 +6,20 @@ import { vibrate } from '../ble';
 
 const BUZZ_NORMAL = 3;
 
-export default function StopwatchScreen() {
+export default function StopwatchScreen({ navigation }: { navigation: any }) {
     const [time, setTime] = useState(0);
     const [running, setRunning] = useState(false);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const startTimeRef = useRef<number>(0);
 
     const backgroundAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('beforeRemove', () => {
+            reset();
+        });
+        return unsubscribe;
+    }, [navigation]);
 
     useEffect(() => {
         Animated.timing(backgroundAnim, {

@@ -23,7 +23,7 @@ const BUZZ_SHORT  = 1;
 const BUZZ_NORMAL = 3;
 const BUZZ_LONG   = 5;
 
-export default function Tabata() {
+export default function Tabata({ navigation }: { navigation: any }) {
     const [preparationEnabled, setPreparationEnabled] = useState(true);
     const [countdown, setCountdown] = useState(10);
     const [started, setStarted] = useState(false);
@@ -41,6 +41,13 @@ export default function Tabata() {
 
     const phaseAnim = useRef(new Animated.Value(0)).current;
     const [circleKey, setCircleKey] = useState(0);
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('beforeRemove', () => {
+            reset();
+        });
+        return unsubscribe;
+    }, [navigation]);
 
     useEffect(() => {
         const val = running ? (inRest ? 2 : 1) : 0;

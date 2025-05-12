@@ -14,7 +14,7 @@ import {getLastDevice, vibrate, softReconnect} from '../ble';
 import * as Progress from 'react-native-progress';
 import { styles, input } from '../styles';
 
-export default function DownRd() {
+export default function DownRd({ navigation }: { navigation: any }) {
     const [roundCount, setRoundCount] = useState('5');
     const [roundMinutes, setRoundMinutes] = useState('0');
     const [roundSeconds, setRoundSeconds] = useState('10');
@@ -40,6 +40,13 @@ export default function DownRd() {
 
     const [circleKey, setCircleKey] = useState(0);
     const backgroundAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('beforeRemove', () => {
+            reset();
+        });
+        return unsubscribe;
+    }, [navigation]);
 
     useEffect(() => {
         Animated.timing(backgroundAnim, {

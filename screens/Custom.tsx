@@ -21,7 +21,7 @@ const BUZZ_NORMAL = 3;
 const BUZZ_LONG = 4;
 
 
-export default function Custom() {
+export default function Custom({ navigation }: { navigation: any }) {
     /* ---------- Eingabe ---------- */
     const [label, setLabel]   = useState('');
     const [min,   setMin]     = useState('0');
@@ -65,6 +65,13 @@ export default function Custom() {
         inputRange: [0, 1],
         outputRange: ['#000', '#fff'],
     });
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('beforeRemove', () => {
+            resetAllState();
+        });
+        return unsubscribe;
+    }, [navigation]);
 
     /* ---------- Persistenz ---------- */
     useEffect(() => {

@@ -19,7 +19,7 @@ const BUZZ_LONG = 4;
 
 type PhaseType = 'work' | 'rest';
 
-export default function Interval() {
+export default function Interval({ navigation }: { navigation: any }) {
     /* ---------------------- Eingabe ---------------------- */
     const [workMin, setWorkMin] = useState('0');
     const [workSec, setWorkSec] = useState('20');
@@ -51,6 +51,13 @@ export default function Interval() {
     /* ------------------- Hintergrund-Anim ---------------- */
     const bgAnim = useRef(new Animated.Value(0)).current; // 0 idle, 1 work, 2 rest
     const [circleKey, setCircleKey] = useState(0);
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('beforeRemove', () => {
+            reset();
+        });
+        return unsubscribe;
+    }, [navigation]);
 
     useEffect(() => {
         const val = running ? (inRest ? 2 : 1) : 0;

@@ -18,7 +18,7 @@ const BUZZ_SHORT = 1;
 const BUZZ_NORMAL = 3;
 const BUZZ_LONG = 5;
 
-export default function Amrap() {
+export default function Amrap ({ navigation }: { navigation: any }) {
     const [min, setMin] = useState('1');
     const [sec, setSec] = useState('0');
     const [prepEnabled, setPrepEnabled] = useState(true);
@@ -37,6 +37,13 @@ export default function Amrap() {
 
     const [circleKey, setCircleKey] = useState(0);
     const bg = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('beforeRemove', () => {
+            reset();
+        });
+        return unsubscribe;
+    }, [navigation]);
 
     useEffect(() => {
         Animated.timing(bg, {

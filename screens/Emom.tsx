@@ -18,7 +18,7 @@ const BUZZ_SHORT = 1;
 const BUZZ_NORMAL = 3;
 const BUZZ_LONG = 5;
 
-export default function Emom() {
+export default function Emom({ navigation }: { navigation: any }) {
     const [rounds, setRounds] = useState('10');
     const [prepEnabled, setPrepEnabled] = useState(true);
     const [countdown, setCountdown] = useState(10);
@@ -36,6 +36,13 @@ export default function Emom() {
     const [circleKey, setCircleKey] = useState(0);
 
     const bg = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('beforeRemove', () => {
+            reset();
+        });
+        return unsubscribe;
+    }, [navigation]);
 
     useEffect(() => {
         Animated.timing(bg, {

@@ -22,7 +22,7 @@ const levelData = [
     { level: 10, runs: 12, pace: 6300 },
 ];
 
-export default function Beeptest() {
+export default function Beeptest ({ navigation }: { navigation: any }) {
     /* ---------- State ---------- */
     const [level, setLevel]       = useState(1);
     const [runState, setRunState] = useState(1);           // UI-Run
@@ -50,6 +50,13 @@ export default function Beeptest() {
     /* ---------- Hintergrund-Anim ---------- */
     const bg = useRef(new Animated.Value(0)).current;      // 0 idle · 1 running
     const [circleKey, setCircleKey] = useState(0);
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('beforeRemove', () => {
+            stop();
+        });
+        return unsubscribe;
+    }, [navigation]);
 
     useEffect(() => {
         Animated.timing(bg, {

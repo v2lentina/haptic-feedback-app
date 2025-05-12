@@ -4,7 +4,7 @@ import {getLastDevice, vibrate, softReconnect} from '../ble';
 import { styles, input } from '../styles';
 import * as Progress from 'react-native-progress';
 
-export default function UpRd() {
+export default function UpRd({ navigation }: { navigation: any }) {
     const [roundCount, setRoundCount] = useState("5");
     const [countdown, setCountdown] = useState(10);
     const [started, setStarted] = useState(false);
@@ -30,6 +30,13 @@ export default function UpRd() {
     const BUZZ_SHORT = 1;
     const BUZZ_NORMAL = 3;
     const BUZZ_LONG = 5;
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('beforeRemove', () => {
+            reset();
+        });
+        return unsubscribe;
+    }, [navigation]);
 
     useEffect(() => {
         Animated.timing(backgroundAnim, {
