@@ -210,7 +210,7 @@ export default function F9Bad() {
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     {!started ? (
                         <>
-                            <Text style={[styles.h1, { marginBottom: 14 }]}>🥊 Fight Gone Bad</Text>
+                            <Text style={[styles.h1, { marginBottom: 14 }]}>Fight Gone Bad</Text>
                             <Text style={[styles.subLabel, { color: '#666', marginBottom: 24 }]}>
                                 5 min Work · 1 min Rest · 3 Runden
                             </Text>

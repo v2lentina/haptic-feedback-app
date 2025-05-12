@@ -196,7 +196,7 @@ export default function Tabata() {
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     {!started ? (
                         <>
-                            <Text style={[styles.h1, { marginBottom: 14 }]}>🧨 Tabata</Text>
+                            <Text style={[styles.h1, { marginBottom: 14 }]}>Tabata</Text>
                             <Text style={[styles.subLabel, { color: '#666', marginBottom: 24 }]}>
                                 20 s Work · 10 s Rest · 8 Runden
                             </Text>

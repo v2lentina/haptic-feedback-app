@@ -155,7 +155,7 @@ export default function Beeptest() {
                     {/* -------------- Setup -------------- */}
                     {!running && !done && (
                         <>
-                            <Text style={[styles.h1, { marginBottom: 6 }]}>🏃 Beep-Test</Text>
+                            <Text style={[styles.h1, { marginBottom: 6 }]}>Beep-Test</Text>
                             <Text style={[styles.subLabel, { color: '#666', marginBottom: 30, textAlign: 'center' }]}>
                                 20 m Shuttle-Run mit steigendem Tempo
                             </Text>
