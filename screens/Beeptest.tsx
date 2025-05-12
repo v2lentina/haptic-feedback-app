@@ -2,10 +2,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
     View, Text, TouchableOpacity,
-    TouchableWithoutFeedback, Animated, Easing, Keyboard,
+    TouchableWithoutFeedback, Animated, Easing, Keyboard, Switch,
 } from 'react-native';
-import { Buffer } from 'buffer';
-import { manager, SERVICE_UUID, CHAR_UUID } from '../ble';
+import { vibrate } from '../ble';
 import * as Progress from 'react-native-progress';
 import { styles } from '../styles';
 
@@ -38,6 +37,16 @@ export default function Beeptest() {
     const runRef         = useRef(1);                      // aktueller Run
     const runStartRef    = useRef<number>(0);
 
+    const [prepEnabled, setPrepEnabled] = useState(true);
+    const [countdown, setCountdown] = useState(10);
+    const [started, setStarted] = useState(false);
+
+    const BUZZ_SHORT = 1;
+    const BUZZ_NORMAl = 3;
+    const BUZZ_LONG = 5;
+
+    const stoppedRef = useRef(false);
+
     /* ---------- Hintergrund-Anim ---------- */
     const bg = useRef(new Animated.Value(0)).current;      // 0 idle · 1 running
     const [circleKey, setCircleKey] = useState(0);
@@ -60,20 +69,6 @@ export default function Beeptest() {
         outputRange: ['#000', '#fff'],
     });
 
-    /* ---------- Vibrate ---------- */
-    const vibrate = async (times = 1) => {
-        const dev = await manager.connectedDevices([SERVICE_UUID]);
-        if (!dev.length) return;
-        try {
-            for (let i = 0; i < times; i++) {
-                await manager.writeCharacteristicWithoutResponseForDevice(
-                    dev[0].id, SERVICE_UUID, CHAR_UUID, Buffer.from([1]).toString('base64'),
-                );
-                if (i < times - 1) await new Promise(r => setTimeout(r, 300));
-            }
-        } catch { /* silent */ }
-    };
-
     /* ---------- Helper ---------- */
     const fmt = (ms: number) => {
         const s  = Math.floor(ms / 1000).toString().padStart(2, '0');
@@ -84,6 +79,30 @@ export default function Beeptest() {
     /* ---------- Steuer-Logik ---------- */
     const start = () => {
         Keyboard.dismiss();
+        stoppedRef.current = false;
+        setStarted(true);
+
+        if (prepEnabled) {
+            setCountdown(10);
+            const prep = setInterval(() => {
+                setCountdown(c => {
+                    const next = c - 1;
+                    if (next === 3 || next === 2 || next === 1) vibrate(BUZZ_SHORT);
+                    if (next === 0) {
+                        clearInterval(prep);
+                        vibrate(BUZZ_LONG);
+                        doStart();
+                    }
+                    return next;
+                });
+            }, 1000);
+        } else {
+            vibrate(BUZZ_LONG);
+            doStart();
+        }
+    };
+
+    const doStart = () => {
         idxRef.current = 0;
         runRef.current = 1;
         setLevel(1);
@@ -94,32 +113,38 @@ export default function Beeptest() {
     };
 
     const nextRun = () => {
+        if (stoppedRef.current) return;
+
         const cur = levelData[idxRef.current];
 
-        /* Start eines Runs */
-        vibrate(1);
+        if (!(runRef.current === 1 && idxRef.current === 0)) {
+            vibrate(BUZZ_NORMAl);
+        }
+
         runStartRef.current = Date.now();
         setLeft(cur.pace);
-        setCircleKey(k => k + 1);           // Progress neu mounten
+        setCircleKey(k => k + 1);
 
-        /* Laufende Uhr */
         clearInterval(clockRef.current!);
         clockRef.current = setInterval(() => {
+            if (stoppedRef.current) {
+                clearInterval(clockRef.current!);
+                return;
+            }
             const left = Math.max(0, cur.pace - (Date.now() - runStartRef.current));
             setLeft(left);
         }, 50);
 
-        /* Timeout für Run-Ende */
         clearTimeout(timeoutRef.current!);
         timeoutRef.current = setTimeout(() => {
+            if (stoppedRef.current) return;
+
             if (runRef.current < cur.runs) {
-                /* gleicher Level – nächster Run */
                 runRef.current += 1;
                 setRunState(runRef.current);
                 nextRun();
             } else {
-                /* Levelwechsel */
-                vibrate(2);
+                vibrate(BUZZ_NORMAl);
                 if (idxRef.current >= levelData.length - 1) {
                     stop();
                     return;
@@ -135,11 +160,20 @@ export default function Beeptest() {
     };
 
     const stop = () => {
+        stoppedRef.current = true;
         clearTimeout(timeoutRef.current!);
         clearInterval(clockRef.current!);
         setCircleKey(k => k + 1);          // detach Progress → kein Anim-Crash
         setRunning(false);
         setDone(true);
+    };
+
+    const resetToStartScreen = () => {
+        setDone(false);
+        setStarted(false);
+        setRunning(false);
+        setRunState(1);
+        setLevel(1);
     };
 
     /* ---------- Progress ---------- */
@@ -152,23 +186,24 @@ export default function Beeptest() {
             <Animated.View style={[styles.stopwatchContainer, { backgroundColor }]}>
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
 
-                    {/* -------------- Setup -------------- */}
-                    {!running && !done && (
+                    {/* -------------- Setup (nicht gestartet) -------------- */}
+                    {!started && (
                         <>
-                            <Text style={[styles.h1, { marginBottom: 6 }]}>Beep-Test</Text>
-                            <Text style={[styles.subLabel, { color: '#666', marginBottom: 30, textAlign: 'center' }]}>
+                            <Text style={[styles.h1, { marginBottom: 6 }]}>🏃 Beep-Test</Text>
+                            <Text style={[styles.subLabel, { color: '#666', marginBottom: 20, textAlign: 'center' }]}>
                                 20 m Shuttle-Run mit steigendem Tempo
                             </Text>
+
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 30 }}>
+                                <Text style={[styles.subLabel, { color: '#666', marginRight: 10 }]}>10 s Vorbereitung</Text>
+                                <Switch value={prepEnabled} onValueChange={setPrepEnabled} />
+                            </View>
 
                             <TouchableOpacity style={styles.startButton} onPress={start}>
                                 <Text style={styles.buttonText}>Start</Text>
                             </TouchableOpacity>
 
-                            <Text
-                                style={[
-                                    styles.subLabel,
-                                    { color: '#666', marginTop: 24, fontSize: 13, textAlign: 'center' },
-                                ]}>
+                            <Text style={[styles.subLabel, { color: '#666', marginTop: 24, fontSize: 13, textAlign: 'center' }]}>
                                 Laufe 20 m hin- und her.{'\n'}
                                 <Text style={{ fontWeight: '600' }}>Wende beim Beep.</Text>{'\n'}
                                 Tempo steigt pro Level.
@@ -176,16 +211,26 @@ export default function Beeptest() {
                         </>
                     )}
 
+                    {/* -------------- Vorbereitung (nach Start, vor Running) -------------- */}
+                    {started && !running && !done && (
+                        <>
+                            <Animated.Text style={[styles.time, { color: textColor }]}>
+                                {countdown}
+                            </Animated.Text>
+                            <Text style={[styles.subLabel]}>Vorbereitung</Text>
+                        </>
+                    )}
+
                     {/* -------------- Ergebnis -------------- */}
                     {done && (
                         <>
                             <Animated.Text style={[styles.time, { color: textColor, marginBottom: 20 }]}>
-                                ✅ Beendet
+                                ✅ Fertig!
                             </Animated.Text>
                             <Text style={[styles.subLabel]}>
                                 Level {level} – Lauf {runState}
                             </Text>
-                            <TouchableOpacity style={styles.startButton} onPress={start}>
+                            <TouchableOpacity style={styles.startButton} onPress={resetToStartScreen}>
                                 <Text style={styles.buttonText}>Neu starten</Text>
                             </TouchableOpacity>
                         </>
@@ -198,7 +243,6 @@ export default function Beeptest() {
                                 Level {level} – Lauf {runState} / {levelData[idxRef.current].runs}
                             </Text>
 
-                            {/* Progress-Ring nur im Laufbetrieb */}
                             <View style={styles.progressContainer}>
                                 <Progress.Circle
                                     key={circleKey}

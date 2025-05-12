@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import * as Progress from 'react-native-progress';
 import { styles, input } from '../styles';
-import {vibrate} from '../ble';
+import {vibrate, getLastDevice, softReconnect} from '../ble';
 
 /* Farbcodes */
 const WORK_COLOR  = '#007AFF'; // blau
@@ -87,8 +87,18 @@ export default function Interval() {
 
     /* -------------------- Timer-Logik -------------------- */
     const runPhase = (phase: PhaseType, doBuzz = true) => {
-        if (doBuzz) vibrate(BUZZ_NORMAL);
-
+        if (doBuzz) {
+            const totalRounds = parseInt(rounds);
+            const isFinalRound = roundRef.current >= totalRounds;
+            if (phase === 'work' && isFinalRound) {
+                // kein runPhase('rest') mehr danach → letzte Phase
+                vibrate(BUZZ_LONG);
+            } else if (phase === 'work' && roundRef.current === 1) {
+                vibrate(BUZZ_LONG);
+            } else {
+                vibrate(BUZZ_NORMAL);
+            }
+        }
         curPhaseDur.current = getDuration(phase);
         setInRest(phase==='rest');
         setCircleKey(k=>k+1);
@@ -124,17 +134,23 @@ export default function Interval() {
 
     const begin = ()=>{ setRunning(true); runPhase('work', false); };
 
-    const start = ()=>{
-        if( parseInt(rounds)<=0 || getDuration('work')<=0 ) return;
+    const start = async () => {
+        if (parseInt(rounds) <= 0 || getDuration('work') <= 0) return;
 
         Keyboard.dismiss();
-        setStarted(true); setRunning(false); setPaused(false); setDone(false);
-        roundRef.current=1; setCurrentRound(1);
+        setStarted(true);
+        setRunning(false);
+        setPaused(false);
+        setDone(false);
+        roundRef.current = 1;
+        setCurrentRound(1);
 
-        if(prepEnabled){
+        if (prepEnabled) {
+            const lastId = await getLastDevice();
+            if (lastId) softReconnect(lastId);
             setCountdown(10);
-            prepRef.current = setInterval(()=>{
-                setCountdown(c=>{
+            prepRef.current = setInterval(() => {
+                setCountdown(c => {
                     const next = c - 1;
                     if (next > 0 && next <= 3) {
                         vibrate(BUZZ_SHORT);
@@ -146,8 +162,11 @@ export default function Interval() {
                     }
                     return next;
                 });
-            },1000);
-        }else{ vibrate(BUZZ_LONG); begin(); }
+            }, 1000);
+        } else {
+            vibrate(BUZZ_LONG);
+            begin();
+        }
     };
 
     const pause = ()=>{
@@ -184,7 +203,7 @@ export default function Interval() {
         setCountdown(10); setTimeValue(0); setInRest(false); roundRef.current=1; setCurrentRound(1);
     };
 
-    const finish=()=>{ setRunning(false); setDone(true); vibrate(BUZZ_NORMAL); };
+    const finish=()=>{ setRunning(false); setDone(true); vibrate(BUZZ_LONG); };
 
     /* ------------- Progress (0-1) ------------- */
     const prog = running||paused

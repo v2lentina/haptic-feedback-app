@@ -10,7 +10,7 @@ import {
     Keyboard,
     Switch,
 } from 'react-native';
-import { vibrate } from '../ble';
+import {getLastDevice, vibrate, softReconnect} from '../ble';
 import * as Progress from 'react-native-progress';
 import { styles, input } from '../styles';
 
@@ -60,11 +60,13 @@ export default function DownRd() {
         outputRange: ['#000', '#fff'],
     });
 
-    const start = () => {
+    const start = async () => {
         Keyboard.dismiss();
         setStarted(true);
 
         if (preparationEnabled) {
+            const lastId = await getLastDevice();
+            if (lastId) softReconnect(lastId);
             setCountdown(10);
             const prep = setInterval(() => {
                 setCountdown(c => {

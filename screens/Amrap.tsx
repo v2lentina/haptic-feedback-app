@@ -10,7 +10,7 @@ import {
     Animated,
     Easing,
 } from 'react-native';
-import { vibrate } from '../ble';
+import {getLastDevice, vibrate, softReconnect} from '../ble';
 import * as Progress from 'react-native-progress';
 import { styles, input } from '../styles';
 
@@ -90,12 +90,14 @@ export default function Amrap() {
         }, 50);
     };
 
-    const start = () => {
+    const start = async () => {
         Keyboard.dismiss();
         setStarted(true);
         setReps(0);
 
         if (prepEnabled) {
+            const lastId = await getLastDevice();
+            if (lastId) softReconnect(lastId);
             setCountdown(10);
             const prep = setInterval(() => {
                 setCountdown(c => {

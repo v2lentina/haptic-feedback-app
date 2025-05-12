@@ -6,8 +6,7 @@ import {
     Animated, Easing,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Buffer } from 'buffer';
-import { manager, SERVICE_UUID, CHAR_UUID } from '../ble';
+import {getLastDevice, vibrate, softReconnect} from '../ble';
 import * as Progress from 'react-native-progress';
 import { styles, input } from '../styles';
 
@@ -15,6 +14,12 @@ type Kind = 'work' | 'rest';
 type Phase = { label: string; duration: number; kind: Kind };
 
 const STORAGE_KEY = 'customTimer.phases';
+
+
+const BUZZ_SHORT = 1;
+const BUZZ_NORMAL = 3;
+const BUZZ_LONG = 4;
+
 
 export default function Custom() {
     /* ---------- Eingabe ---------- */
@@ -72,16 +77,6 @@ export default function Custom() {
         AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(phases));
     }, [phases]);
 
-    /* ---------- BLE-Vibration ---------- */
-    const vibrate = async () => {
-        const dev = await manager.connectedDevices([SERVICE_UUID]);
-        if (!dev.length) return;
-        try {
-            await manager.writeCharacteristicWithoutResponseForDevice(
-                dev[0].id, SERVICE_UUID, CHAR_UUID, Buffer.from([1]).toString('base64'),
-            );
-        } catch {/* ignore */}
-    };
 
     /* ---------- Helfer ---------- */
     const format = (s: number) => {
@@ -134,7 +129,7 @@ export default function Custom() {
     const runPhase = (idx:number) => {
         if (idx>=phases.length) { finish(); return; }
 
-        vibrate();
+        vibrate(BUZZ_NORMAL);
         const {duration, kind} = phases[idx];
         setBgColorTarget(kind==='work' ? '#007AFF' : '#FF9500');
         setCurrent(idx);
@@ -157,24 +152,36 @@ export default function Custom() {
 
     const begin = () => { setRunning(true); runPhase(0); };
 
-    const start = () => {
-        if(!phases.length) return;
+    const start = async () => {
+        if (!phases.length) return;
         Keyboard.dismiss();
-        setStarted(true); setRunning(false); setPaused(false); setDone(false);
-        vibrate();
+        setStarted(true);
+        setRunning(false);
+        setPaused(false);
+        setDone(false);
+        vibrate(BUZZ_NORMAL);
 
-        if(prepEnabled){
+        if (prepEnabled) {
+            const lastId = await getLastDevice();
+            if (lastId) softReconnect(lastId);
             setCountdown(10);
-            prepRef.current = setInterval(()=>{
-                setCountdown(c=>{
-                    if(c===1){
-                        clearInterval(prepRef.current!);
-                        vibrate(); begin();
+            prepRef.current = setInterval(() => {
+                setCountdown(c => {
+                    const next = c - 1;
+                    if (next > 0 && next <= 3) {
+                        vibrate(BUZZ_SHORT);
                     }
-                    return c-1;
+                    if (next === 0) {
+                        clearInterval(prepRef.current!);
+                        vibrate(BUZZ_LONG);
+                        begin();
+                    }
+                    return next;
                 });
-            },1000);
-        } else { begin(); }
+            }, 1000);
+        } else {
+            begin();
+        }
     };
 
     const pause = () => { clearInterval(tickRef.current!); setRunning(false); setPaused(true); };
@@ -192,7 +199,7 @@ export default function Custom() {
         setStarted(false); setRunning(false); setPaused(false); setDone(false);
         setCurrent(0); setLeft(0); setCountdown(10);
     };
-    const finish = () => { setRunning(false); setDone(true); vibrate(); };
+    const finish = () => { setRunning(false); setDone(true); vibrate(BUZZ_LONG); };
 
     const clearPhases = () => setPhases([]);
 

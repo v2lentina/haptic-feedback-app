@@ -10,7 +10,7 @@ import {
     TouchableWithoutFeedback,
     Switch,
 } from 'react-native';
-import { vibrate } from '../ble';
+import {getLastDevice, vibrate, softReconnect} from '../ble';
 import * as Progress from 'react-native-progress';
 import { styles, input } from '../styles';
 
@@ -22,7 +22,7 @@ export default function Down() {
     const [paused, setPaused] = useState(false);
     const [done, setDone] = useState(false);
     const [durationMin, setDurationMin] = useState("0");
-    const [durationSec, setDurationSec] = useState("10");
+    const [durationSec, setDurationSec] = useState("30");
     const [preparationEnabled, setPreparationEnabled] = useState(true);
 
     const BUZZ_SHORT = 1;
@@ -56,11 +56,13 @@ export default function Down() {
         outputRange: ['#000000', '#ffffff'],
     });
 
-    const start = () => {
+    const start = async () => {
         Keyboard.dismiss();
         setStarted(true);
 
         if (preparationEnabled) {
+            const lastId = await getLastDevice();
+            if (lastId) softReconnect(lastId);
             setCountdown(10);
             const prep = setInterval(() => {
                 setCountdown(c => {

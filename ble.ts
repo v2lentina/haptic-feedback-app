@@ -13,7 +13,7 @@ export async function getLastDevice()   { return AsyncStorage.getItem(LAST_DEVIC
 export async function saveLastDevice(id: string) { return AsyncStorage.setItem(LAST_DEVICE_KEY, id); }
 export async function clearLastDevice() { return AsyncStorage.removeItem(LAST_DEVICE_KEY); }
 export let reconnecting = false;
-async function softReconnect(deviceId: string) {
+export async function softReconnect(deviceId: string) {
     if (reconnecting) return;
     reconnecting = true;
     try {

@@ -10,7 +10,7 @@ import {
     Animated,
     Easing,
 } from 'react-native';
-import { vibrate } from '../ble';
+import {getLastDevice, softReconnect, vibrate} from '../ble';
 import * as Progress from 'react-native-progress';
 import { styles, input } from '../styles';
 
@@ -73,11 +73,13 @@ export default function Tabata() {
             ? 1 - Math.min(remaining / currentPhaseMS.current, 1)
             : 0;
 
-    const start = () => {
+    const start = async () => {
         Keyboard.dismiss();
         setStarted(true);
 
         if (preparationEnabled) {
+            const lastId = await getLastDevice();
+            if (lastId) softReconnect(lastId);
             setCountdown(10);
             const prep = setInterval(() => {
                 setCountdown(c => {

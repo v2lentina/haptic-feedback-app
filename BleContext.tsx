@@ -2,7 +2,6 @@
 import React, {
     createContext, useContext, useEffect, useState, useCallback, ReactNode,
 } from 'react';
-import { Alert } from 'react-native';
 import { manager, getLastDevice, saveLastDevice, clearLastDevice } from './ble.ts';
 import type {Device, State, Subscription} from 'react-native-ble-plx';
 import { reconnecting } from './ble.ts';
@@ -75,7 +74,7 @@ export function BleProvider({ children }: { children: ReactNode }) {
         await saveLastDevice(device.id);
         device.onDisconnected(() => {
             if (!reconnecting) {
-                Alert.alert('Verbindung verloren', 'Die Uhr wurde getrennt.');
+                //Alert.alert('Verbindung verloren', 'Die Uhr wurde getrennt.');
             }            setConnected(null);
             clearLastDevice();
         });
@@ -93,7 +92,7 @@ export function BleProvider({ children }: { children: ReactNode }) {
             sub.remove();
             setDisconnectSub(null);
 
-            Alert.alert('Verbindung verloren', 'Die Uhr wurde getrennt.');
+            //Alert.alert('Verbindung verloren', 'Die Uhr wurde getrennt.');
             setConnected(null);
             clearLastDevice();
         });

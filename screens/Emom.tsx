@@ -10,7 +10,7 @@ import {
     Easing,
     Keyboard,
 } from 'react-native';
-import { vibrate } from '../ble';
+import {getLastDevice, softReconnect, vibrate} from '../ble';
 import * as Progress from 'react-native-progress';
 import { styles, input } from '../styles';
 
@@ -97,7 +97,7 @@ export default function Emom() {
         startMinute(total);
     };
 
-    const start = () => {
+    const start = async () => {
         const total = parseInt(rounds);
         if (!total || total < 1) return;
 
@@ -105,6 +105,8 @@ export default function Emom() {
         setStarted(true);
 
         if (prepEnabled) {
+            const lastId = await getLastDevice();
+            if (lastId) softReconnect(lastId);
             setCountdown(10);
             const prep = setInterval(() => {
                 setCountdown(c => {

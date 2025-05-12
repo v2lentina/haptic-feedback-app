@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Animated, Easing, Keyboard, TouchableWithoutFeedback, Switch } from 'react-native';
-import { vibrate } from '../ble';
+import {getLastDevice, vibrate, softReconnect} from '../ble';
 import { styles, input } from '../styles';
 import * as Progress from 'react-native-progress';
 
@@ -12,7 +12,7 @@ export default function Up() {
     const [paused, setPaused] = useState(false);
     const [done, setDone] = useState(false);
     const [durationMin, setDurationMin] = useState("0");
-    const [durationSec, setDurationSec] = useState("10");
+    const [durationSec, setDurationSec] = useState("30");
     const [preparationEnabled, setPreparationEnabled] = useState(true);
 
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -44,11 +44,13 @@ export default function Up() {
         outputRange: ['#000000', '#ffffff'],
     });
 
-    const startTimer = () => {
+    const startTimer = async () => {
         Keyboard.dismiss();
         setStarted(true);
 
         if (preparationEnabled) {
+            const lastId = await getLastDevice();
+            if (lastId) softReconnect(lastId);
             setCountdown(10);
             const prepInterval = setInterval(() => {
                 setCountdown((c) => {
@@ -81,7 +83,7 @@ export default function Up() {
 
             if (elapsed + savedElapsedRef.current >= getTotalMillis()) {
                 clearInterval(intervalRef.current!);
-                vibrate(BUZZ_NORMAL);
+                vibrate(BUZZ_LONG);
                 setRunning(false);
                 setDone(true);
             }
@@ -101,7 +103,7 @@ export default function Up() {
         const totalElapsed = getTotalMillis() - savedElapsedRef.current;
 
         if (totalElapsed <= 0) {
-            vibrate(BUZZ_NORMAL);
+            vibrate(BUZZ_LONG);
             setDone(true);
             setRunning(false);
             return;
