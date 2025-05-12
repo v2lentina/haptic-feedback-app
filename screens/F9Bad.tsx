@@ -117,9 +117,6 @@ export default function F9Bad({ navigation }: { navigation: any }) {
 
     const startPhase = (phase: 'work' | 'rest') => {
         if (minuteRef.current) clearInterval(minuteRef.current);
-        if (phase === 'work') {
-            minuteRef.current = setInterval(() => vibrate(BUZZ_NORMAL), 60_000);
-        }
 
         setCircleKey(k => k + 1);
         currentPhaseMS.current = phase === 'work' ? WORK_MS : REST_MS;
@@ -168,9 +165,7 @@ export default function F9Bad({ navigation }: { navigation: any }) {
         setPaused(false);
         phaseStartRef.current = Date.now() - (currentPhaseMS.current - remaining);
 
-        if (!inRest) {
-            minuteRef.current = setInterval(() => vibrate(BUZZ_NORMAL), 60_000);
-        }
+
 
         intervalRef.current = setInterval(() => {
             const elapsed = Date.now() - phaseStartRef.current;

@@ -87,8 +87,9 @@ export default function Custom({ navigation }: { navigation: any }) {
 
     /* ---------- Helfer ---------- */
     const format = (s: number) => {
-        const m = Math.floor(s / 60).toString().padStart(2,'0');
-        const ss= (s%60).toString().padStart(2,'0');
+        const total = Math.ceil(s); // oder Math.floor(s) für exakt abgelaufene Zeit
+        const m = Math.floor(total / 60).toString().padStart(2, '0');
+        const ss = (total % 60).toString().padStart(2, '0');
         return `${m}:${ss}`;
     };
 
@@ -145,16 +146,16 @@ export default function Custom({ navigation }: { navigation: any }) {
         setCircleKey(k=>k+1);
 
         clearInterval(tickRef.current!);
-        tickRef.current = setInterval(()=>{
-            setLeft(t=>{
-                if(t<=1){
+        tickRef.current = setInterval(() => {
+            setLeft(t => {
+                if (t <= 0.05) {
                     clearInterval(tickRef.current!);
-                    setTimeout(()=>runPhase(idx+1),0);
+                    setTimeout(() => runPhase(idx + 1), 0);
                     return 0;
                 }
-                return t-1;
+                return t - 0.05;
             });
-        },1000);
+        }, 50);
     };
 
     const begin = () => { setRunning(true); runPhase(0); };
@@ -328,9 +329,18 @@ export default function Custom({ navigation }: { navigation: any }) {
                                     </Text>
 
                                     <View style={styles.progressContainer}>
-                                        <Progress.Circle key={circleKey} size={250} progress={progress}
-                                                         color="#fff" borderWidth={4} thickness={8}
-                                                         unfilledColor="rgba(255,255,255,0.2)" animated direction="clockwise"/>
+                                        <Progress.Circle
+                                            key={circleKey}
+                                            size={250}
+                                            progress={progress}
+                                            color="#ffffff"
+                                            borderWidth={4}
+                                            thickness={8}
+                                            showsText={false}
+                                            unfilledColor="rgba(255,255,255,0.2)"
+                                            animated={true}
+                                            direction="clockwise"
+                                        />
                                         <View style={styles.timerOverlay}>
                                             <Animated.Text style={[styles.time,{color:textColor}]}>
                                                 {format(timeLeft)}

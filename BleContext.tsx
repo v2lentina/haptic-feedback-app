@@ -2,7 +2,7 @@
 import React, {
     createContext, useContext, useEffect, useState, useCallback, ReactNode,
 } from 'react';
-import { manager, getLastDevice, saveLastDevice, clearLastDevice } from './ble.ts';
+import { manager, getLastDevice, saveLastDevice, clearLastDevice, SERVICE_UUID } from './ble.ts';
 import type {Device, State, Subscription} from 'react-native-ble-plx';
 import { reconnecting } from './ble.ts';
 
@@ -42,6 +42,22 @@ export function BleProvider({ children }: { children: ReactNode }) {
         }, true);
         return () => sub.remove();
     }, []);
+
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            const current = await manager.connectedDevices([SERVICE_UUID]);
+            if (current.length > 0) {
+                if (!connected || connected.id !== current[0].id) {
+                    setConnected(current[0]);
+                    await saveLastDevice(current[0].id);
+                }
+            } else if (connected) {
+                setConnected(null);
+                await clearLastDevice();
+            }
+        }, 2000);
+        return () => clearInterval(interval);
+    }, [connected]);
 
     // Scan
     const scanForDevices = useCallback(() => {
@@ -133,6 +149,3 @@ export function useBle() {
     if (!ctx) throw new Error('useBle must be used inside BleProvider');
     return ctx;
 }
-
-// Vergiss nicht SERVICE_UUID / CHAR_UUID zu importieren
-const SERVICE_UUID = '19b10001-e8f2-537e-4f6c-d104768a1214';

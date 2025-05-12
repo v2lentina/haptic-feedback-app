@@ -78,9 +78,10 @@ export default function Beeptest ({ navigation }: { navigation: any }) {
 
     /* ---------- Helper ---------- */
     const fmt = (ms: number) => {
-        const s  = Math.floor(ms / 1000).toString().padStart(2, '0');
-        const hs = Math.floor((ms % 1000) / 10).toString().padStart(2, '0');
-        return `${s}.${hs}`;
+        const totalSec = Math.ceil(ms / 1000);
+        const min = Math.floor(totalSec / 60).toString().padStart(2, '0');
+        const sec = (totalSec % 60).toString().padStart(2, '0');
+        return `${min}:${sec}`;
     };
 
     /* ---------- Steuer-Logik ---------- */

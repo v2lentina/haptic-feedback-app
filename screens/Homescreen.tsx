@@ -1,111 +1,26 @@
-// screens/HomeScreen.tsx
-import React, { useCallback, useEffect, useState } from 'react';
+import React from 'react';
 import {
     View,
     Text,
     TouchableOpacity,
     FlatList,
-    Alert,
     ActivityIndicator,
-    ScrollView
+    ScrollView,
+    Alert,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Buffer } from 'buffer';
-import { Device, State } from 'react-native-ble-plx';
 import { styles } from '../styles';
-
-// Globale BLE-Instanz und Konstanten
-import { manager, SERVICE_UUID, CHAR_UUID } from '../ble';
-
-type DeviceInfo = { id: string; name: string | null; };
-
-global.Buffer = global.Buffer || Buffer;
+import { useBle } from '../BleContext';
 
 export default function HomeScreen({ navigation }: any) {
-    const [devices, setDevices] = useState<DeviceInfo[]>([]);
-    const [connected, setConnected] = useState<Device | null>(null);
-    const [scanning, setScanning] = useState(false);
-    const [bleState, setBleState] = useState<State | null>(null);
-    const [buzzing, setBuzzing] = useState(false);
-    const [buzzInterval, setBuzzInterval] = useState<NodeJS.Timeout | null>(null);
-    const [scanCompleted, setScanCompleted] = useState(false);
-
-    useEffect(() => {
-        const sub = manager.onStateChange((state) => {
-            setBleState(state);
-            if (state === "PoweredOn") reconnectLastKnown();
-        }, true);
-        return () => sub.remove();
-    }, []);
-
-    const reconnectLastKnown = useCallback(async () => {
-        try {
-            const already = await manager.connectedDevices([SERVICE_UUID]);
-            if (already.length) {
-                return handleConnectedDevice(already[0]);
-            }
-            const lastId = await AsyncStorage.getItem("lastDeviceId");
-            if (lastId) await connectToDevice(lastId);
-        } catch (e) {
-            console.warn("Reconnect-Fehler:", e);
-        }
-    }, []);
-
-    const scanForDevices = () => {
-        if (bleState !== "PoweredOn") return;
-        setScanCompleted(false);
-        setScanning(true);
-        setDevices([]);
-        manager.startDeviceScan([], { allowDuplicates: false }, (error, device) => {
-            if (error || !device) return;
-            if (device.serviceUUIDs?.includes(SERVICE_UUID)) {
-                setDevices((prev) =>
-                    prev.some((d) => d.id === device.id)
-                        ? prev
-                        : [...prev, { id: device.id, name: device.name }]
-                );
-            }
-        });
-        setTimeout(() => {
-            manager.stopDeviceScan();
-            setScanning(false);
-            setScanCompleted(true);
-        }, 6000);
-    };
-
-    const connectToDevice = async (id: string) => {
-        try {
-            const device = await manager.connectToDevice(id, { timeout: 8000 });
-            await handleConnectedDevice(device);
-        } catch (e) {
-            console.error("Verbindungsfehler:", e);
-        }
-    };
-
-    const handleConnectedDevice = async (device: Device) => {
-        await device.discoverAllServicesAndCharacteristics();
-        await AsyncStorage.setItem("lastDeviceId", device.id);
-        setConnected(device);
-        const sub = device.onDisconnected(() => {
-            cleanup();
-            Alert.alert("Verbindung verloren", "Die Verbindung zur Uhr wurde unterbrochen.");
-            sub.remove();
-        });
-    };
-
-    const cleanup = async () => {
-        if (connected) {
-            try { await connected.cancelConnection(); } catch {}
-        }
-        if (buzzInterval) {
-            clearInterval(buzzInterval);
-            setBuzzInterval(null);
-        }
-        setBuzzing(false);
-        setConnected(null);
-        setDevices([]);
-        await AsyncStorage.removeItem("lastDeviceId");
-    };
+    const {
+        connected,
+        bleState,
+        devices,
+        scanning,
+        scanForDevices,
+        connect,
+        disconnect,
+    } = useBle();
 
     const connectionStatus = connected
         ? { color: '#34C759', text: `Verbunden mit ${connected.name ?? "Gerät"}` }
@@ -138,7 +53,7 @@ export default function HomeScreen({ navigation }: any) {
                             renderItem={({ item }) => (
                                 <TouchableOpacity
                                     style={styles.deviceCard}
-                                    onPress={() => connectToDevice(item.id)}
+                                    onPress={() => connect(item)}
                                 >
                                     <Text style={styles.deviceName}>
                                         {item.name ?? "Unbekanntes Gerät"}
@@ -147,7 +62,7 @@ export default function HomeScreen({ navigation }: any) {
                                 </TouchableOpacity>
                             )}
                             ListEmptyComponent={
-                                !scanning && scanCompleted && devices.length === 0
+                                !scanning && devices.length === 0
                                     ? <Text style={styles.hint}>Keine Geräte gefunden.</Text>
                                     : null
                             }
@@ -167,7 +82,7 @@ export default function HomeScreen({ navigation }: any) {
                                     "Möchtest du die Verbindung wirklich trennen?",
                                     [
                                         { text: "Abbrechen", style: "cancel" },
-                                        { text: "Trennen", style: "destructive", onPress: cleanup }
+                                        { text: "Trennen", style: "destructive", onPress: disconnect }
                                     ]
                                 );
                             }}

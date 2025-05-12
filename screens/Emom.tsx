@@ -37,6 +37,9 @@ export default function Emom({ navigation }: { navigation: any }) {
 
     const bg = useRef(new Animated.Value(0)).current;
 
+    const [exerciseDone, setExerciseDone] = useState(false);
+    const [recordedTime, setRecordedTime] = useState('');
+
     useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', () => {
             reset();
@@ -45,17 +48,27 @@ export default function Emom({ navigation }: { navigation: any }) {
     }, [navigation]);
 
     useEffect(() => {
+        let toValue = 0; // Weiß bei Pause oder Default
+
+        if (paused) {
+            toValue = 0; // Immer weiß, wenn pausiert
+        } else if (exerciseDone) {
+            toValue = 2; // Orange nur wenn aktiv und nicht pausiert
+        } else if (running) {
+            toValue = 1; // Blau nur wenn aktiv und nicht paused/done
+        }
+
         Animated.timing(bg, {
-            toValue: running ? 1 : 0,
+            toValue,
             duration: 500,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: false,
         }).start();
-    }, [running]);
+    }, [running, exerciseDone, paused]);
 
     const backgroundColor = bg.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['#f5f5f5', '#007AFF'],
+        inputRange: [0, 1, 2],
+        outputRange: ['#f5f5f5', '#007AFF', '#FF9500'],
     });
 
     const textColor = bg.interpolate({
@@ -77,6 +90,8 @@ export default function Emom({ navigation }: { navigation: any }) {
         if (roundRef.current > 1) {
             vibrate(BUZZ_NORMAL);
         }
+        setExerciseDone(false);
+        setRecordedTime('');
         startRef.current = Date.now();
         setElapsed(0);
         tickMinute();
@@ -172,6 +187,15 @@ export default function Emom({ navigation }: { navigation: any }) {
         setElapsed(0);
         setCountdown(10);
         setCircleKey(k => k + 1);
+        setExerciseDone(false);
+        setRecordedTime('');
+    };
+
+    const markExerciseDone = () => {
+        if (exerciseDone) return;
+        vibrate(BUZZ_LONG);
+        setRecordedTime(timeStr(elapsed));
+        setExerciseDone(true);
     };
 
     const timeStr = (ms: number) => `00:${Math.floor(ms / 1000).toString().padStart(2, '0')}`;
@@ -226,6 +250,16 @@ export default function Emom({ navigation }: { navigation: any }) {
                                     </Animated.Text>
                                 </View>
                             </View>
+
+                            <TouchableOpacity   style={[{ backgroundColor: '#4CD964', padding: 15, borderRadius: 30, marginBottom: 20, opacity: exerciseDone ? 0.5 : 1}]} onPress={markExerciseDone}>
+                                <Text style={styles.buttonText}>Übung done</Text>
+                            </TouchableOpacity>
+
+                            {exerciseDone && (
+                                <Text style={[styles.subLabel, { color: '#fff', marginBottom: 10 }]}>
+                                    Zeit gebraucht: {recordedTime}
+                                </Text>
+                            )}
 
                             <View style={{ flexDirection: 'row', marginTop: 30, gap: 20 }}>
                                 <TouchableOpacity style={styles.stopButton} onPress={reset}>
