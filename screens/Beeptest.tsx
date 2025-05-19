@@ -1,4 +1,3 @@
-// Beeptest.tsx --------------------------------------------------------------
 import React, { useState, useRef, useEffect } from 'react';
 import {
     View, Text, TouchableOpacity,
@@ -8,7 +7,6 @@ import { vibrate } from '../ble';
 import * as Progress from 'react-native-progress';
 import { styles } from '../styles';
 
-/* ------- Level-Tabelle (m/s → Pace in ms) ----------------------------- */
 const levelData = [
     { level: 1,  runs: 7,  pace: 9000 },
     { level: 2,  runs: 8,  pace: 8700 },
@@ -23,18 +21,16 @@ const levelData = [
 ];
 
 export default function Beeptest ({ navigation }: { navigation: any }) {
-    /* ---------- State ---------- */
     const [level, setLevel]       = useState(1);
-    const [runState, setRunState] = useState(1);           // UI-Run
+    const [runState, setRunState] = useState(1);
     const [running, setRunning]   = useState(false);
     const [done, setDone]         = useState(false);
-    const [timeLeft, setLeft]     = useState(0);           // ms
+    const [timeLeft, setLeft]     = useState(0);
 
-    /* ---------- Refs ----------- */
     const timeoutRef     = useRef<NodeJS.Timeout|null>(null);
     const clockRef       = useRef<NodeJS.Timeout|null>(null);
-    const idxRef         = useRef(0);                      // Level-Index
-    const runRef         = useRef(1);                      // aktueller Run
+    const idxRef         = useRef(0);
+    const runRef         = useRef(1);
     const runStartRef    = useRef<number>(0);
 
     const [prepEnabled, setPrepEnabled] = useState(true);
@@ -47,8 +43,7 @@ export default function Beeptest ({ navigation }: { navigation: any }) {
 
     const stoppedRef = useRef(false);
 
-    /* ---------- Hintergrund-Anim ---------- */
-    const bg = useRef(new Animated.Value(0)).current;      // 0 idle · 1 running
+    const bg = useRef(new Animated.Value(0)).current;
     const [circleKey, setCircleKey] = useState(0);
 
     useEffect(() => {
@@ -76,7 +71,6 @@ export default function Beeptest ({ navigation }: { navigation: any }) {
         outputRange: ['#000', '#fff'],
     });
 
-    /* ---------- Helper ---------- */
     const fmt = (ms: number) => {
         const totalSec = Math.ceil(ms / 1000);
         const min = Math.floor(totalSec / 60).toString().padStart(2, '0');
@@ -84,7 +78,6 @@ export default function Beeptest ({ navigation }: { navigation: any }) {
         return `${min}:${sec}`;
     };
 
-    /* ---------- Steuer-Logik ---------- */
     const start = () => {
         Keyboard.dismiss();
         stoppedRef.current = false;
@@ -171,7 +164,7 @@ export default function Beeptest ({ navigation }: { navigation: any }) {
         stoppedRef.current = true;
         clearTimeout(timeoutRef.current!);
         clearInterval(clockRef.current!);
-        setCircleKey(k => k + 1);          // detach Progress → kein Anim-Crash
+        setCircleKey(k => k + 1);
         setRunning(false);
         setDone(true);
     };
@@ -184,17 +177,14 @@ export default function Beeptest ({ navigation }: { navigation: any }) {
         setLevel(1);
     };
 
-    /* ---------- Progress ---------- */
     const pace = running ? levelData[idxRef.current].pace : 1;
     const progress = running ? 1 - timeLeft / pace : 0;
 
-    /* =========================== UI =========================== */
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <Animated.View style={[styles.stopwatchContainer, { backgroundColor }]}>
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
 
-                    {/* -------------- Setup (nicht gestartet) -------------- */}
                     {!started && (
                         <>
                             <Text style={[styles.h1, { marginBottom: 6 }]}>🏃 Beep-Test</Text>
@@ -219,7 +209,6 @@ export default function Beeptest ({ navigation }: { navigation: any }) {
                         </>
                     )}
 
-                    {/* -------------- Vorbereitung (nach Start, vor Running) -------------- */}
                     {started && !running && !done && (
                         <>
                             <Animated.Text style={[styles.time, { color: textColor }]}>
@@ -229,7 +218,6 @@ export default function Beeptest ({ navigation }: { navigation: any }) {
                         </>
                     )}
 
-                    {/* -------------- Ergebnis -------------- */}
                     {done && (
                         <>
                             <Animated.Text style={[styles.time, { color: textColor, marginBottom: 20 }]}>
@@ -244,7 +232,6 @@ export default function Beeptest ({ navigation }: { navigation: any }) {
                         </>
                     )}
 
-                    {/* -------------- Laufender Test -------------- */}
                     {running && (
                         <>
                             <Text style={[styles.subLabel, { color: '#fff', marginBottom: 8 }]}>

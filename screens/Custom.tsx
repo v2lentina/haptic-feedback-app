@@ -1,4 +1,3 @@
-// Custom.tsx – komplette, funktionsfähige Fassung
 import React, { useState, useRef, useEffect } from 'react';
 import {
     View, Text, TextInput, FlatList, Switch,
@@ -22,17 +21,15 @@ const BUZZ_LONG = 4;
 
 
 export default function Custom({ navigation }: { navigation: any }) {
-    /* ---------- Eingabe ---------- */
     const [label, setLabel]   = useState('');
     const [min,   setMin]     = useState('0');
     const [sec,   setSec]     = useState('30');
-    const [kind,  setKind]    = useState<Kind>('work');        // neuer Toggle
+    const [kind,  setKind]    = useState<Kind>('work');
     const [editIdx, setEditIdx] = useState<number | null>(null);
 
     const [phases, setPhases] = useState<Phase[]>([]);
     const [prepEnabled, setPrepEnabled] = useState(true);
 
-    /* ---------- Timer ---------- */
     const [started, setStarted] = useState(false);
     const [running, setRunning] = useState(false);
     const [paused,  setPaused]  = useState(false);
@@ -43,10 +40,9 @@ export default function Custom({ navigation }: { navigation: any }) {
     const [timeLeft,  setLeft]      = useState(0);
     const [phaseDur,  setPhaseDur]  = useState(1);
 
-    /* ---------- Animation ---------- */
     const [circleKey, setCircleKey] = useState(0);
     const bg = useRef(new Animated.Value(0)).current;
-    const [bgColorTarget, setBgColorTarget] = useState('#007AFF');   // work = blau, rest = grün
+    const [bgColorTarget, setBgColorTarget] = useState('#007AFF');
 
     useEffect(() => {
         Animated.timing(bg, {
@@ -73,7 +69,6 @@ export default function Custom({ navigation }: { navigation: any }) {
         return unsubscribe;
     }, [navigation]);
 
-    /* ---------- Persistenz ---------- */
     useEffect(() => {
         AsyncStorage.getItem(STORAGE_KEY).then(json => {
             if (json) setPhases(JSON.parse(json));
@@ -85,15 +80,13 @@ export default function Custom({ navigation }: { navigation: any }) {
     }, [phases]);
 
 
-    /* ---------- Helfer ---------- */
     const format = (s: number) => {
-        const total = Math.ceil(s); // oder Math.floor(s) für exakt abgelaufene Zeit
+        const total = Math.ceil(s);
         const m = Math.floor(total / 60).toString().padStart(2, '0');
         const ss = (total % 60).toString().padStart(2, '0');
         return `${m}:${ss}`;
     };
 
-    /* ---------- Phase speichern / bearbeiten ---------- */
     const addOrUpdatePhase = () => {
         const m = parseInt(min)||0, s=parseInt(sec)||0, total = m*60+s;
         if (total<=0) return;
@@ -110,7 +103,6 @@ export default function Custom({ navigation }: { navigation: any }) {
                 : p.map((ph,i)=> i===editIdx ? data : ph)
         );
 
-        // Felder zurücksetzen
         setLabel('');
         setMin('0');
         setSec('30');
@@ -130,7 +122,6 @@ export default function Custom({ navigation }: { navigation: any }) {
         setKind(p.kind);
     };
 
-    /* ---------- Timer-Logik ---------- */
     const tickRef = useRef<NodeJS.Timeout|null>(null);
     const prepRef = useRef<NodeJS.Timeout|null>(null);
 
@@ -211,7 +202,6 @@ export default function Custom({ navigation }: { navigation: any }) {
 
     const clearPhases = () => setPhases([]);
 
-    /* ---------- Render ---------- */
     const progress = 1-timeLeft/phaseDur;
 
     return (
@@ -219,12 +209,10 @@ export default function Custom({ navigation }: { navigation: any }) {
             <Animated.View style={[styles.stopwatchContainer,{backgroundColor}]}>
                 <View style={{flex:1,justifyContent:'center',alignItems:'center'}}>
 
-                    {/* ---------- SETUP ---------- */}
                     {!started ? (
                         <>
                             <Text style={[styles.h1,{marginBottom:10}]}>Custom Timer</Text>
 
-                            {/* Eingabe */}
                             <View style={{flexDirection:'row',marginBottom:20}}>
                                 <View style={{alignItems:'center',marginHorizontal:8}}>
                                     <Text style={[styles.subLabel,{color:'#666'}]}>Name</Text>
@@ -244,20 +232,17 @@ export default function Custom({ navigation }: { navigation: any }) {
                                 </View>
                             </View>
 
-                            {/* Work / Rest Toggle */}
                             <View style={{flexDirection:'row',alignItems:'center',marginBottom:15}}>
                                 <Text style={[styles.subLabel,{color:'#666',marginRight:10}]}>Pause?</Text>
                                 <Switch value={kind==='rest'} onValueChange={v=>setKind(v?'rest':'work')} />
                             </View>
 
-                            {/* Add / Update Button */}
                             <TouchableOpacity style={styles.startButton} onPress={addOrUpdatePhase}>
                                 <Text style={styles.buttonText}>
                                     {editIdx===null?'➕ Phase hinzufügen':'💾 Phase aktualisieren'}
                                 </Text>
                             </TouchableOpacity>
 
-                            {/* Liste */}
                             <FlatList
                                 data={phases}
                                 keyExtractor={(_,i)=>i.toString()}
@@ -270,7 +255,6 @@ export default function Custom({ navigation }: { navigation: any }) {
                                             marginVertical: 2,
                                             width: '100%',
                                         }}>
-                                        {/* kompletter Text als EIN template-String */}
                                         <Text
                                             style={{
                                                 flex: 1,
@@ -284,14 +268,12 @@ export default function Custom({ navigation }: { navigation: any }) {
                                             )}`}
                                         </Text>
 
-                                        {/* Edit-Icon */}
                                         <TouchableOpacity
                                             onPress={() => loadForEdit(index)}
                                             style={{ width: 28, alignItems: 'center' }}>
                                             <Text style={{ fontSize: 18 }}>📝</Text>
                                         </TouchableOpacity>
 
-                                        {/* Delete-Icon */}
                                         <TouchableOpacity
                                             onPress={() => deletePhase(index)}
                                             style={{ width: 28, alignItems: 'center' }}>
@@ -301,7 +283,6 @@ export default function Custom({ navigation }: { navigation: any }) {
                                 )}
                             />
 
-                            {/* Vorbereitung & Buttons */}
                             <View style={{flexDirection:'row',alignItems:'center',marginBottom:20}}>
                                 <Text style={[styles.subLabel,{color:'#666',marginRight:10}]}>10 s Vorbereitung</Text>
                                 <Switch value={prepEnabled} onValueChange={setPrepEnabled}/>
@@ -320,7 +301,6 @@ export default function Custom({ navigation }: { navigation: any }) {
                             )}
                         </>
                     ) : (
-                        /* ---------- TIMER ---------- */
                         <>
                             {(running||paused) ? (
                                 <>

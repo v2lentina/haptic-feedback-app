@@ -9,8 +9,11 @@ const BUZZ_NORMAL = 3;
 export default function StopwatchScreen({ navigation }: { navigation: any }) {
     const [time, setTime] = useState(0);
     const [running, setRunning] = useState(false);
+    const [circleKey, setCircleKey] = useState(0);
+
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const startTimeRef = useRef<number>(0);
+    const savedElapsedRef = useRef<number>(0);
 
     const backgroundAnim = useRef(new Animated.Value(0)).current;
 
@@ -42,22 +45,30 @@ export default function StopwatchScreen({ navigation }: { navigation: any }) {
 
     const start = () => {
         if (running) return;
-        setRunning(true);
         vibrate(BUZZ_NORMAL);
-        startTimeRef.current = Date.now() - time;
+        setRunning(true);
+        startTimeRef.current = Date.now();
+        savedElapsedRef.current = 0;
         intervalRef.current = setInterval(() => {
-            setTime(Date.now() - startTimeRef.current);
+            const now = Date.now();
+            const elapsed = now - startTimeRef.current + savedElapsedRef.current;
+            setTime(elapsed);
         }, 50);
     };
 
     const stop = () => {
         if (intervalRef.current) clearInterval(intervalRef.current);
+        savedElapsedRef.current += Date.now() - startTimeRef.current;
         setRunning(false);
         vibrate(BUZZ_NORMAL);
     };
 
     const reset = () => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
         setTime(0);
+        setCircleKey(k => k + 1);
+        setRunning(false);
+        savedElapsedRef.current = 0;
     };
 
     const formatTime = (ms: number) => {
@@ -67,13 +78,15 @@ export default function StopwatchScreen({ navigation }: { navigation: any }) {
         return `${min}:${sec}`;
     };
 
-    const progress = (time % 60000) / 60000;
+    const fullCircleMillis = 60000;
+    const progress = (time % fullCircleMillis) / fullCircleMillis;
 
     return (
         <Animated.View style={[styles.stopwatchContainer, { backgroundColor }]}>
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                 <View style={styles.progressContainer}>
                     <Progress.Circle
+                        key={circleKey}
                         size={250}
                         progress={progress}
                         color="#ffffff"

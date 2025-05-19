@@ -1,4 +1,3 @@
-// Interval.tsx -------------------------------------------------------------
 import React, { useState, useRef, useEffect } from 'react';
 import {
     View, Text, TextInput, Switch, TouchableOpacity,
@@ -8,9 +7,8 @@ import * as Progress from 'react-native-progress';
 import { styles, input } from '../styles';
 import {vibrate, getLastDevice, softReconnect} from '../ble';
 
-/* Farbcodes */
-const WORK_COLOR  = '#007AFF'; // blau
-const REST_COLOR  = '#FF9500'; // orange
+const WORK_COLOR  = '#007AFF'; //blue
+const REST_COLOR  = '#FF9500'; //orange
 const IDLE_COLOR  = '#f5f5f5';
 
 const BUZZ_SHORT = 1;
@@ -20,7 +18,6 @@ const BUZZ_LONG = 4;
 type PhaseType = 'work' | 'rest';
 
 export default function Interval({ navigation }: { navigation: any }) {
-    /* ---------------------- Eingabe ---------------------- */
     const [workMin, setWorkMin] = useState('0');
     const [workSec, setWorkSec] = useState('20');
     const [restMin, setRestMin] = useState('0');
@@ -28,7 +25,6 @@ export default function Interval({ navigation }: { navigation: any }) {
     const [rounds,   setRounds] = useState('8');
     const [countDownMode, setCountDown] = useState(false);
 
-    /* ---------------------- Timer-State ------------------ */
     const [prepEnabled, setPrepEnabled] = useState(true);
     const [countdown, setCountdown] = useState(10);
 
@@ -41,15 +37,13 @@ export default function Interval({ navigation }: { navigation: any }) {
     const [currentRound, setCurrentRound] = useState(1);
     const [timeValue, setTimeValue] = useState(0);     // ms (up oder down)
 
-    /* ---------------------- Refs ------------------------- */
     const phaseStartRef = useRef<number>(0);
     const tickRef       = useRef<NodeJS.Timeout|null>(null);
     const prepRef       = useRef<NodeJS.Timeout|null>(null);
     const roundRef      = useRef(1);
-    const curPhaseDur   = useRef(1); // ms
+    const curPhaseDur   = useRef(1);
 
-    /* ------------------- Hintergrund-Anim ---------------- */
-    const bgAnim = useRef(new Animated.Value(0)).current; // 0 idle, 1 work, 2 rest
+    const bgAnim = useRef(new Animated.Value(0)).current;
     const [circleKey, setCircleKey] = useState(0);
 
     useEffect(() => {
@@ -78,7 +72,6 @@ export default function Interval({ navigation }: { navigation: any }) {
         outputRange: ['#000', '#fff', '#fff'],
     });
 
-    /* -------------------- Helfer ------------------------- */
     const format = (ms: number) => {
         const totalSec = Math.ceil(ms/1000);
         const m = Math.floor(totalSec/60).toString().padStart(2,'0');
@@ -92,13 +85,11 @@ export default function Interval({ navigation }: { navigation: any }) {
         return (min*60 + sec)*1000;
     };
 
-    /* -------------------- Timer-Logik -------------------- */
     const runPhase = (phase: PhaseType, doBuzz = true) => {
         if (doBuzz) {
             const totalRounds = parseInt(rounds);
             const isFinalRound = roundRef.current >= totalRounds;
             if (phase === 'work' && isFinalRound) {
-                // kein runPhase('rest') mehr danach → letzte Phase
                 vibrate(BUZZ_LONG);
             } else if (phase === 'work' && roundRef.current === 1) {
                 vibrate(BUZZ_LONG);
@@ -110,8 +101,8 @@ export default function Interval({ navigation }: { navigation: any }) {
         setInRest(phase==='rest');
         setCircleKey(k=>k+1);
 
-        if (!countDownMode) setTimeValue(0);               // hochzählen
-        else                setTimeValue(curPhaseDur.current); // runterzählen
+        if (!countDownMode) setTimeValue(0);
+        else                setTimeValue(curPhaseDur.current);
 
         phaseStartRef.current = Date.now();
         clearInterval(tickRef.current!);
@@ -212,25 +203,21 @@ export default function Interval({ navigation }: { navigation: any }) {
 
     const finish=()=>{ setRunning(false); setDone(true); vibrate(BUZZ_LONG); };
 
-    /* ------------- Progress (0-1) ------------- */
     const prog = running||paused
         ? (countDownMode
             ? 1 - Math.max(0,timeValue)/curPhaseDur.current
             : Math.min(timeValue/curPhaseDur.current,1))
         : 0;
 
-    /* --------------------- UI ------------------ */
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <Animated.View style={[styles.stopwatchContainer,{backgroundColor}]}>
                 <View style={{flex:1,justifyContent:'center',alignItems:'center'}}>
 
-                    {/* ---------- SETUP ---------- */}
                     {!started ? (
                         <>
                             <Text style={[styles.h1,{marginBottom:20}]}>Intervall</Text>
 
-                            {/* Arbeits­zeit */}
                             <Text style={[styles.subLabel,{color:'#666'}]}>Arbeitszeit</Text>
                             <View style={{flexDirection:'row',marginBottom:16}}>
                                 <View style={{alignItems:'center',marginHorizontal:10}}>
@@ -245,7 +232,6 @@ export default function Interval({ navigation }: { navigation: any }) {
                                 </View>
                             </View>
 
-                            {/* Pause­zeit */}
                             <Text style={[styles.subLabel,{color:'#666'}]}>Pausenzeit</Text>
                             <View style={{flexDirection:'row',marginBottom:16}}>
                                 <View style={{alignItems:'center',marginHorizontal:10}}>
@@ -260,19 +246,16 @@ export default function Interval({ navigation }: { navigation: any }) {
                                 </View>
                             </View>
 
-                            {/* Runden */}
                             <Text style={[styles.subLabel,{color:'#666'}]}>Runden</Text>
                             <TextInput value={rounds} onChangeText={setRounds} keyboardType="numeric"
                                        style={[input,{width:100,height:60,fontSize:24,textAlign:'center',marginBottom:20}]}/>
 
-                            {/* Count-Direction */}
                             <View style={{flexDirection:'row',alignItems:'center',marginBottom:12}}>
                                 <Text style={[styles.subLabel,{color:'#666',marginRight:8}]}>Zählrichtung</Text>
                                 <Switch value={countDownMode} onValueChange={setCountDown}/>
                                 <Text style={[styles.subLabel,{marginLeft:8}]}>{countDownMode?'⬇️':'⬆️'}</Text>
                             </View>
 
-                            {/* Vorbereitung */}
                             <View style={{flexDirection:'row',alignItems:'center',marginBottom:30}}>
                                 <Text style={[styles.subLabel,{color:'#666',marginRight:10}]}>10 s Vorbereitung</Text>
                                 <Switch value={prepEnabled} onValueChange={setPrepEnabled}/>
@@ -283,7 +266,6 @@ export default function Interval({ navigation }: { navigation: any }) {
                             </TouchableOpacity>
                         </>
                     ) : (
-                        /* ---------- TIMER ---------- */
                         <>
                             {(running||paused) ? (
                                 <>
@@ -327,7 +309,6 @@ export default function Interval({ navigation }: { navigation: any }) {
                                     </TouchableOpacity>
                                 </>
                             ) : (
-                                /* Vorbereitung */
                                 <>
                                     <Animated.Text style={[styles.time,{color:textColor}]}>{countdown}</Animated.Text>
                                     <Text style={styles.subLabel}>Vorbereitung</Text>

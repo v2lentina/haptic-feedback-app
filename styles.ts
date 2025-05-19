@@ -110,15 +110,15 @@ export const styles = StyleSheet.create({
         backgroundColor: '#ccc',
     },
     connectionCircleScanning: {
-        backgroundColor: '#007aff', // blau wie "Suche läuft..."
+        backgroundColor: '#007aff', //blue
     },
 
     connectionCircleConnected: {
-        backgroundColor: '#34C759', // Grün
+        backgroundColor: '#34C759', //green
     },
 
     connectionCircleDisconnected: {
-        backgroundColor: '#ccc', // Grau
+        backgroundColor: '#ccc', //grey
     },
 
     connectionCircleText: {
@@ -285,15 +285,15 @@ export const styles = StyleSheet.create({
     },
 
     statusConnected: {
-        backgroundColor: "#34C759", // grün
+        backgroundColor: "#34C759", //green
     },
 
     statusDisconnected: {
-        backgroundColor: "#8e8e93", // grau
+        backgroundColor: "#8e8e93", //grey
     },
 
     statusScanning: {
-        backgroundColor: "#007aff", // blau
+        backgroundColor: "#007aff", //blue
     },
 
     greenDot: {

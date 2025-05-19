@@ -1,4 +1,3 @@
-// BleContext.tsx
 import React, {
     createContext, useContext, useEffect, useState, useCallback, ReactNode,
 } from 'react';
@@ -25,18 +24,16 @@ export function BleProvider({ children }: { children: ReactNode }) {
     const [scanning, setScanning] = useState(false);
     const [disconnectSub, setDisconnectSub] = useState<Subscription | null>(null);
 
-    // StateChange-Listener
     useEffect(() => {
         const sub = manager.onStateChange(async (state) => {
             setBleState(state);
             if (state === 'PoweredOn') {
-                // Versuche Reconnect
                 const lastId = await getLastDevice();
                 if (lastId) {
                     try {
                         const dev = await manager.connectToDevice(lastId);
                         handleConnect(dev);
-                    } catch { /* no-op */ }
+                    } catch { }
                 }
             }
         }, true);
@@ -59,7 +56,6 @@ export function BleProvider({ children }: { children: ReactNode }) {
         return () => clearInterval(interval);
     }, [connected]);
 
-    // Scan
     const scanForDevices = useCallback(() => {
         if (bleState !== 'PoweredOn' || scanning) return;
         setScanning(true);
@@ -83,14 +79,12 @@ export function BleProvider({ children }: { children: ReactNode }) {
         }, 6000);
     }, [bleState, scanning, devices]);
 
-    // Connect helper
     const handleConnect = async (device: Device) => {
         await device.discoverAllServicesAndCharacteristics();
         setConnected(device);
         await saveLastDevice(device.id);
         device.onDisconnected(() => {
             if (!reconnecting) {
-                //Alert.alert('Verbindung verloren', 'Die Uhr wurde getrennt.');
             }            setConnected(null);
             clearLastDevice();
         });
@@ -102,13 +96,9 @@ export function BleProvider({ children }: { children: ReactNode }) {
         setConnected(device);
         await saveLastDevice(device.id);
 
-        // neuen onDisconnected listener anlegen – genau einer!
         const sub = device.onDisconnected(() => {
-            // Listener direkt wieder entfernen, damit er nicht mehrfach feuert
             sub.remove();
             setDisconnectSub(null);
-
-            //Alert.alert('Verbindung verloren', 'Die Uhr wurde getrennt.');
             setConnected(null);
             clearLastDevice();
         });
@@ -143,7 +133,6 @@ export function BleProvider({ children }: { children: ReactNode }) {
     );
 };
 
-// Hook zum Konsumieren
 export function useBle() {
     const ctx = useContext(BleContext);
     if (!ctx) throw new Error('useBle must be used inside BleProvider');

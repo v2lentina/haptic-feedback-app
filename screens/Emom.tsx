@@ -48,14 +48,14 @@ export default function Emom({ navigation }: { navigation: any }) {
     }, [navigation]);
 
     useEffect(() => {
-        let toValue = 0; // Weiß bei Pause oder Default
+        let toValue = 0;
 
         if (paused) {
-            toValue = 0; // Immer weiß, wenn pausiert
+            toValue = 0;
         } else if (exerciseDone) {
-            toValue = 2; // Orange nur wenn aktiv und nicht pausiert
+            toValue = 2;
         } else if (running) {
-            toValue = 1; // Blau nur wenn aktiv und nicht paused/done
+            toValue = 1;
         }
 
         Animated.timing(bg, {

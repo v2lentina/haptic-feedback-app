@@ -13,10 +13,9 @@ import {getLastDevice, softReconnect, vibrate} from '../ble';
 import * as Progress from 'react-native-progress';
 import { styles } from '../styles';
 
-/* ---------- Fight-Gone-Bad Parameter ------------------------------- */
 const TOTAL_ROUNDS = 3;
-const WORK_MS = 5 * 60_000;  // 5 min
-const REST_MS = 1 * 60_000;  // 1 min
+const WORK_MS = 5 * 60_000;
+const REST_MS = 1 * 60_000;
 
 const BUZZ_SHORT = 1;
 const BUZZ_NORMAL = 3;
