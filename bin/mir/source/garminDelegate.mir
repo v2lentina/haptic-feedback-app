@@ -1,0 +1,93 @@
+[ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\garminDelegate.mc"; @line = 1; @symbol_importdef<0> = [Toybox,1,7,13]; @symbol_importdef<1> = [Lang,1,14,18]; ]
+import Toybox.Lang;
+[ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\garminDelegate.mc"; @line = 2; @symbol_importdef<0> = [Toybox,2,7,13]; @symbol_importdef<1> = [WatchUi,2,14,21]; ]
+import Toybox.WatchUi;
+[ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\garminDelegate.mc"; @line = 3; @symbol_importdef<0> = [Toybox,3,7,13]; @symbol_importdef<1> = [BluetoothLowEnergy,3,14,32]; ]
+import Toybox.BluetoothLowEnergy;
+[ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\garminDelegate.mc"; @line = 5; @symbol_classdef = [garminDelegate,5,6,20]; @symbol_extends<0> = [WatchUi,5,29,36]; @symbol_extends<1> = [BehaviorDelegate,5,37,53]; ]
+class garminDelegate extends WatchUi.BehaviorDelegate {
+    [ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\garminDelegate.mc"; @line = 5; ]
+    <init> {
+    }
+    [ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\garminDelegate.mc"; @line = 5; ]
+    static
+    <init> {
+    }
+    [ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\garminDelegate.mc"; @line = 6; @position = 8; @symbol_vardef = [view,6,8,12]; @symbol_type<0> = [garminView,6,16,26]; ]
+    var view as garminView;
+    [ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\garminDelegate.mc"; @line = 8; @position = 8; @symbol_vardef = [bleHandler,8,8,18]; @symbol_type<0> = [BleHandler,8,22,32]; ]
+    var bleHandler as BleHandler;
+    [ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\garminDelegate.mc"; @line = 11; @symbol_functiondef = [initialize,11,13,23]; @symbol_param<0> = [viewP,11,24,29]; @symbol_param<0>_type<0> = [garminView,11,33,43]; ]
+    function initialize(viewP as garminView) as Void {
+C__GitRepos_haptic_feedback_app_garmin_source_garminDelegate_mc_11_45_19_4_start:
+[ "C:\GitRepos\haptic-feedback-app\garmin\source\garminDelegate.mc" 12 8 ]
+        symbol [ self %self 12 8 12 ];
+        %tmp.1 = lgetv %viewP;
+        symbol [ viewP %tmp.1 12 20 25 ];
+        symbol [ view ? 12 13 17 ];
+        putv self :view %tmp.1;
+[ "C:\GitRepos\haptic-feedback-app\garmin\source\garminDelegate.mc" 14 8 ]
+        symbol [ self %self 14 8 12 ];
+        symbol [ BleHandler %tmp.5 14 30 40 ];
+        %tmp.5 = getv ? :BleHandler;
+        %tmp.2 = newc %tmp.5 ();
+        symbol [ bleHandler ? 14 13 23 ];
+        putv self :bleHandler %tmp.2;
+[ "C:\GitRepos\haptic-feedback-app\garmin\source\garminDelegate.mc" 15 8 ]
+        symbol [ BluetoothLowEnergy %tmp.6 15 8 26 ];
+        %tmp.6 = getm $.Toybox.BluetoothLowEnergy;
+        symbol [ setDelegate %tmp.7 15 27 38 ];
+        %tmp.7 = getv function %tmp.6 :setDelegate;
+        symbol [ bleHandler %tmp.9 15 39 49 ];
+        %tmp.9 = getv ? :bleHandler;
+        invoke %tmp.6 %tmp.7(%tmp.9);
+[ "C:\GitRepos\haptic-feedback-app\garmin\source\garminDelegate.mc" 17 8 ]
+        symbol [ BehaviorDelegate %tmp.11 17 8 24 ];
+        %tmp.11 = getv ? :BehaviorDelegate;
+        symbol [ initialize %tmp.12 17 25 35 ];
+        %tmp.12 = getv function %tmp.11 :initialize;
+        invoke %tmp.11 %tmp.12();
+C__GitRepos_haptic_feedback_app_garmin_source_garminDelegate_mc_11_45_19_4_stop:
+    }
+    [ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\garminDelegate.mc"; @line = 21; @symbol_functiondef = [onSelect,21,13,21]; @symbol_return<0> = [Boolean,21,27,34]; ]
+    function onSelect() as Boolean {
+C__GitRepos_haptic_feedback_app_garmin_source_garminDelegate_mc_21_35_29_4_start:
+[ "C:\GitRepos\haptic-feedback-app\garmin\source\garminDelegate.mc" 22 8 ]
+        symbol [ System %tmp.2 22 8 14 ];
+        %tmp.2 = getv ? :System;
+        symbol [ println %tmp.3 22 15 22 ];
+        %tmp.3 = getv function %tmp.2 :println;
+        %tmp.4 = "Tapped!";
+        invoke %tmp.2 %tmp.3(%tmp.4);
+[ "C:\GitRepos\haptic-feedback-app\garmin\source\garminDelegate.mc" 23 8 ]
+        symbol [ self %self 23 8 12 ];
+        symbol [ view %tmp.5 23 13 17 ];
+        %tmp.5 = getv self :view;
+        symbol [ DISCOVERABLE_PAIRING %tmp.7 23 33 53 ];
+        %tmp.7 = getv ? :DISCOVERABLE_PAIRING;
+        symbol [ pairingState ? 23 18 30 ];
+        putv %tmp.5 :pairingState %tmp.7;
+[ "C:\GitRepos\haptic-feedback-app\garmin\source\garminDelegate.mc" 25 8 ]
+        symbol [ BluetoothLowEnergy %tmp.8 25 8 26 ];
+        %tmp.8 = getm $.Toybox.BluetoothLowEnergy;
+        symbol [ setScanState %tmp.9 25 27 39 ];
+        %tmp.9 = getv function %tmp.8 :setScanState;
+        symbol [ BluetoothLowEnergy %tmp.10 25 40 58 ];
+        %tmp.10 = getm $.Toybox.BluetoothLowEnergy;
+        symbol [ SCAN_STATE_SCANNING %tmp.11 25 59 78 ];
+        %tmp.11 = getv %tmp.10 :SCAN_STATE_SCANNING;
+        invoke %tmp.8 %tmp.9(%tmp.11);
+[ "C:\GitRepos\haptic-feedback-app\garmin\source\garminDelegate.mc" 27 8 ]
+        %tmp.12 = self;
+        symbol [ requestUpdate %tmp.13 27 8 21 ];
+        %tmp.13 = getv function %tmp.12 :requestUpdate;
+        invoke %tmp.12 %tmp.13();
+[ "C:\GitRepos\haptic-feedback-app\garmin\source\garminDelegate.mc" 28 8 ]
+        %tmp.14 = true;
+        ret %tmp.14;
+C__GitRepos_haptic_feedback_app_garmin_source_garminDelegate_mc_21_35_29_4_stop:
+    }
+}
+[ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\garminDelegate.mc"; @line = 1; ]
+<init> {
+}

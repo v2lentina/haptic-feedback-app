@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<debugInfo>
+    <manifest filename="C:\GitRepos\haptic-feedback-app\garmin\manifest.xml"/>
+    <pcToLineNum>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="1" lineNum="24" parent="globals" pc="268435460" symbol="stringToByteArray"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="1" lineNum="25" parent="globals" pc="268435471" symbol="stringToByteArray"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="1" lineNum="32" parent="globals" pc="268435501" symbol="stringToByteArray"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="1" lineNum="35" parent="globals" pc="268435519" symbol="stringToByteArray"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="2" lineNum="63" parent="globals" pc="268435522" symbol="parseVibrationMessage"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="2" lineNum="64" parent="globals" pc="268435533" symbol="parseVibrationMessage"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="2" lineNum="65" parent="globals" pc="268435551" symbol="parseVibrationMessage"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="2" lineNum="67" parent="globals" pc="268435575" symbol="parseVibrationMessage"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="2" lineNum="69" parent="globals" pc="268435581" symbol="parseVibrationMessage"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="2" lineNum="72" parent="globals" pc="268435612" symbol="parseVibrationMessage"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="2" lineNum="74" parent="globals" pc="268435618" symbol="parseVibrationMessage"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="2" lineNum="77" parent="globals" pc="268435649" symbol="parseVibrationMessage"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminApp.mc" id="3" lineNum="20" parent="globals" pc="268435679" symbol="getApp"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminApp.mc" id="3" lineNum="21" parent="globals" pc="268435689" symbol="getApp"/>
+        <entry filename="c:\\GitRepos\\haptic-feedback-app\\bin\\gen\\006-B4315-00\\source\\Rez.mcgen" id="4" lineNum="7" parent="globals/Rez" pc="268435700" symbol="&lt;init&gt;"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\bleCommunication.mc" id="5" lineNum="9" parent="globals" pc="268435720" symbol="handleMessage"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\bleCommunication.mc" id="5" lineNum="10" parent="globals" pc="268435731" symbol="handleMessage"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\bleCommunication.mc" id="5" lineNum="12" parent="globals" pc="268435743" symbol="handleMessage"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\bleCommunication.mc" id="5" lineNum="13" parent="globals" pc="268435755" symbol="handleMessage"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\bleCommunication.mc" id="5" lineNum="14" parent="globals" pc="268435757" symbol="handleMessage"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\bleCommunication.mc" id="5" lineNum="16" parent="globals" pc="268435772" symbol="handleMessage"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\bleCommunication.mc" id="5" lineNum="15" parent="globals" pc="268435791" symbol="handleMessage"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\bleCommunication.mc" id="5" lineNum="17" parent="globals" pc="268435802" symbol="handleMessage"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\bleCommunication.mc" id="6" lineNum="26" parent="globals" pc="268435815" symbol="handleOtherMessage"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="7" lineNum="9" parent="globals" pc="268435818" symbol="byteArrayToString"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="7" lineNum="10" parent="globals" pc="268435829" symbol="byteArrayToString"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="7" lineNum="17" parent="globals" pc="268435859" symbol="byteArrayToString"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="7" lineNum="20" parent="globals" pc="268435877" symbol="byteArrayToString"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="8" lineNum="43" parent="globals" pc="268435880" symbol="parseMessageType"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="8" lineNum="44" parent="globals" pc="268435891" symbol="parseMessageType"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="8" lineNum="46" parent="globals" pc="268435907" symbol="parseMessageType"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="8" lineNum="47" parent="globals" pc="268435913" symbol="parseMessageType"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="8" lineNum="50" parent="globals" pc="268435944" symbol="parseMessageType"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="8" lineNum="52" parent="globals" pc="268435958" symbol="parseMessageType"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="8" lineNum="53" parent="globals" pc="268435960" symbol="parseMessageType"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="8" lineNum="55" parent="globals" pc="268435979" symbol="parseMessageType"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="8" lineNum="57" parent="globals" pc="268435998" symbol="parseMessageType"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="8" lineNum="54" parent="globals" pc="268436001" symbol="parseMessageType"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="8" lineNum="56" parent="globals" pc="268436003" symbol="parseMessageType"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="8" lineNum="58" parent="globals" pc="268436006" symbol="parseMessageType"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="9" lineNum="80" parent="globals" pc="268436036" symbol="parseVibrationPattern"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="9" lineNum="81" parent="globals" pc="268436047" symbol="parseVibrationPattern"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="9" lineNum="83" parent="globals" pc="268436064" symbol="parseVibrationPattern"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="9" lineNum="84" parent="globals" pc="268436078" symbol="parseVibrationPattern"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="9" lineNum="85" parent="globals" pc="268436084" symbol="parseVibrationPattern"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="9" lineNum="88" parent="globals" pc="268436115" symbol="parseVibrationPattern"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="9" lineNum="90" parent="globals" pc="268436119" symbol="parseVibrationPattern"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="9" lineNum="91" parent="globals" pc="268436138" symbol="parseVibrationPattern"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="9" lineNum="92" parent="globals" pc="268436151" symbol="parseVibrationPattern"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="9" lineNum="94" parent="globals" pc="268436167" symbol="parseVibrationPattern"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="9" lineNum="95" parent="globals" pc="268436182" symbol="parseVibrationPattern"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="9" lineNum="98" parent="globals" pc="268436239" symbol="parseVibrationPattern"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="9" lineNum="99" parent="globals" pc="268436246" symbol="parseVibrationPattern"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="9" lineNum="102" parent="globals" pc="268436303" symbol="parseVibrationPattern"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="9" lineNum="103" parent="globals" pc="268436312" symbol="parseVibrationPattern"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="9" lineNum="106" parent="globals" pc="268436369" symbol="parseVibrationPattern"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="9" lineNum="109" parent="globals" pc="268436415" symbol="parseVibrationPattern"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminDelegate.mc" id="10" lineNum="4" parent="globals/garminDelegate" pc="268436418" symbol="&lt;init&gt;"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\bleCommunication.mc" id="11" lineNum="21" parent="globals" pc="268436430" symbol="handleVibationMessage"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\bleCommunication.mc" id="11" lineNum="22" parent="globals" pc="268436441" symbol="handleVibationMessage"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\bleCommunication.mc" id="11" lineNum="23" parent="globals" pc="268436453" symbol="handleVibationMessage"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="12" lineNum="112" parent="globals" pc="268436469" symbol="split"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="12" lineNum="113" parent="globals" pc="268436480" symbol="split"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="12" lineNum="115" parent="globals" pc="268436484" symbol="split"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="12" lineNum="117" parent="globals" pc="268436497" symbol="split"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="12" lineNum="118" parent="globals" pc="268436503" symbol="split"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="12" lineNum="119" parent="globals" pc="268436517" symbol="split"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="12" lineNum="121" parent="globals" pc="268436529" symbol="split"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="12" lineNum="123" parent="globals" pc="268436557" symbol="split"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="12" lineNum="126" parent="globals" pc="268436573" symbol="split"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\communicationProtocol.mc" id="12" lineNum="128" parent="globals" pc="268436585" symbol="split"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="13" lineNum="20" parent="globals/garminView" pc="268436588" symbol="&lt;init&gt;"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminApp.mc" id="14" lineNum="7" parent="globals/garminApp" pc="268436600" symbol="&lt;init&gt;"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminDelegate.mc" id="15" lineNum="7" parent="globals/garminDelegate" pc="268436612" symbol="initialize"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminDelegate.mc" id="15" lineNum="8" parent="globals/garminDelegate" pc="268436614" symbol="initialize"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminDelegate.mc" id="15" lineNum="9" parent="globals/garminDelegate" pc="268436623" symbol="initialize"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminDelegate.mc" id="16" lineNum="12" parent="globals/garminDelegate" pc="268436636" symbol="onSelect"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminDelegate.mc" id="16" lineNum="13" parent="globals/garminDelegate" pc="268436638" symbol="onSelect"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminDelegate.mc" id="16" lineNum="14" parent="globals/garminDelegate" pc="268436656" symbol="onSelect"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminDelegate.mc" id="16" lineNum="15" parent="globals/garminDelegate" pc="268436669" symbol="onSelect"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminDelegate.mc" id="16" lineNum="16" parent="globals/garminDelegate" pc="268436676" symbol="onSelect"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="17" lineNum="44" parent="globals/garminView" pc="268436678" symbol="stringFromPairingState"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="17" lineNum="45" parent="globals/garminView" pc="268436680" symbol="stringFromPairingState"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="17" lineNum="46" parent="globals/garminView" pc="268436682" symbol="stringFromPairingState"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="17" lineNum="48" parent="globals/garminView" pc="268436697" symbol="stringFromPairingState"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="17" lineNum="50" parent="globals/garminView" pc="268436713" symbol="stringFromPairingState"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="17" lineNum="52" parent="globals/garminView" pc="268436729" symbol="stringFromPairingState"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="17" lineNum="54" parent="globals/garminView" pc="268436745" symbol="stringFromPairingState"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="17" lineNum="56" parent="globals/garminView" pc="268436761" symbol="stringFromPairingState"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="17" lineNum="47" parent="globals/garminView" pc="268436764" symbol="stringFromPairingState"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="17" lineNum="49" parent="globals/garminView" pc="268436770" symbol="stringFromPairingState"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="17" lineNum="51" parent="globals/garminView" pc="268436776" symbol="stringFromPairingState"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="17" lineNum="53" parent="globals/garminView" pc="268436782" symbol="stringFromPairingState"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="17" lineNum="55" parent="globals/garminView" pc="268436788" symbol="stringFromPairingState"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="17" lineNum="57" parent="globals/garminView" pc="268436794" symbol="stringFromPairingState"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="18" lineNum="29" parent="globals/garminView" pc="268436802" symbol="onLayout"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="18" lineNum="30" parent="globals/garminView" pc="268436804" symbol="onLayout"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="19" lineNum="23" parent="globals/garminView" pc="268436838" symbol="initialize"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="19" lineNum="24" parent="globals/garminView" pc="268436840" symbol="initialize"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="19" lineNum="25" parent="globals/garminView" pc="268436858" symbol="initialize"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="20" lineNum="34" parent="globals/garminView" pc="268436871" symbol="onUpdate"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="20" lineNum="35" parent="globals/garminView" pc="268436874" symbol="onUpdate"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="20" lineNum="37" parent="globals/garminView" pc="268436892" symbol="onUpdate"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="20" lineNum="38" parent="globals/garminView" pc="268436907" symbol="onUpdate"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminView.mc" id="20" lineNum="41" parent="globals/garminView" pc="268436930" symbol="onUpdate"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminApp.mc" id="21" lineNum="13" parent="globals/garminApp" pc="268436947" symbol="getInitialView"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminApp.mc" id="21" lineNum="14" parent="globals/garminApp" pc="268436950" symbol="getInitialView"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminApp.mc" id="21" lineNum="15" parent="globals/garminApp" pc="268436970" symbol="getInitialView"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminApp.mc" id="21" lineNum="16" parent="globals/garminApp" pc="268436992" symbol="getInitialView"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminApp.mc" id="22" lineNum="8" parent="globals/garminApp" pc="268437007" symbol="initialize"/>
+        <entry filename="C:\\GitRepos\\haptic-feedback-app\\garmin\\source\\garminApp.mc" id="22" lineNum="9" parent="globals/garminApp" pc="268437009" symbol="initialize"/>
+        <entry filename="c:\\GitRepos\\haptic-feedback-app\\bin\\gen\\006-B4315-00\\source\\Rez.mcgen" id="23" lineNum="13" parent="globals/Rez/Layouts" pc="268437022" symbol="MainLayout"/>
+        <entry filename="c:\\GitRepos\\haptic-feedback-app\\bin\\gen\\006-B4315-00\\source\\Rez.mcgen" id="23" lineNum="14" parent="globals/Rez/Layouts" pc="268437033" symbol="MainLayout"/>
+        <entry filename="c:\\GitRepos\\haptic-feedback-app\\bin\\gen\\006-B4315-00\\source\\Rez.mcgen" id="23" lineNum="16" parent="globals/Rez/Layouts" pc="268437042" symbol="MainLayout"/>
+        <entry filename="c:\\GitRepos\\haptic-feedback-app\\bin\\gen\\006-B4315-00\\source\\Rez.mcgen" id="23" lineNum="18" parent="globals/Rez/Layouts" pc="268437051" symbol="MainLayout"/>
+        <entry filename="c:\\GitRepos\\haptic-feedback-app\\bin\\gen\\006-B4315-00\\source\\Rez.mcgen" id="23" lineNum="20" parent="globals/Rez/Layouts" pc="268437206" symbol="MainLayout"/>
+    </pcToLineNum>
+    <symbolTable>
+        <entry id="8388639" module="true" symbol="Graphics"/>
+        <entry field="true" id="8389346" symbol="text"/>
+        <entry id="8388632" method="true" symbol="&lt;init&gt;"/>
+        <entry id="7" object="true" symbol="garminApp"/>
+        <entry id="8390552" symbol="toRepresentation"/>
+        <entry id="23" method="true" symbol="MainLayout"/>
+        <entry id="17" method="true" symbol="stringToByteArray"/>
+        <entry id="8390551" symbol="fromRepresentation"/>
+        <entry id="8389782" module="true" symbol="StringUtil"/>
+        <entry field="true" id="8388611" module="true" symbol="Toybox"/>
+        <entry field="true" id="24" symbol="AppName"/>
+        <entry id="5" module="true" symbol="globals/Rez/Strings"/>
+        <entry id="15" method="true" symbol="parseVibrationPattern"/>
+        <entry id="8388648" module="true" symbol="WatchUi"/>
+        <entry field="true" id="20" symbol="pairingState"/>
+        <entry id="2" module="true" symbol="globals/Rez"/>
+        <entry field="true" id="27" symbol="prompt"/>
+        <entry id="8389124" method="true" symbol="onUpdate"/>
+        <entry field="true" id="8389065" symbol="locY"/>
+        <entry field="true" id="8389064" symbol="locX"/>
+        <entry id="9" object="true" symbol="garminView"/>
+        <entry id="8388771" module="true" object="true" symbol="Drawables"/>
+        <entry id="8389348" symbol="font"/>
+        <entry field="true" id="8389067" symbol="height"/>
+        <entry id="8389275" method="true" symbol="getApp"/>
+        <entry id="4" module="true" symbol="globals/Rez/Layouts"/>
+        <entry field="true" id="8389066" symbol="width"/>
+        <entry field="true" id="8390387" symbol="encoding"/>
+        <entry id="8389122" method="true" symbol="onLayout"/>
+        <entry field="true" id="8389063" symbol="identifier"/>
+        <entry id="8389349" symbol="justification"/>
+        <entry id="21" method="true" symbol="stringFromPairingState"/>
+        <entry id="10" method="true" symbol="handleMessage"/>
+        <entry id="3" module="true" symbol="globals/Rez/Drawables"/>
+        <entry id="13" method="true" symbol="parseMessageType"/>
+        <entry id="8388644" module="true" symbol="System"/>
+        <entry id="8" object="true" symbol="garminDelegate"/>
+        <entry id="16" method="true" symbol="split"/>
+        <entry id="8389619" method="true" symbol="onSelect"/>
+        <entry id="8388769" module="true" object="true" symbol="Rez"/>
+        <entry id="8388640" module="true" symbol="Lang"/>
+        <entry field="true" id="22" symbol="LauncherIcon"/>
+        <entry id="8388610" symbol="statics"/>
+        <entry id="8389350" module="true" symbol="globals"/>
+        <entry id="8388770" module="true" object="true" symbol="Strings"/>
+        <entry id="8391193" module="true" symbol="BluetoothLowEnergy"/>
+        <entry id="8388702" method="true" symbol="initialize"/>
+        <entry field="true" id="19" symbol="view"/>
+        <entry id="11" method="true" symbol="handleOtherMessage"/>
+        <entry id="8389280" method="true" symbol="getInitialView"/>
+        <entry id="12" method="true" symbol="handleVibationMessage"/>
+        <entry id="14" method="true" symbol="parseVibrationMessage"/>
+        <entry field="true" id="8389347" symbol="color"/>
+        <entry id="18" module="true" symbol="Layouts"/>
+        <entry id="8388636" module="true" symbol="Attention"/>
+        <entry id="6" method="true" symbol="byteArrayToString"/>
+        <entry id="8388635" module="true" symbol="Application"/>
+        <entry field="true" id="26" symbol="menu_label_2"/>
+        <entry field="true" id="25" symbol="menu_label_1"/>
+    </symbolTable>
+    <localVars>
+        <entry arg="true" endPc="268435521" name="plain_text" stackId="1" startPc="268435460"/>
+        <entry endPc="268435521" name="options" stackId="2" startPc="268435471"/>
+        <entry endPc="268435521" name="result" stackId="3" startPc="268435471"/>
+        <entry arg="true" endPc="268435678" name="vibrationMessageText" stackId="1" startPc="268435522"/>
+        <entry endPc="268435678" name="hasOpeningBracket" stackId="2" startPc="268435533"/>
+        <entry endPc="268435678" name="hasClosingBracket" stackId="3" startPc="268435533"/>
+        <entry arg="true" endPc="268435814" name="messageBuffer" stackId="1" startPc="268435720"/>
+        <entry endPc="268435813" name="messageText" stackId="2" startPc="268435731"/>
+        <entry endPc="268435813" name="type" stackId="3" startPc="268435731"/>
+        <entry arg="true" endPc="268435879" name="byte_array" stackId="1" startPc="268435818"/>
+        <entry endPc="268435879" name="options" stackId="2" startPc="268435829"/>
+        <entry endPc="268435879" name="result" stackId="3" startPc="268435829"/>
+        <entry arg="true" endPc="268436035" name="messageText" stackId="1" startPc="268435880"/>
+        <entry endPc="268436034" name="firstColonIndex" stackId="2" startPc="268435891"/>
+        <entry endPc="268436034" name="typeText" stackId="3" startPc="268435891"/>
+        <entry arg="true" endPc="268436417" name="vibrationPatternText" stackId="1" startPc="268436036"/>
+        <entry endPc="268436417" name="splits" stackId="2" startPc="268436047"/>
+        <entry endPc="268436417" name="validNumberOfEntries" stackId="3" startPc="268436047"/>
+        <entry endPc="268436417" name="vibrationData" stackId="4" startPc="268436047"/>
+        <entry endPc="268436414" name="index" stackId="5" startPc="268436138"/>
+        <entry endPc="268436404" name="strength" stackId="6" startPc="268436138"/>
+        <entry endPc="268436404" name="durationMs" stackId="7" startPc="268436138"/>
+        <entry arg="true" endPc="268436468" name="messageText" stackId="1" startPc="268436430"/>
+        <entry endPc="268436467" name="vibrationData" stackId="2" startPc="268436441"/>
+        <entry arg="true" endPc="268436587" name="s" stackId="1" startPc="268436469"/>
+        <entry arg="true" endPc="268436587" name="sep" stackId="2" startPc="268436469"/>
+        <entry endPc="268436587" name="tokens" stackId="3" startPc="268436480"/>
+        <entry endPc="268436587" name="found" stackId="4" startPc="268436480"/>
+        <entry endPc="268436569" name="token" stackId="5" startPc="268436503"/>
+        <entry arg="true" endPc="268436635" name="viewP" stackId="1" startPc="268436612"/>
+        <entry arg="true" endPc="268436801" name="state" stackId="1" startPc="268436678"/>
+        <entry arg="true" endPc="268436837" name="dc" stackId="1" startPc="268436802"/>
+        <entry arg="true" endPc="268436946" name="dc" stackId="1" startPc="268436871"/>
+        <entry endPc="268436945" name="drw" stackId="2" startPc="268436874"/>
+        <entry endPc="268437006" name="view" stackId="1" startPc="268436950"/>
+        <entry endPc="268437006" name="delegate" stackId="2" startPc="268436950"/>
+        <entry arg="true" endPc="268437215" name="dc" stackId="1" startPc="268437022"/>
+        <entry endPc="268437215" name="rez_cmp_local_var_dc_getHeight" stackId="2" startPc="268437033"/>
+        <entry endPc="268437215" name="rez_cmp_local_var_dc_getWidth" stackId="3" startPc="268437033"/>
+        <entry endPc="268437215" name="rez_cmp_local_textarea_pairingStateLabel" stackId="4" startPc="268437033"/>
+    </localVars>
+    <deviceInfo deviceVersion="5c7ae9cf907f88c116a91dc4ffd75be9b5b7d2e9" partNumber="006-B4315-00"/>
+    <annotations>
+        <annotationEntry annotation="initialized" class="Drawables" module="globals/Rez" symbol="LauncherIcon"/>
+        <annotationEntry annotation="initialized" class="Strings" module="globals/Rez" symbol="menu_label_2"/>
+        <annotationEntry annotation="initialized" class="Strings" module="globals/Rez" symbol="menu_label_1"/>
+        <annotationEntry annotation="initialized" class="Strings" module="globals/Rez" symbol="prompt"/>
+        <annotationEntry annotation="initialized" class="Strings" module="globals/Rez" symbol="AppName"/>
+    </annotations>
+    <dataEntryOffsetMappings>
+        <dataEntry label="globals" offset="58" parentId="" symbolId="globals" type="module"/>
+        <dataEntry label="globals/Rez" offset="215" parentId="globals" symbolId="Rez" type="module"/>
+        <dataEntry label="globals/garminDelegate" offset="268" parentId="globals" symbolId="garminDelegate" type="class"/>
+        <dataEntry label="globals/garminView" offset="330" parentId="globals" symbolId="garminView" type="class"/>
+        <dataEntry label="globals/garminApp" offset="410" parentId="globals" symbolId="garminApp" type="class"/>
+        <dataEntry label="globals/Rez/Drawables" offset="463" parentId="Rez" symbolId="Drawables" type="module"/>
+        <dataEntry label="globals/Rez/Layouts" offset="498" parentId="Rez" symbolId="Layouts" type="module"/>
+        <dataEntry label="globals/Rez/Strings" offset="533" parentId="Rez" symbolId="Strings" type="module"/>
+    </dataEntryOffsetMappings>
+    <functions>
+        <functionEntry accessMode="public" endPc="268435521" name="stringToByteArray" startPc="268435460">
+            <param id="plain_text"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435678" name="parseVibrationMessage" startPc="268435522">
+            <param id="vibrationMessageText"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435699" name="getApp" startPc="268435679">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435719" name="&lt;init&gt;" parent="Rez" startPc="268435700">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435814" name="handleMessage" startPc="268435720">
+            <param id="messageBuffer"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435817" name="handleOtherMessage" startPc="268435815">
+            <param id="messageText"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435879" name="byteArrayToString" startPc="268435818">
+            <param id="byte_array"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436035" name="parseMessageType" startPc="268435880">
+            <param id="messageText"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436417" name="parseVibrationPattern" startPc="268436036">
+            <param id="vibrationPatternText"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436429" name="&lt;init&gt;" parent="garminDelegate" startPc="268436418">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436468" name="handleVibationMessage" startPc="268436430">
+            <param id="messageText"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436587" name="split" startPc="268436469">
+            <param id="s"/>
+            <param id="sep"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436599" name="&lt;init&gt;" parent="garminView" startPc="268436588">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436611" name="&lt;init&gt;" parent="garminApp" startPc="268436600">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" name="&lt;init&gt;" parent="Drawables">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" name="&lt;init&gt;" parent="Layouts">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" name="&lt;init&gt;" parent="Strings">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436635" name="initialize" parent="garminDelegate" startPc="268436612">
+            <param id="viewP"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436677" name="onSelect" parent="garminDelegate" startPc="268436636">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436801" name="stringFromPairingState" parent="garminView" startPc="268436678">
+            <param id="state"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436837" name="onLayout" parent="garminView" startPc="268436802">
+            <param id="dc"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436870" name="initialize" parent="garminView" startPc="268436838">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436946" name="onUpdate" parent="garminView" startPc="268436871">
+            <param id="dc"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268437006" name="getInitialView" parent="garminApp" startPc="268436947">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268437021" name="initialize" parent="garminApp" startPc="268437007">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268437215" name="MainLayout" parent="Layouts" startPc="268437022">
+            <param id="dc"/>
+            <documentation/>
+        </functionEntry>
+    </functions>
+</debugInfo>

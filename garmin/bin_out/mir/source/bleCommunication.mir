@@ -1,0 +1,115 @@
+[ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\bleCommunication.mc"; @line = 1; @symbol_importdef<0> = [Toybox,1,7,13]; @symbol_importdef<1> = [Application,1,14,25]; ]
+import Toybox.Application;
+[ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\bleCommunication.mc"; @line = 2; @symbol_importdef<0> = [Toybox,2,7,13]; @symbol_importdef<1> = [Lang,2,14,18]; ]
+import Toybox.Lang;
+[ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\bleCommunication.mc"; @line = 3; @symbol_importdef<0> = [Toybox,3,7,13]; @symbol_importdef<1> = [WatchUi,3,14,21]; ]
+import Toybox.WatchUi;
+[ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\bleCommunication.mc"; @line = 4; @symbol_importdef<0> = [Toybox,4,7,13]; @symbol_importdef<1> = [System,4,14,20]; ]
+import Toybox.System;
+[ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\bleCommunication.mc"; @line = 5; @symbol_importdef<0> = [Toybox,5,7,13]; @symbol_importdef<1> = [StringUtil,5,14,24]; ]
+import Toybox.StringUtil;
+[ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\bleCommunication.mc"; @line = 6; @symbol_importdef<0> = [Toybox,6,7,13]; @symbol_importdef<1> = [Attention,6,14,23]; ]
+import Toybox.Attention;
+[ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\bleCommunication.mc"; @line = 7; @symbol_importdef<0> = [Toybox,7,7,13]; @symbol_importdef<1> = [BluetoothLowEnergy,7,14,32]; ]
+import Toybox.BluetoothLowEnergy;
+[ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\bleCommunication.mc"; @line = 9; @symbol_functiondef = [handleMessage,9,9,22]; @symbol_param<0> = [messageBuffer,9,23,36]; @symbol_param<0>_type<0> = [ByteArray,9,40,49]; ]
+function handleMessage(messageBuffer as ByteArray) {
+C__GitRepos_haptic_feedback_app_garmin_source_bleCommunication_mc_9_51_19_0_start:
+[ "C:\GitRepos\haptic-feedback-app\garmin\source\bleCommunication.mc" 10 4 ]
+    [ "C__GitRepos_haptic_feedback_app_garmin_source_bleCommunication_mc_9_51_19_0_start" "C__GitRepos_haptic_feedback_app_garmin_source_bleCommunication_mc_9_51_19_0_stop" ]
+    %messageText.1 = local;
+    symbol [ messageText %messageText.1 10 8 19 ];
+    %tmp.1 = self;
+    symbol [ byteArrayToString %tmp.2 10 22 39 ];
+    %tmp.2 = getv function %tmp.1 :byteArrayToString;
+    %tmp.3 = lgetv %messageBuffer;
+    symbol [ messageBuffer %tmp.3 10 40 53 ];
+    %tmp.4 = invoke %tmp.1 %tmp.2(%tmp.3);
+    lputv %messageText.1 %tmp.4;
+    symbol [ messageText %messageText.1 10 8 19 ];
+[ "C:\GitRepos\haptic-feedback-app\garmin\source\bleCommunication.mc" 12 4 ]
+    [ "C__GitRepos_haptic_feedback_app_garmin_source_bleCommunication_mc_9_51_19_0_start" "C__GitRepos_haptic_feedback_app_garmin_source_bleCommunication_mc_9_51_19_0_stop" ]
+    %type.2 = local;
+    symbol [ type %type.2 12 8 12 ];
+    %tmp.5 = self;
+    symbol [ parseMessageType %tmp.6 12 15 31 ];
+    %tmp.6 = getv function %tmp.5 :parseMessageType;
+    %tmp.7 = lgetv %messageText.1;
+    symbol [ messageText %tmp.7 12 32 43 ];
+    %tmp.8 = invoke %tmp.5 %tmp.6(%tmp.7);
+    lputv %type.2 %tmp.8;
+    symbol [ type %type.2 12 8 12 ];
+[ "C:\GitRepos\haptic-feedback-app\garmin\source\bleCommunication.mc" 13 4 ]
+    %tmp.9 = lgetv %type.2;
+    symbol [ type %tmp.9 13 12 16 ];
+    push %tmp.9;
+    switch %tmp.9 @C__GitRepos_haptic_feedback_app_garmin_source_bleCommunication_mc_13_4_18_4_switchStmtEnd;
+C__GitRepos_haptic_feedback_app_garmin_source_bleCommunication_mc_13_4_18_4_switchStmtBegin:
+[ "C:\GitRepos\haptic-feedback-app\garmin\source\bleCommunication.mc" 14 8 ]
+    %tmp.10 = dup %tmp.9;
+    symbol [ VIBRATION %tmp.12 14 13 22 ];
+    %tmp.12 = getv ? :VIBRATION;
+    %tmp.13 = getv function %tmp.10 :equals;
+    %tmp.14 = invoke %tmp.10 %tmp.13 (%tmp.12);
+    bt %tmp.14 @C__GitRepos_haptic_feedback_app_garmin_source_bleCommunication_mc_14_8_15_46_switchCase;
+[ "C:\GitRepos\haptic-feedback-app\garmin\source\bleCommunication.mc" 16 8 ]
+    %tmp.15 = dup %tmp.9;
+    symbol [ OTHER %tmp.17 16 13 18 ];
+    %tmp.17 = getv ? :OTHER;
+    %tmp.18 = getv function %tmp.15 :equals;
+    %tmp.19 = invoke %tmp.15 %tmp.18 (%tmp.17);
+    bt %tmp.19 @C__GitRepos_haptic_feedback_app_garmin_source_bleCommunication_mc_16_8_17_43_switchCase;
+C__GitRepos_haptic_feedback_app_garmin_source_bleCommunication_mc_13_4_18_4_switchStmtDefault:
+    goto @C__GitRepos_haptic_feedback_app_garmin_source_bleCommunication_mc_13_4_18_4_defaultCodeBegin;
+C__GitRepos_haptic_feedback_app_garmin_source_bleCommunication_mc_14_8_15_46_switchCase:
+[ "C:\GitRepos\haptic-feedback-app\garmin\source\bleCommunication.mc" 15 12 ]
+    %tmp.20 = self;
+    symbol [ handleVibationMessage %tmp.21 15 12 33 ];
+    %tmp.21 = getv function %tmp.20 :handleVibationMessage;
+    %tmp.22 = lgetv %messageText.1;
+    symbol [ messageText %tmp.22 15 34 45 ];
+    invoke %tmp.20 %tmp.21(%tmp.22);
+C__GitRepos_haptic_feedback_app_garmin_source_bleCommunication_mc_16_8_17_43_switchCase:
+[ "C:\GitRepos\haptic-feedback-app\garmin\source\bleCommunication.mc" 17 12 ]
+    %tmp.23 = self;
+    symbol [ handleOtherMessage %tmp.24 17 12 30 ];
+    %tmp.24 = getv function %tmp.23 :handleOtherMessage;
+    %tmp.25 = lgetv %messageText.1;
+    symbol [ messageText %tmp.25 17 31 42 ];
+    invoke %tmp.23 %tmp.24(%tmp.25);
+C__GitRepos_haptic_feedback_app_garmin_source_bleCommunication_mc_13_4_18_4_defaultCodeBegin:
+C__GitRepos_haptic_feedback_app_garmin_source_bleCommunication_mc_13_4_18_4_switchStmtEnd:
+    pop;
+C__GitRepos_haptic_feedback_app_garmin_source_bleCommunication_mc_9_51_19_0_stop:
+}
+[ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\bleCommunication.mc"; @line = 21; @symbol_functiondef = [handleVibationMessage,21,9,30]; @symbol_param<0> = [messageText,21,31,42]; @symbol_param<0>_type<0> = [String,21,46,52]; ]
+function handleVibationMessage(messageText as String) {
+C__GitRepos_haptic_feedback_app_garmin_source_bleCommunication_mc_21_54_24_0_start:
+[ "C:\GitRepos\haptic-feedback-app\garmin\source\bleCommunication.mc" 22 4 ]
+    [ "C__GitRepos_haptic_feedback_app_garmin_source_bleCommunication_mc_21_54_24_0_start" "C__GitRepos_haptic_feedback_app_garmin_source_bleCommunication_mc_21_54_24_0_stop" ]
+    %vibrationData.1 = local;
+    symbol [ vibrationData %vibrationData.1 22 8 21 ];
+    %tmp.1 = self;
+    symbol [ parseVibrationMessage %tmp.2 22 24 45 ];
+    %tmp.2 = getv function %tmp.1 :parseVibrationMessage;
+    %tmp.3 = lgetv %messageText;
+    symbol [ messageText %tmp.3 22 46 57 ];
+    %tmp.4 = invoke %tmp.1 %tmp.2(%tmp.3);
+    lputv %vibrationData.1 %tmp.4;
+    symbol [ vibrationData %vibrationData.1 22 8 21 ];
+[ "C:\GitRepos\haptic-feedback-app\garmin\source\bleCommunication.mc" 23 4 ]
+    symbol [ Attention %tmp.5 23 4 13 ];
+    %tmp.5 = getm $.Toybox.Attention;
+    symbol [ vibrate %tmp.6 23 14 21 ];
+    %tmp.6 = getv function %tmp.5 :vibrate;
+    %tmp.7 = lgetv %vibrationData.1;
+    symbol [ vibrationData %tmp.7 23 22 35 ];
+    invoke %tmp.5 %tmp.6(%tmp.7);
+C__GitRepos_haptic_feedback_app_garmin_source_bleCommunication_mc_21_54_24_0_stop:
+}
+[ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\bleCommunication.mc"; @line = 26; @symbol_functiondef = [handleOtherMessage,26,9,27]; @symbol_param<0> = [messageText,26,28,39]; @symbol_param<0>_type<0> = [String,26,43,49]; ]
+function handleOtherMessage(messageText as String) {
+}
+[ @file = "C:\GitRepos\haptic-feedback-app\garmin\source\bleCommunication.mc"; @line = 1; ]
+<init> {
+}
