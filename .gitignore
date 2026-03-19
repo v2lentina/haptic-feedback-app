@@ -1,3 +1,9 @@
+bin
+bin_out
+garmin/bin
+garmin/generated
+garmin/bin_out
+
 # OSX
 #
 .DS_Store
