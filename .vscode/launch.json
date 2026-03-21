@@ -14,8 +14,9 @@
 		{
 			"type": "monkeyc",
 			"request": "launch",
-			"name": "Run App",
+			"name": "Run Garmin",
 			"stopAtLaunch": false,
+			"cwd": "${workspaceFolder}/garmin",
 			"device": "${command:GetTargetDevice}",
 		}
 	]

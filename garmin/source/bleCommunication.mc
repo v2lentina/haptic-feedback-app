@@ -6,7 +6,7 @@ import Toybox.StringUtil;
 import Toybox.Attention;
 import Toybox.BluetoothLowEnergy;
 
-function handleMessage(messageBuffer as ByteArray) {
+function handleMessage(messageBuffer as ByteArray) as Void {
     var messageText = byteArrayToString(messageBuffer);
 
     var type = parseMessageType(messageText);
@@ -18,11 +18,11 @@ function handleMessage(messageBuffer as ByteArray) {
     }
 }
 
-function handleVibationMessage(messageText as String) {
+function handleVibationMessage(messageText as String) as Void {
     var vibrationData = parseVibrationMessage(messageText);
     Attention.vibrate(vibrationData);
 }
 
-function handleOtherMessage(messageText as String) {
+function handleOtherMessage(messageText as String) as Void {
     // do nothing, it's just a stub for possible additional functions
 }

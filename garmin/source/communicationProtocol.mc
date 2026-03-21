@@ -6,7 +6,7 @@ import Toybox.StringUtil;
 import Toybox.Attention;
 
 // from https://forums.garmin.com/developer/connect-iq/f/discussion/196954/convert-byte-array-to-string/961973
-function byteArrayToString(byte_array) {
+function byteArrayToString(byte_array as ByteArray) as String {
     var options = {
         :fromRepresentation => StringUtil.REPRESENTATION_BYTE_ARRAY,
         :toRepresentation => StringUtil.REPRESENTATION_STRING_PLAIN_TEXT,
@@ -17,11 +17,11 @@ function byteArrayToString(byte_array) {
     var result = StringUtil.convertEncodedString(byte_array, options);
     // System.println(Lang.format("           '$1$'..", [ result ]));
 
-    return result;
+    return result as String;
 }
 
 // from https://forums.garmin.com/developer/connect-iq/f/discussion/196954/convert-byte-array-to-string/961973
-function stringToByteArray(plain_text) {
+function stringToByteArray(plain_text as String) as ByteArray{
     var options = {
 		:fromRepresentation => StringUtil.REPRESENTATION_STRING_PLAIN_TEXT,
         :toRepresentation => StringUtil.REPRESENTATION_BYTE_ARRAY,
@@ -32,7 +32,7 @@ function stringToByteArray(plain_text) {
     var result = StringUtil.convertEncodedString(plain_text, options);
     // System.println(Lang.format("           '$1$'..", [ result ]));
 
-    return result;
+    return result as ByteArray;
 }
 
 enum MessageType {
@@ -49,6 +49,10 @@ function parseMessageType(messageText as String) as MessageType {
 
     var typeText = messageText.substring(0, firstColonIndex);
 
+    if (typeText == null) {
+        typeText = "";
+    }
+
     switch (typeText) {
         case "VIBRATION":
             return VIBRATION;
@@ -60,7 +64,7 @@ function parseMessageType(messageText as String) as MessageType {
 }
 
 // [vibrationMessageText] is the message as parsed text, see [byteArrayToString]
-function parseVibrationMessage(vibrationMessageText as String) as [VibeProfile] {
+function parseVibrationMessage(vibrationMessageText as String) as Array<VibeProfile> {
     var hasOpeningBracket = vibrationMessageText.find("[") == 0;
     var hasClosingBracket = vibrationMessageText.find("]") == vibrationMessageText.length();
 
@@ -74,10 +78,15 @@ function parseVibrationMessage(vibrationMessageText as String) as [VibeProfile] 
         throw new SymbolNotAllowedException("message had no closing bracket ']'");
     }
 
-    return parseVibrationPattern(vibrationMessageText.substring(1,vibrationMessageText.length()-1));
+    var sb = vibrationMessageText.substring(1,vibrationMessageText.length()-1);
+    if (sb == null) {
+        throw new SymbolNotAllowedException("couldn't extract the vibrationPatternText from vibrationMessageText");
+    }
+
+    return parseVibrationPattern(sb);
 }
 
-function parseVibrationPattern(vibrationPatternText as String) as [VibeProfile] {
+function parseVibrationPattern(vibrationPatternText as String) as Array<VibeProfile> {
     var splits = split(vibrationPatternText, ",");
 
     var validNumberOfEntries = splits.size() % 2 == 0;
@@ -85,11 +94,18 @@ function parseVibrationPattern(vibrationPatternText as String) as [VibeProfile] 
         throw new SymbolNotAllowedException("invalid number of entries, needs to be a non-zero even number. This is because the first number determines the strength (0..100), with the immediately following number determining the playtime in milliseconds.");
     }
 
-    var vibrationData = [] as [VibeProfile];
+    var vibrationData = [] as Array<VibeProfile>;
 
     for (var index = 0; index < splits.size()-1; index+=2) {
         var strength = splits[index].toNumber();
         var durationMs = splits[index+1].toNumber();
+
+        if (strength == null) {
+            throw new SymbolNotAllowedException("strength was invalid! (0..100) index: " + (index+1).toString() + ", value: "+ splits[index]);
+        }
+        if (durationMs == null) {
+            throw new SymbolNotAllowedException("durationMs was invalid! (0..100) index: " + (index+1).toString() + ", value: "+ splits[index+1]);
+        }
 
         if (strength < 0 || strength > 100) {
             throw new SymbolNotAllowedException("strength was invalid! (0..100) index: " + (index+1).toString() + ", value: "+strength.toString());
@@ -109,16 +125,23 @@ function parseVibrationPattern(vibrationPatternText as String) as [VibeProfile] 
     return vibrationData;
 }
 
-function split(s as String, sep as String) as [String] {
-    var tokens = [];
+function split(s as String, sep as String) as Array<String> {
+    var tokens = [] as Array<String>;
 
     var found = s.find(sep);
 
     while (found != null) {
         var token = s.substring(0, found);
-        tokens.add(token);
+        if (token == null) {
+            throw new UnexpectedTypeException("couldn't substring s", null, null);
+        }
+
+        tokens = tokens.add(token);
 
         s = s.substring(found + sep.length(), s.length());
+        if (s == null) {
+            throw new UnexpectedTypeException("couldn't substring s to change view", null, null);
+        }
 
         found = s.find(sep);
     }

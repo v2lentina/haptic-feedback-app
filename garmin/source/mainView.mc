@@ -1,23 +1,10 @@
-import Toybox.Graphics;
-import Toybox.WatchUi;
 import Toybox.Lang;
-
-enum PairingState {
-    // Neither trying to connect, nor being connected, nor being available to connect
-    IDLE,
-    // Not connected, but available for connection
-    DISCOVERABLE_PAIRING,
-    // Connected
-    PAIRED_CONNECTED,
-    // Paired, but not connected, trying to connect
-    PAIRED_TRYINGTOCONNECT,
-    // Failure of some sorts
-    ERROR
-}
+import Toybox.WatchUi;
+import Toybox.BluetoothLowEnergy;
+import Toybox.Graphics;
 
 
-
-class garminView extends WatchUi.View {
+class MainView extends WatchUi.View {
     var pairingState as PairingState = IDLE;
 
     function initialize() {
@@ -45,8 +32,8 @@ class garminView extends WatchUi.View {
         switch (state) {
             case IDLE:
                 return "Press for pair";
-            case DISCOVERABLE_PAIRING:
-                return "Waiting for connection";
+            case SCANNING:
+                return "Scanning";
             case PAIRED_CONNECTED:
                 return "Connected";
             case PAIRED_TRYINGTOCONNECT:
@@ -56,5 +43,33 @@ class garminView extends WatchUi.View {
             default:
                 return "UNKNOWN";
         }
+    }
+}
+
+
+class MainDelegate extends WatchUi.BehaviorDelegate {
+    var view as MainView;
+
+    var bleHandler as BleHandler;
+
+
+    function initialize(viewP as MainView) {
+        self.view = viewP;
+
+        self.bleHandler = new BleHandler();
+        BluetoothLowEnergy.setDelegate(bleHandler);
+
+        BehaviorDelegate.initialize();
+
+    }
+
+    function onSelect() as Boolean {
+        System.println("Tapped!");
+        self.view.pairingState = SCANNING;
+
+        BluetoothLowEnergy.setScanState(BluetoothLowEnergy.SCAN_STATE_SCANNING);
+
+        requestUpdate();
+        return true;
     }
 }
