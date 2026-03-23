@@ -1,26 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-    View,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    ScrollView,
     Text,
     TouchableOpacity,
-    FlatList,
-    ActivityIndicator,
-    ScrollView,
-    Alert,
+    View,
 } from 'react-native';
-import { styles } from '../styles';
+import { Device } from 'react-native-ble-plx';
 import { useBle } from '../BleContext';
+import { styles } from '../styles';
 
 export default function HomeScreen({ navigation }: any) {
     const {
         connected,
         bleState,
-        devices,
+        // devices,
         scanning,
+        advertising,
+        advertiseService,
+        stopAdvertise,
+        getConnectedDevices,
         scanForDevices,
         connect,
         disconnect,
     } = useBle();
+
+    const [devices, setDevices] = useState<Device[]>([]);
 
     const connectionStatus = connected
         ? { color: '#34C759', text: `Verbunden mit ${connected.name ?? "Gerät"}` }
@@ -40,12 +47,29 @@ export default function HomeScreen({ navigation }: any) {
 
                 {!connected && (
                     <>
-                        {!scanning && (
+                        {!advertising ?
+                            <TouchableOpacity style={styles.scanButton} onPress={advertiseService}>
+                                <Text style={styles.scanButtonText}>Anbieten</Text>
+                            </TouchableOpacity>
+                            :
+                            <TouchableOpacity style={styles.scanButton} onPress={stopAdvertise}>
+                                <ActivityIndicator size="small" color="#007AFF" style={{ marginVertical: 20 }} />
+                                <Text style={styles.scanButtonText}>Stop</Text>
+                            </TouchableOpacity>
+                        }
+                        <TouchableOpacity style={styles.scanButton} onPress={async () => {
+                            setDevices(getConnectedDevices());
+                        }}>
+                            <Text style={styles.scanButtonText}>Geräte</Text>
+                        </TouchableOpacity>
+                        {/* {devices?.length && devices?.map(d => <div key={d}>asdf</div>)} */}
+                        {!scanning ?
                             <TouchableOpacity style={styles.scanButton} onPress={scanForDevices}>
                                 <Text style={styles.scanButtonText}>Nach Gerät scannen</Text>
                             </TouchableOpacity>
-                        )}
-                        {scanning && <ActivityIndicator size="small" color="#007AFF" style={{ marginVertical: 20 }} />}
+                            :
+                            <ActivityIndicator size="small" color="#007AFF" style={{ marginVertical: 20 }} />
+                        }
 
                         <FlatList
                             data={devices}

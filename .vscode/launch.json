@@ -6,7 +6,11 @@
 	"configurations": [
 		{
 			"name": "Debug Android",
-			"cwd": "${workspaceFolder}/app",
+			"cwd": "${workspaceFolder}/HapticFeedbackApp",
+			"enableDebug": true,
+			"trace": "verbose",
+			"suppressMultipleSessionWarning": false,
+			"debuggerWorkerUrlPath": "",
 			"type": "reactnative",
 			"request": "launch",
 			"platform": "android"

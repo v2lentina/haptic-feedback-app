@@ -23,6 +23,7 @@ class GlobalState {
         return instance;
     }
 }
+const globalState = GlobalState.getInstance();
 
 
 

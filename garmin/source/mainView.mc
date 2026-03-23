@@ -50,26 +50,41 @@ class MainView extends WatchUi.View {
 class MainDelegate extends WatchUi.BehaviorDelegate {
     var view as MainView;
 
-    var bleHandler as BleHandler;
-
-
     function initialize(viewP as MainView) {
         self.view = viewP;
 
-        self.bleHandler = new BleHandler();
-        BluetoothLowEnergy.setDelegate(bleHandler);
-
         BehaviorDelegate.initialize();
-
     }
 
     function onSelect() as Boolean {
         System.println("Tapped!");
         self.view.pairingState = SCANNING;
 
-        BluetoothLowEnergy.setScanState(BluetoothLowEnergy.SCAN_STATE_SCANNING);
+        globalState.bleHandler.onScanResult.add(method(:handleScanResult));
+        globalState.bleHandler.startScanning();
 
         requestUpdate();
         return true;
+    }
+
+    function handleScanResult(scanResults as Iterator) as Void {
+        System.println("Received Scanresults");
+
+        var results = [] as Array<ScanResult>;
+
+        var current = scanResults.next() as ScanResult or Null;
+        while(current != null) {
+            results.add(current as ScanResult);
+
+            var serviceUuids = current.getServiceUuids();
+            var currentServiceUuid = serviceUuids.next() as Uuid or Null;
+            while (currentServiceUuid != null) {
+                if (currentServiceUuid.equals(globalState.bleHandler.SERVICE_UUID)) {
+                    System.println("FOUND THE SERVICE!! on device " + current.getDeviceName());
+                }
+            }
+
+            current = scanResults.next();
+        }
     }
 }

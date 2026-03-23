@@ -1,15 +1,21 @@
 import React, {
-    createContext, useContext, useEffect, useState, useCallback, ReactNode,
+    createContext,
+    ReactNode,
+    useCallback,
+    useContext, useEffect, useState,
 } from 'react';
-import { manager, getLastDevice, saveLastDevice, clearLastDevice, SERVICE_UUID } from './ble.ts';
-import type {Device, State, Subscription} from 'react-native-ble-plx';
-import { reconnecting } from './ble.ts';
+import type { Device, State, Subscription } from 'react-native-ble-plx';
+import { clearLastDevice, getLastDevice, manager, reconnecting, saveLastDevice, SERVICE_UUID } from './ble.ts';
 
 interface BleContextValue {
     bleState: State | null;
     devices: Device[];
     connected: Device | null;
     scanning: boolean;
+    advertising: boolean;
+    advertiseService: () => void;
+    stopAdvertise: () => void;
+    getConnectedDevices: () => Promise<Device[]>
     scanForDevices: () => void;
     connect: (device: Device) => void;
     disconnect: () => void;
@@ -18,10 +24,15 @@ interface BleContextValue {
 const BleContext = createContext<BleContextValue | undefined>(undefined);
 
 export function BleProvider({ children }: { children: ReactNode }) {
+
+    console.log("manager: " + manager.requestPermissions);
+
     const [bleState, setBleState] = useState<State | null>(null);
     const [devices, setDevices] = useState<Device[]>([]);
     const [connected, setConnected] = useState<Device | null>(null);
     const [scanning, setScanning] = useState(false);
+    const [advertising, setAdvertising] = useState(false);
+    // TODO: Doesn't a useRef suffice??
     const [disconnectSub, setDisconnectSub] = useState<Subscription | null>(null);
 
     useEffect(() => {
@@ -79,13 +90,32 @@ export function BleProvider({ children }: { children: ReactNode }) {
         }, 6000);
     }, [bleState, scanning, devices]);
 
+    const advertiseService = useCallback(async() => {
+        await manager.requestPermissions();
+        if (bleState !== 'PoweredOn' || advertising) return;
+        setAdvertising(true);
+        await manager.advertise();
+    }, [bleState, advertising]);
+
+    const stopAdvertise = useCallback(() => {
+        if (bleState !== 'PoweredOn' || !advertising) return;
+        setAdvertising(false);
+        manager.stopAdvertise();
+    }, [bleState, advertising]);
+
+    const getConnectedDevices = useCallback(async () => {
+        await manager.requestPermissions();
+        if (bleState !== 'PoweredOn') return;
+        return await manager.getConnectedDevices();
+    }, [bleState])
+
     const handleConnect = async (device: Device) => {
         await device.discoverAllServicesAndCharacteristics();
         setConnected(device);
         await saveLastDevice(device.id);
         device.onDisconnected(() => {
             if (!reconnecting) {
-            }            setConnected(null);
+            } setConnected(null);
             clearLastDevice();
         });
         if (disconnectSub) {
@@ -119,14 +149,14 @@ export function BleProvider({ children }: { children: ReactNode }) {
         if (!connected) return;
         try {
             await connected.cancelConnection();
-        } catch {}
+        } catch { }
         setConnected(null);
         clearLastDevice();
     }, [connected]);
 
     return (
         <BleContext.Provider
-            value={{ bleState, devices, connected, scanning, scanForDevices: scanForDevices as any, connect, disconnect }}
+            value={{ bleState, devices, connected, scanning, advertising, advertiseService, stopAdvertise, getConnectedDevices, scanForDevices: scanForDevices as any, connect, disconnect }}
         >
             {children}
         </BleContext.Provider>

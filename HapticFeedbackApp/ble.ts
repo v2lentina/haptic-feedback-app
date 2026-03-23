@@ -1,15 +1,73 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Buffer } from 'buffer';
-import { BleManager } from 'react-native-ble-plx';
+import { PermissionsAndroid, Platform } from 'react-native';
+import BleAdvertise from "react-native-ble-advertise";
+import { BleManager as BlePlxManager } from 'react-native-ble-plx';
 global.Buffer = global.Buffer || Buffer;
 
-export const manager = new BleManager();
 export const SERVICE_UUID = '19b10001-e8f2-537e-4f6c-d104768a1214';
-export const CHAR_UUID    = '19b10002-e8f2-537e-4f6c-d104768a1214';
+export const CHAR_UUID = '19b10002-e8f2-537e-4f6c-d104768a1214';
 const LAST_DEVICE_KEY = 'lastDeviceId';
 
+/**
+ * Allows for both advertising and scanning using `plx` and `advertise`
+ */
+export class BleManager extends BlePlxManager {
+    companyId = 0xFFFF; // special id for development
+    uuid = "66b869a0-88cc-4ce9-9ac9-159e69089880";
+    major = parseInt("CD00", 16); // tbh I don't know what these are for...
+    minor = parseInt("0003", 16); // tbh I don't know what these are for...
+
+    constructor() {
+        super();
+        console.log("Custom BleManager created.");
+    }
+
+    requestPermissions() {
+        if (Platform.OS === 'android') {
+            const permissionsRequiredToBeAccepted = [
+                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                Platform.Version >= 31 ? PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE : undefined
+            ];
+
+
+            return PermissionsAndroid.requestMultiple(permissionsRequiredToBeAccepted);
+        }
+
+        // nothing to request on iOS
+        return Promise.resolve(true);
+    }
+
+    advertise() {
+        BleAdvertise.setCompanyId(this.companyId);
+
+        return BleAdvertise.broadcast(this.uuid, this.major, this.minor)
+            .then(success => {
+                console.log('broadcast started');
+            }).catch(error => {
+                console.log('broadcast failed with: ' + error);
+            });
+    }
+
+    async getConnectedDevices() {
+        const connectedDevices = await this.connectedDevices([this.uuid]);
+        return connectedDevices
+    }
+
+    stopAdvertise() {
+        BleAdvertise.stopBroadcast()
+            .then(success => {
+                console.log('broadcast stopped');
+            }).catch(error => {
+                console.log('broadcast failed to stop with: ' + error);
+            });
+    }
+}
+
+export const manager = new BleManager();
+
 //helper functions
-export async function getLastDevice()   { return AsyncStorage.getItem(LAST_DEVICE_KEY); }
+export async function getLastDevice() { return AsyncStorage.getItem(LAST_DEVICE_KEY); }
 export async function saveLastDevice(id: string) { return AsyncStorage.setItem(LAST_DEVICE_KEY, id); }
 export async function clearLastDevice() { return AsyncStorage.removeItem(LAST_DEVICE_KEY); }
 export let reconnecting = false;
@@ -33,7 +91,7 @@ const RECONNECT_EVERY = 5; //soft reconnect after every 5 vibrations
 
 export function enqueueVibration(deviceId: string, payloadBase64: string) {
     writeQueue = writeQueue
-        .catch(() => {})
+        .catch(() => { })
         .then(() => {
             return manager.writeCharacteristicWithResponseForDevice(
                 deviceId, SERVICE_UUID, CHAR_UUID, payloadBase64
@@ -57,7 +115,7 @@ export async function vibrate(pattern: VibrationPatterns) {
     const data = Buffer.from(pattern).toString('base64');
     try {
         await enqueueVibration(deviceId, data);
-    } catch(e) {
+    } catch (e) {
         console.warn('BLE> Sending vibration pattern failed', e);
     }
 }
