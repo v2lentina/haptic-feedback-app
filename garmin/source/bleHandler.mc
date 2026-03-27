@@ -18,7 +18,7 @@ class BleHandler extends BleDelegate {
 			:characteristics => [
 					{
 							:uuid => self.SERVICE_UUID,
-							:descriptors => [ BluetoothLowEnergy.cccdUuid() ]
+							:descriptors => [ ]
 					}
 			]
 	};

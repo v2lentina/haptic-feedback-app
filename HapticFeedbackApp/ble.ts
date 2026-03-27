@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Buffer } from 'buffer';
+import { setServices, startAdvertising } from 'munim-bluetooth';
 import { PermissionsAndroid, Platform } from 'react-native';
 import BleAdvertise from "react-native-ble-advertise";
 import { BleManager as BlePlxManager } from 'react-native-ble-plx';
@@ -14,9 +15,9 @@ const LAST_DEVICE_KEY = 'lastDeviceId';
  */
 export class BleManager extends BlePlxManager {
     companyId = 0xFFFF; // special id for development
-    uuid = "66b869a0-88cc-4ce9-9ac9-159e69089880";
-    major = parseInt("CD00", 16); // tbh I don't know what these are for...
-    minor = parseInt("0003", 16); // tbh I don't know what these are for...
+    uuid = "F89D9611-39A3-4777-868D-FB31E94B382A";
+    major = parseInt("0000", 16); // tbh I don't know what these are for...
+    minor = parseInt("0000", 16); // tbh I don't know what these are for...
 
     constructor() {
         super();
@@ -26,8 +27,7 @@ export class BleManager extends BlePlxManager {
     requestPermissions() {
         if (Platform.OS === 'android') {
             const permissionsRequiredToBeAccepted = [
-                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-                Platform.Version >= 31 ? PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE : undefined
+                PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE
             ];
 
 
@@ -41,12 +41,25 @@ export class BleManager extends BlePlxManager {
     advertise() {
         BleAdvertise.setCompanyId(this.companyId);
 
-        return BleAdvertise.broadcast(this.uuid, this.major, this.minor)
-            .then(success => {
-                console.log('broadcast started');
-            }).catch(error => {
-                console.log('broadcast failed with: ' + error);
-            });
+        setServices([{
+            uuid: this.uuid,
+            characteristics: [{
+                uuid: this.uuid,
+                properties: [],
+            }],
+        }])
+
+        startAdvertising({
+            serviceUUIDs: [this.uuid],
+            localName: 'HFA', // not to be confused with L-FA
+            manufacturerData: 0xffff,
+        })
+        // .then(_ => BleAdvertise.broadcast(this.uuid, this.major, this.minor))
+        // .then(_success => {
+        //     console.log('broadcast started');
+        // }).catch(error => {
+        //     console.log('broadcast failed with: ' + error);
+        // });
     }
 
     async getConnectedDevices() {
@@ -56,7 +69,7 @@ export class BleManager extends BlePlxManager {
 
     stopAdvertise() {
         BleAdvertise.stopBroadcast()
-            .then(success => {
+            .then(_success => {
                 console.log('broadcast stopped');
             }).catch(error => {
                 console.log('broadcast failed to stop with: ' + error);

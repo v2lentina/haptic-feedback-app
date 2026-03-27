@@ -4,34 +4,18 @@ import Toybox.WatchUi;
 import Toybox.System;
 import Toybox.StringUtil;
 
-class GlobalState {
-    const bleHandler = new BleHandler();
-    var pairingState as PairingState = IDLE;
-
-
-
-// Singleton
-    // cannot use constructed object, as it doesn't allow for Method/Function properties
-    private static var instance as GlobalState or Null;
-    private function initialize() {
-
-    }
-    static function getInstance() as GlobalState {
-        if (instance == null) {
-             instance = new GlobalState();
-        }
-        return instance;
-    }
+function globalState() as GlobalState {
+    return GlobalState.getInstance();
 }
-const globalState = GlobalState.getInstance();
-
 
 
 class garminApp extends Application.AppBase {
     function initialize() {
+        System.println("STARTUP");
         // BluetoothLowEnergy.setDelegate(GlobalState.getInstance().bleHandler);
 
         AppBase.initialize();
+        System.println("STARTUP - initialized");
     }
 
     // Return the initial view of your application here
