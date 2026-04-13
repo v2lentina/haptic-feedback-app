@@ -10,6 +10,8 @@ class GlobalState {
     }
     var foundDevices as Array<ScanResult> or Null;
 
+    var characteristic as Characteristic or Null;
+
 // Singleton
     // cannot use constructed object, as it doesn't allow for Method/Function properties
     private static var instance as GlobalState or Null;

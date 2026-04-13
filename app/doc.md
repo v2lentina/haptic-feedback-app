@@ -5,6 +5,8 @@
 
 Values are like [Garmin](https://developer.garmin.com/connect-iq/api-docs/Toybox/Attention/VibeProfile.html) uses.
 
+<!-- add handshake message -->
+
 # Protocol v1.0
 ```
 <MESSAGE> ::= <VIBRATIONMESSAGE> | <OTHERMESSAGE>

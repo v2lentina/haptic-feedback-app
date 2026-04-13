@@ -12,7 +12,7 @@ class BleHandler extends BleDelegate {
 	var onDisconnected as Array<Method> = [];
 
 	// const SERVICE_UUID = Toybox.BluetoothLowEnergy.stringToUuid("66b869a0-88cc-4ce9-9ac9-159e69089880");
-	const SERVICE_UUID = Toybox.BluetoothLowEnergy.stringToUuid("F89D9611-39A3-4777-868D-FB31E94B382A");
+	static const SERVICE_UUID = Toybox.BluetoothLowEnergy.stringToUuid("F89D9611-39A3-4777-868D-FB31E94B382A");
 
 	const profile = {
 			:uuid => self.SERVICE_UUID,
@@ -58,6 +58,8 @@ class BleHandler extends BleDelegate {
 
 	function onConnectedStateChanged(device as Device, state as ConnectionState) as Void {
 		if (state == CONNECTION_STATE_CONNECTED) {
+			abortScanning(); // automatically stop scanning - it doesn't make any sense to continue
+
 			connectedDevice = device;
 			for(var index = 0; index < self.onConnected.size(); index++) {
 				self.onConnected[index].invoke(connectedDevice);

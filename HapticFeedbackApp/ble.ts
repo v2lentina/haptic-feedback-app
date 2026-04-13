@@ -52,11 +52,11 @@ export class BleManager extends BlePlxManager {
         startAdvertising({
             serviceUUIDs: [this.uuid],
             // localName: 'FFFF', // not to be confused with L-FA
-            manufacturerData: "FFFF",
+            manufacturerData: "2620", // little endian (byte-level reversed)
             advertisingData: {
                 // appearance: this.companyId,
                 // manufacturerId is handled by HybridMunimBluetooth.kt:812
-                manufacturerData: "FFFF",
+                manufacturerData: "2620",
                 // completeLocalName: "FFFA",
                 // shortenedLocalName: "FA",
             }

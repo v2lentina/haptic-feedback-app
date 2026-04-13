@@ -21,19 +21,28 @@ class MainView extends WatchUi.View {
     // Update the view
     function onUpdate(dc as Dc) as Void {
         System.println("garminView.onUpdate");
-
         var drw = self.findDrawableById("pairingStateLabel") as TextArea;
-        if (globalState().hasFoundDevices()) {
-            var str = "";
 
-            for (var index = 0; index < (globalState().foundDevices as Array<ScanResult>).size(); index++) {
-                str += (globalState().foundDevices as Array<ScanResult>)[index].getDeviceName();
-                str += " _ ";
-            }
+        if (globalState().bleHandler.connectedDevice != null) {
+            var cd = globalState().bleHandler.connectedDevice as Device;
+            var str = cd.getName() + "";
+
+
 
             drw.setText(str);
         } else {
-            drw.setText(stringFromPairingState(pairingState));
+            if (globalState().hasFoundDevices()) {
+                var str = "";
+
+                for (var index = 0; index < (globalState().foundDevices as Array<ScanResult>).size(); index++) {
+                    str += (globalState().foundDevices as Array<ScanResult>)[index].getDeviceName();
+                    str += " _ ";
+                }
+
+                drw.setText(str);
+            } else {
+                drw.setText(stringFromPairingState(pairingState));
+            }
         }
 
 
@@ -81,10 +90,40 @@ class MainDelegate extends WatchUi.BehaviorDelegate {
         self.view.pairingState = SCANNING;
 
         self.gs.bleHandler.onScanResult.add(method(:handleScanResult));
+        self.gs.bleHandler.onConnected.add(method(:handleConnection));
         self.gs.bleHandler.startScanning();
 
         requestUpdate();
         return true;
+    }
+
+    function handleConnection() as Void {
+        // state will have been updated by BleHandler
+        GlobalState.getInstance().pairingState = PAIRED_TRYINGTOCONNECT;
+        var cd = GlobalState.getInstance().bleHandler.connectedDevice as Device;
+
+        var service = cd.getService(BleHandler.SERVICE_UUID);
+
+        if (service == null) {
+            System.println("Couldn't get service with UUID: " + BleHandler.SERVICE_UUID);
+            return;
+        }
+
+        var characteristic = (service as Service).getCharacteristic(BleHandler.SERVICE_UUID);
+        if (characteristic == null) {
+            System.println("Couldn't get characteristic from Service ("+BleHandler.SERVICE_UUID+") with UUID: "+ BleHandler.SERVICE_UUID);
+            return;
+        }
+
+        GlobalState.getInstance().characteristic = characteristic;
+
+        (characteristic as Characteristic).requestRead();
+        // async -> BleHandler.onCharacteristicRead
+        //          then accept the connection finally
+
+        // TODO: update docu to add handshake message
+
+        requestUpdate();
     }
 
     function handleScanResult(scanResults as Iterator) as Void {
@@ -136,6 +175,7 @@ class MainDelegate extends WatchUi.BehaviorDelegate {
                     System.println("            FOUND THE SERVICE!! on device " + current.getDeviceName());
 
                     (self.gs.foundDevices as Array<ScanResult>).add(current);
+                    _handleDeviceFound(current);
                     requestUpdate();
                 }
             }
@@ -145,6 +185,13 @@ class MainDelegate extends WatchUi.BehaviorDelegate {
 
         // self.gs.foundDevices = results;
         requestUpdate();
+    }
+
+    function _handleDeviceFound(result as ScanResult) as Void {
+        Toybox.BluetoothLowEnergy.pairDevice(result);
+        // async -> BleHandler.onConnectedStateChanged
+        //          BleHandler will update it's state automatically (in particular `connectedDevice`)
+        //          afterwards all .onConnected listeners will be called by BleHandler itself
     }
 
     // Manual byte-search for the Company ID (reversed (Little Endian): 26 20 -> 2026)
