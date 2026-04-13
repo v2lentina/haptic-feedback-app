@@ -14,11 +14,11 @@ import { styles } from '../styles';
 
 export default function HomeScreen({ navigation }: any) {
     const {
-        connected,
+        connectedDevice,
         bleState,
         // devices,
-        scanning,
-        advertising,
+        isScanning,
+        isAdvertising,
         advertiseService,
         stopAdvertise,
         getConnectedDevices,
@@ -29,9 +29,9 @@ export default function HomeScreen({ navigation }: any) {
 
     const [devices, setDevices] = useState<Device[]>([]);
 
-    const connectionStatus = connected
-        ? { color: '#34C759', text: `Verbunden mit ${connected.name ?? "Gerät"}` }
-        : scanning
+    const connectionStatus = connectedDevice
+        ? { color: '#34C759', text: `Verbunden mit ${connectedDevice.name ?? "Gerät"}` }
+        : isScanning
             ? { color: '#007AFF', text: 'Scannen...' }
             : { color: '#8e8e93', text: 'Nicht verbunden' };
 
@@ -45,9 +45,9 @@ export default function HomeScreen({ navigation }: any) {
                     </Text>
                 </View>
 
-                {!connected && (
+                {!connectedDevice && (
                     <>
-                        {!advertising ?
+                        {!isAdvertising ?
                             <TouchableOpacity style={styles.scanButton} onPress={advertiseService}>
                                 <Text style={styles.scanButtonText}>Anbieten</Text>
                             </TouchableOpacity>
@@ -63,7 +63,7 @@ export default function HomeScreen({ navigation }: any) {
                             <Text style={styles.scanButtonText}>Geräte</Text>
                         </TouchableOpacity>
                         {/* {devices?.length && devices?.map(d => <div key={d}>asdf</div>)} */}
-                        {!scanning ?
+                        {!isScanning ?
                             <TouchableOpacity style={styles.scanButton} onPress={scanForDevices}>
                                 <Text style={styles.scanButtonText}>Nach Gerät scannen</Text>
                             </TouchableOpacity>
@@ -86,7 +86,7 @@ export default function HomeScreen({ navigation }: any) {
                                 </TouchableOpacity>
                             )}
                             ListEmptyComponent={
-                                !scanning && devices.length === 0
+                                !isScanning && devices.length === 0
                                     ? <Text style={styles.hint}>Keine Geräte gefunden.</Text>
                                     : null
                             }
@@ -96,7 +96,7 @@ export default function HomeScreen({ navigation }: any) {
                     </>
                 )}
 
-                {connected && (
+                {connectedDevice && (
                     <View style={styles.connectedActions}>
                         <TouchableOpacity
                             style={styles.scanButtonEx}

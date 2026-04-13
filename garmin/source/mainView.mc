@@ -114,31 +114,31 @@ class MainDelegate extends WatchUi.BehaviorDelegate {
                 System.println("Payload: " + hexString);
             }
 
-            // Logic to check for 0xFFFF manually in the byte stream
+            // Logic to check for 0x2026 manually in the byte stream
             if (containsCompanyCode(rawData)) {
-                System.println("MATCH FOUND: 0xFFFF detected in raw bytes.");
+                System.println("MATCH FOUND: 0x2026 detected in raw bytes.");
                 (self.gs.foundDevices as Array<ScanResult>).add(current);
             }
 
-            var isFromFFFF = current.getManufacturerSpecificData(0xFFFF) != null;
-            System.println("    current is 0xFFFF:" + isFromFFFF);
-            if (isFromFFFF) {
+            var isFrom2026 = current.getManufacturerSpecificData(0x2026) != null;
+            System.println("    current is 0x2026:" + isFrom2026);
+            if (isFrom2026) {
                 (self.gs.foundDevices as Array<ScanResult>).add(current);
             }
 
             System.println("    current.rssi: " + current.getRssi());
 
 
-            // var serviceUuids = current.getServiceUuids();
-        //     for (var uuid = serviceUuids.next(); uuid != null; uuid = serviceUuids.next()) {
-        //         System.println("        current UUIDs: " + uuid);
-        //         if (uuid.equals(self.gs.bleHandler.SERVICE_UUID)) {
-        //             System.println("            FOUND THE SERVICE!! on device " + current.getDeviceName());
+            var serviceUuids = current.getServiceUuids();
+            for (var uuid = serviceUuids.next(); uuid != null; uuid = serviceUuids.next()) {
+                System.println("        current UUIDs: " + uuid);
+                if (uuid.equals(self.gs.bleHandler.SERVICE_UUID)) {
+                    System.println("            FOUND THE SERVICE!! on device " + current.getDeviceName());
 
-        //             (self.gs.foundDevices as Array<ScanResult>).add(current);
-        //             requestUpdate();
-        //         }
-        //     }
+                    (self.gs.foundDevices as Array<ScanResult>).add(current);
+                    requestUpdate();
+                }
+            }
         }
 
         System.println("Finished processing ScanResults, got " + results.size());
@@ -147,12 +147,12 @@ class MainDelegate extends WatchUi.BehaviorDelegate {
         requestUpdate();
     }
 
-    // Manual byte-search for the Company ID (Little Endian: FF FF)
+    // Manual byte-search for the Company ID (reversed (Little Endian): 26 20 -> 2026)
     function containsCompanyCode(data as ByteArray) as Boolean{
-        if (data == null || data.size() < 4) { return false; }
-        for (var i = 0; i < data.size() - 2; i++) {
+        if (data == null || data.size() < 2) { return false; }
+        for (var i = 0; i < data.size() - 1; i++) {
             // Manufacturer data blocks usually start with [Length][0xFF][LowByte][HighByte]
-            if (data[i] == 0xFF && data[i+1] == 0xFF && data[i+2] == 0xFF) {
+            if ((data[i] == 0x26 && data[i+1] == 0x20) || (data[i] == 0xFF && data[i+1] == 0xFF)) {
                 return true;
             }
         }

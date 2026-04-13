@@ -10,9 +10,9 @@ import { clearLastDevice, getLastDevice, manager, reconnecting, saveLastDevice, 
 interface BleContextValue {
     bleState: State | null;
     devices: Device[];
-    connected: Device | null;
-    scanning: boolean;
-    advertising: boolean;
+    connectedDevice: Device | null;
+    isScanning: boolean;
+    isAdvertising: boolean;
     advertiseService: () => void;
     stopAdvertise: () => void;
     getConnectedDevices: () => Promise<Device[]>
@@ -25,13 +25,13 @@ const BleContext = createContext<BleContextValue | undefined>(undefined);
 
 export function BleProvider({ children }: { children: ReactNode }) {
 
-    console.log("manager: " + manager.requestPermissions);
+    // console.log("manager: " + manager.requestPermissions);
 
     const [bleState, setBleState] = useState<State | null>(null);
     const [devices, setDevices] = useState<Device[]>([]);
-    const [connected, setConnected] = useState<Device | null>(null);
-    const [scanning, setScanning] = useState(false);
-    const [advertising, setAdvertising] = useState(false);
+    const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
+    const [isScanning, setIsScanning] = useState(false);
+    const [isAdvertising, setIsAdvertising] = useState(false);
     // TODO: Doesn't a useRef suffice??
     const [disconnectSub, setDisconnectSub] = useState<Subscription | null>(null);
 
@@ -55,21 +55,21 @@ export function BleProvider({ children }: { children: ReactNode }) {
         const interval = setInterval(async () => {
             const current = await manager.connectedDevices([SERVICE_UUID]);
             if (current.length > 0) {
-                if (!connected || connected.id !== current[0].id) {
-                    setConnected(current[0]);
+                if (!connectedDevice || connectedDevice.id !== current[0].id) {
+                    setConnectedDevice(current[0]);
                     await saveLastDevice(current[0].id);
                 }
-            } else if (connected) {
-                setConnected(null);
+            } else if (connectedDevice) {
+                setConnectedDevice(null);
                 await clearLastDevice();
             }
         }, 2000);
         return () => clearInterval(interval);
-    }, [connected]);
+    }, [connectedDevice]);
 
     const scanForDevices = useCallback(() => {
-        if (bleState !== 'PoweredOn' || scanning) return;
-        setScanning(true);
+        if (bleState !== 'PoweredOn' || isScanning) return;
+        setIsScanning(true);
         setDevices([]);
         manager.startDeviceScan(
             [SERVICE_UUID],
@@ -77,7 +77,7 @@ export function BleProvider({ children }: { children: ReactNode }) {
             (err, dev) => {
                 if (err) {
                     console.warn('Scan-Error', err);
-                    setScanning(false);
+                    setIsScanning(false);
                     return;
                 }
                 if (dev && !devices.find(d => d.id === dev.id))
@@ -86,22 +86,22 @@ export function BleProvider({ children }: { children: ReactNode }) {
         );
         setTimeout(() => {
             manager.stopDeviceScan();
-            setScanning(false);
+            setIsScanning(false);
         }, 6000);
-    }, [bleState, scanning, devices]);
+    }, [bleState, isScanning, devices]);
 
     const advertiseService = useCallback(async() => {
         await manager.requestPermissions();
-        if (bleState !== 'PoweredOn' || advertising) return;
-        setAdvertising(true);
+        if (bleState !== 'PoweredOn' || isAdvertising) return;
+        setIsAdvertising(true);
         await manager.advertise();
-    }, [bleState, advertising]);
+    }, [bleState, isAdvertising]);
 
     const stopAdvertise = useCallback(() => {
-        if (bleState !== 'PoweredOn' || !advertising) return;
-        setAdvertising(false);
+        if (bleState !== 'PoweredOn' || !isAdvertising) return;
+        setIsAdvertising(false);
         manager.stopAdvertise();
-    }, [bleState, advertising]);
+    }, [bleState, isAdvertising]);
 
     const getConnectedDevices = useCallback(async () => {
         await manager.requestPermissions();
@@ -111,11 +111,11 @@ export function BleProvider({ children }: { children: ReactNode }) {
 
     const handleConnect = async (device: Device) => {
         await device.discoverAllServicesAndCharacteristics();
-        setConnected(device);
+        setConnectedDevice(device);
         await saveLastDevice(device.id);
         device.onDisconnected(() => {
             if (!reconnecting) {
-            } setConnected(null);
+            } setConnectedDevice(null);
             clearLastDevice();
         });
         if (disconnectSub) {
@@ -123,13 +123,13 @@ export function BleProvider({ children }: { children: ReactNode }) {
             setDisconnectSub(null);
         }
         await device.discoverAllServicesAndCharacteristics();
-        setConnected(device);
+        setConnectedDevice(device);
         await saveLastDevice(device.id);
 
         const sub = device.onDisconnected(() => {
             sub.remove();
             setDisconnectSub(null);
-            setConnected(null);
+            setConnectedDevice(null);
             clearLastDevice();
         });
         setDisconnectSub(sub);
@@ -146,17 +146,17 @@ export function BleProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const disconnect = useCallback(async () => {
-        if (!connected) return;
+        if (!connectedDevice) return;
         try {
-            await connected.cancelConnection();
+            await connectedDevice.cancelConnection();
         } catch { }
-        setConnected(null);
+        setConnectedDevice(null);
         clearLastDevice();
-    }, [connected]);
+    }, [connectedDevice]);
 
     return (
         <BleContext.Provider
-            value={{ bleState, devices, connected, scanning, advertising, advertiseService, stopAdvertise, getConnectedDevices, scanForDevices: scanForDevices as any, connect, disconnect }}
+            value={{ bleState, devices, connectedDevice, isScanning, isAdvertising, advertiseService, stopAdvertise, getConnectedDevices, scanForDevices, connect, disconnect }}
         >
             {children}
         </BleContext.Provider>

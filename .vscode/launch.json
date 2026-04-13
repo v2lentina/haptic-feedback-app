@@ -10,7 +10,6 @@
 			"enableDebug": true,
 			"trace": "verbose",
 			"suppressMultipleSessionWarning": false,
-			"debuggerWorkerUrlPath": "",
 			"type": "reactnative",
 			"request": "launch",
 			"platform": "android"

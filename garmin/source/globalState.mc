@@ -1,4 +1,4 @@
-import Toybox.Lang; // yo let's import the language, we are talking RIGHT NOW ?! XD (I'm still at the point where I think it's funny)
+import Toybox.Lang; // yo let's import the language we are talking RIGHT NOW ?! XD (I'm still at the point where I think it's funny)
 import Toybox.BluetoothLowEnergy;
 
 class GlobalState {

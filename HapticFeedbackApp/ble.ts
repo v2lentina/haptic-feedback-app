@@ -1,8 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Buffer } from 'buffer';
-import { setServices, startAdvertising } from 'munim-bluetooth';
+import { setServices, startAdvertising, stopAdvertising } from 'munim-bluetooth';
 import { PermissionsAndroid, Platform } from 'react-native';
-import BleAdvertise from "react-native-ble-advertise";
 import { BleManager as BlePlxManager } from 'react-native-ble-plx';
 global.Buffer = global.Buffer || Buffer;
 
@@ -14,10 +13,10 @@ const LAST_DEVICE_KEY = 'lastDeviceId';
  * Allows for both advertising and scanning using `plx` and `advertise`
  */
 export class BleManager extends BlePlxManager {
-    companyId = 0xFFFF; // special id for development
+    companyId = 0x2026; // special id for development
     uuid = "F89D9611-39A3-4777-868D-FB31E94B382A";
-    major = parseInt("0000", 16); // tbh I don't know what these are for...
-    minor = parseInt("0000", 16); // tbh I don't know what these are for...
+    major = 0x0; // tbh I don't know what these are for...
+    minor = 0x0; // tbh I don't know what these are for...
 
     constructor() {
         super();
@@ -27,7 +26,8 @@ export class BleManager extends BlePlxManager {
     requestPermissions() {
         if (Platform.OS === 'android') {
             const permissionsRequiredToBeAccepted = [
-                PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE
+                PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE,
+                PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
             ];
 
 
@@ -39,8 +39,6 @@ export class BleManager extends BlePlxManager {
     }
 
     advertise() {
-        BleAdvertise.setCompanyId(this.companyId);
-
         setServices([{
             uuid: this.uuid,
             characteristics: [{
@@ -49,17 +47,29 @@ export class BleManager extends BlePlxManager {
             }],
         }])
 
+        console.log("Change-3");
+
         startAdvertising({
             serviceUUIDs: [this.uuid],
-            localName: 'HFA', // not to be confused with L-FA
-            manufacturerData: 0xffff,
-        })
-        // .then(_ => BleAdvertise.broadcast(this.uuid, this.major, this.minor))
-        // .then(_success => {
-        //     console.log('broadcast started');
-        // }).catch(error => {
-        //     console.log('broadcast failed with: ' + error);
-        // });
+            // localName: 'FFFF', // not to be confused with L-FA
+            manufacturerData: "FFFF",
+            advertisingData: {
+                // appearance: this.companyId,
+                // manufacturerId is handled by HybridMunimBluetooth.kt:812
+                manufacturerData: "FFFF",
+                // completeLocalName: "FFFA",
+                // shortenedLocalName: "FA",
+            }
+        });
+
+        // BleAdvertise.setCompanyId(this.companyId);
+
+        // BleAdvertise.broadcast(this.uuid, this.major, this.minor)
+        //     .then(_success => {
+        //         console.log('broadcast started');
+        //     }).catch(error => {
+        //         console.log('broadcast failed with: ' + error);
+        //     });
     }
 
     async getConnectedDevices() {
@@ -68,12 +78,13 @@ export class BleManager extends BlePlxManager {
     }
 
     stopAdvertise() {
-        BleAdvertise.stopBroadcast()
-            .then(_success => {
-                console.log('broadcast stopped');
-            }).catch(error => {
-                console.log('broadcast failed to stop with: ' + error);
-            });
+        stopAdvertising();
+        // BleAdvertise.stopBroadcast()
+        //     .then(_success => {
+        //         console.log('broadcast stopped');
+        //     }).catch(error => {
+        //         console.log('broadcast failed to stop with: ' + error);
+        //     });
     }
 }
 

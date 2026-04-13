@@ -1,7 +1,7 @@
 import Toybox.BluetoothLowEnergy;
 import Toybox.Lang;
 
-// extends BleDelegate causes the simulator to crash (yes crash, not even that it doesn't do anything, it straight up causes a segfault...)
+// "extends BleDelegate"causes the simulator to crash (yes crash, not even that it doesn't do anything, it straight up causes a segfault...)
 class BleHandler extends BleDelegate {
 	var lastScanresults as Iterator or Null;
 
@@ -11,7 +11,8 @@ class BleHandler extends BleDelegate {
 	var onConnected as Array<Method> = [];
 	var onDisconnected as Array<Method> = [];
 
-	const SERVICE_UUID = Toybox.BluetoothLowEnergy.stringToUuid("66b869a0-88cc-4ce9-9ac9-159e69089880");
+	// const SERVICE_UUID = Toybox.BluetoothLowEnergy.stringToUuid("66b869a0-88cc-4ce9-9ac9-159e69089880");
+	const SERVICE_UUID = Toybox.BluetoothLowEnergy.stringToUuid("F89D9611-39A3-4777-868D-FB31E94B382A");
 
 	const profile = {
 			:uuid => self.SERVICE_UUID,
@@ -28,6 +29,13 @@ class BleHandler extends BleDelegate {
 		BleDelegate.initialize();
 
 		BluetoothLowEnergy.setDelegate(self);
+	}
+
+	function onProfileRegister(uuid as Uuid, status as Status) as Void {
+		System.print("Profile registered: ");
+		System.print(uuid);
+		System.print(" status: ");
+		System.print(status);
 	}
 
 	function startScanning() as Void {
