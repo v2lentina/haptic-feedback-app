@@ -28,7 +28,7 @@ export class BleManager extends BlePlxManager {
                 PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
             ];
 
-            console.log("Requesting permissions");
+            console.log("Requesting permissions: " + permissionsRequiredToBeAccepted);
             return PermissionsAndroid.requestMultiple(permissionsRequiredToBeAccepted);
         }
 
@@ -37,13 +37,15 @@ export class BleManager extends BlePlxManager {
     }
 
     advertise() {
+        console.log("Starting advertising");
+
         setServices([{
             uuid: this.serviceUUID,
             characteristics: [{
                 uuid: this.characteristicUUID,
                 properties: ['read', 'write', 'notify'],
             }],
-        }])
+        }]);
 
         startAdvertising({
             serviceUUIDs: [this.serviceUUID],

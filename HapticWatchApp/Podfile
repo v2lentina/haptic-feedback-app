@@ -1,0 +1,6 @@
+:watchos, '6.0'
+use_frameworks!
+
+target 'HapticWatchApp' do
+    pod 'SwiftyJSON', '~> 4.0'
+end
