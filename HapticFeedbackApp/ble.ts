@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Buffer } from 'buffer';
-import { setServices, startAdvertising, stopAdvertising } from 'munim-bluetooth';
+import { addWriteListener, setServices, startAdvertising, stopAdvertising } from 'munim-bluetooth';
 import { PermissionsAndroid, Platform } from 'react-native';
 import { BleManager as BlePlxManager } from 'react-native-ble-plx';
 global.Buffer = global.Buffer || Buffer;
@@ -13,10 +13,8 @@ const LAST_DEVICE_KEY = 'lastDeviceId';
  * Allows for both advertising and scanning using `plx` and `advertise`
  */
 export class BleManager extends BlePlxManager {
-    companyId = 0x2026; // special id for development
-    uuid = "F89D9611-39A3-4777-868D-FB31E94B382A";
-    major = 0x0; // tbh I don't know what these are for...
-    minor = 0x0; // tbh I don't know what these are for...
+    serviceUUID = "F89D9611-39A3-4777-868D-FB31E94B382A";
+    characteristicUUID = "40489038-888A-4BFB-9C4B-11660B9B6BE0"
 
     constructor() {
         super();
@@ -30,7 +28,7 @@ export class BleManager extends BlePlxManager {
                 PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
             ];
 
-
+            console.log("Requesting permissions");
             return PermissionsAndroid.requestMultiple(permissionsRequiredToBeAccepted);
         }
 
@@ -40,51 +38,40 @@ export class BleManager extends BlePlxManager {
 
     advertise() {
         setServices([{
-            uuid: this.uuid,
+            uuid: this.serviceUUID,
             characteristics: [{
-                uuid: this.uuid,
-                properties: [],
+                uuid: this.characteristicUUID,
+                properties: ['read', 'write', 'notify'],
             }],
         }])
 
-        console.log("Change-3");
-
         startAdvertising({
-            serviceUUIDs: [this.uuid],
-            // localName: 'FFFF', // not to be confused with L-FA
-            manufacturerData: "2620", // little endian (byte-level reversed)
-            advertisingData: {
-                // appearance: this.companyId,
-                // manufacturerId is handled by HybridMunimBluetooth.kt:812
-                manufacturerData: "2620",
-                // completeLocalName: "FFFA",
-                // shortenedLocalName: "FA",
-            }
+            serviceUUIDs: [this.serviceUUID],
+            localName: 'HFA', // not to be confused with L-FA ;-)
+
+            // // manufacturerId is handled by HybridMunimBluetooth.kt:812
+            // // there it has a 00 00 pad on the left, for reasons unclear to me
+            // // if you want the manufacturing data to be exactly what you specify, change that there!
+            // manufacturerData: this.companyId, // little endian (byte-level reversed)
+            // advertisingData: {
+            //     completeLocalName: "HFA",
+            //     shortenedLocalName: "HFA",
+            // }
         });
 
-        // BleAdvertise.setCompanyId(this.companyId);
-
-        // BleAdvertise.broadcast(this.uuid, this.major, this.minor)
-        //     .then(_success => {
-        //         console.log('broadcast started');
-        //     }).catch(error => {
-        //         console.log('broadcast failed with: ' + error);
-        //     });
+        addWriteListener((val, char) => {
+            const msg = Buffer.from(val, "base64").toString();
+            console.log(`Write request '${msg}' on '${char}'`);
+        });
     }
 
     async getConnectedDevices() {
-        const connectedDevices = await this.connectedDevices([this.uuid]);
+        const connectedDevices = await this.connectedDevices([this.serviceUUID]);
         return connectedDevices
     }
 
     stopAdvertise() {
         stopAdvertising();
-        // BleAdvertise.stopBroadcast()
-        //     .then(_success => {
-        //         console.log('broadcast stopped');
-        //     }).catch(error => {
-        //         console.log('broadcast failed to stop with: ' + error);
-        //     });
     }
 }
 
