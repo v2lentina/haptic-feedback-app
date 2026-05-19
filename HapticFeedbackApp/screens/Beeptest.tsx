@@ -8,6 +8,7 @@ import {
 import * as Progress from 'react-native-progress';
 import { vibrate } from '../ble';
 import { styles } from '../styles';
+import VibrationPatterns from '../vibrationPatterns';
 
 const levelData = [
     { level: 1,  runs: 7,  pace: 9000 },
@@ -29,8 +30,8 @@ export default function Beeptest ({ navigation }: { navigation: any }) {
     const [done, setDone]         = useState(false);
     const [timeLeft, setLeft]     = useState(0);
 
-    const timeoutRef     = useRef<NodeJS.Timeout|null>(null);
-    const clockRef       = useRef<NodeJS.Timeout|null>(null);
+    const timeoutRef     = useRef<number|null>(null);
+    const clockRef       = useRef<number|null>(null);
     const idxRef         = useRef(0);
     const runRef         = useRef(1);
     const runStartRef    = useRef<number>(0);
@@ -86,17 +87,17 @@ export default function Beeptest ({ navigation }: { navigation: any }) {
             const prep = setInterval(() => {
                 setCountdown(c => {
                     const next = c - 1;
-                    if (next === 3 || next === 2 || next === 1) vibrate(VibrationPattern.BUZZ_SHORT);
+                    if (next === 3 || next === 2 || next === 1) vibrate(VibrationPatterns.BUZZ_SHORT);
                     if (next === 0) {
                         clearInterval(prep);
-                        vibrate(VibrationPattern.BUZZ_LONG);
+                        vibrate(VibrationPatterns.BUZZ_LONG);
                         doStart();
                     }
                     return next;
                 });
             }, 1000);
         } else {
-            vibrate(VibrationPattern.BUZZ_LONG);
+            vibrate(VibrationPatterns.BUZZ_LONG);
             doStart();
         }
     };
@@ -117,7 +118,7 @@ export default function Beeptest ({ navigation }: { navigation: any }) {
         const cur = levelData[idxRef.current];
 
         if (!(runRef.current === 1 && idxRef.current === 0)) {
-            vibrate(VibrationPattern.BUZZ_NORMAL);
+            vibrate(VibrationPatterns.BUZZ_NORMAL);
         }
 
         runStartRef.current = Date.now();
@@ -143,7 +144,7 @@ export default function Beeptest ({ navigation }: { navigation: any }) {
                 setRunState(runRef.current);
                 nextRun();
             } else {
-                vibrate(VibrationPattern.BUZZ_NORMAL);
+                vibrate(VibrationPatterns.BUZZ_NORMAL);
                 if (idxRef.current >= levelData.length - 1) {
                     stop();
                     return;

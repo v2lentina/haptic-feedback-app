@@ -19,7 +19,7 @@ export default function UpRd({ navigation }: { navigation: any }) {
     const [roundSeconds, setRoundSeconds] = useState("10");
     const [preparationEnabled, setPreparationEnabled] = useState(true);
 
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const intervalRef = useRef<number | null>(null);
     const startTimeRef = useRef<number>(0);
     const roundStartTimeRef = useRef<number>(0);
     const currentRoundRef = useRef(1);

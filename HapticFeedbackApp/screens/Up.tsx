@@ -16,7 +16,7 @@ export default function Up({ navigation }: { navigation: any }) {
     const [durationSec, setDurationSec] = useState("30");
     const [preparationEnabled, setPreparationEnabled] = useState(true);
 
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const intervalRef = useRef<number | null>(null);
     const startTimeRef = useRef<number>(0);
     const savedElapsedRef = useRef<number>(0);
 

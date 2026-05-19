@@ -13,6 +13,7 @@ import {
 import * as Progress from 'react-native-progress';
 import { getLastDevice, softReconnect, vibrate } from '../ble';
 import { input, styles } from '../styles';
+import VibrationPatterns from '../vibrationPatterns';
 
 export default function Down({ navigation }: { navigation: any }) {
     const [countdown, setCountdown] = useState(10);
@@ -25,7 +26,7 @@ export default function Down({ navigation }: { navigation: any }) {
     const [durationSec, setDurationSec] = useState("30");
     const [preparationEnabled, setPreparationEnabled] = useState(true);
 
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const intervalRef = useRef<number | null>(null);
     const startTimeRef = useRef<number>(0);
     const totalMillisRef = useRef<number>(0);
     const savedElapsedRef = useRef<number>(0);
@@ -71,17 +72,17 @@ export default function Down({ navigation }: { navigation: any }) {
             const prep = setInterval(() => {
                 setCountdown(c => {
                     const next = c - 1;
-                    if (next > 0 && next <= 3) vibrate(VibrationPattern.BUZZ_SHORT);
+                    if (next > 0 && next <= 3) vibrate(VibrationPatterns.BUZZ_SHORT);
                     if (next === 0) {
                         clearInterval(prep);
-                        vibrate(VibrationPattern.BUZZ_LONG);
+                        vibrate(VibrationPatterns.BUZZ_LONG);
                         beginCountdown();
                     }
                     return next;
                 });
             }, 1000);
         } else {
-            vibrate(VibrationPattern.BUZZ_LONG);
+            vibrate(VibrationPatterns.BUZZ_LONG);
             beginCountdown();
         }
     };
@@ -106,7 +107,7 @@ export default function Down({ navigation }: { navigation: any }) {
 
             if (left <= 0) {
                 clearInterval(intervalRef.current!);
-                vibrate(VibrationPattern.BUZZ_LONG);
+                vibrate(VibrationPatterns.BUZZ_LONG);
                 setRunning(false);
                 setDone(true);
             }
@@ -132,7 +133,7 @@ export default function Down({ navigation }: { navigation: any }) {
 
             if (left <= 0) {
                 clearInterval(intervalRef.current!);
-                vibrate(VibrationPattern.BUZZ_LONG);
+                vibrate(VibrationPatterns.BUZZ_LONG);
                 setRunning(false);
                 setDone(true);
             }

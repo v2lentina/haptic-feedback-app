@@ -12,6 +12,7 @@ import {
 import * as Progress from 'react-native-progress';
 import { getLastDevice, softReconnect, vibrate } from '../ble';
 import { input, styles } from '../styles';
+import VibrationPatterns from '../vibrationPatterns';
 
 type Kind = 'work' | 'rest';
 type Phase = { label: string; duration: number; kind: Kind };
@@ -120,13 +121,13 @@ export default function Custom({ navigation }: { navigation: any }) {
         setKind(p.kind);
     };
 
-    const tickRef = useRef<NodeJS.Timeout|null>(null);
-    const prepRef = useRef<NodeJS.Timeout|null>(null);
+    const tickRef = useRef<number|null>(null);
+    const prepRef = useRef<number|null>(null);
 
     const runPhase = (idx:number) => {
         if (idx>=phases.length) { finish(); return; }
 
-        vibrate(VibrationPattern.BUZZ_NORMAL);
+        vibrate(VibrationPatterns.BUZZ_NORMAL);
         const {duration, kind} = phases[idx];
         setBgColorTarget(kind==='work' ? '#007AFF' : '#FF9500');
         setCurrent(idx);
@@ -156,7 +157,7 @@ export default function Custom({ navigation }: { navigation: any }) {
         setRunning(false);
         setPaused(false);
         setDone(false);
-        vibrate(VibrationPattern.BUZZ_NORMAL);
+        vibrate(VibrationPatterns.BUZZ_NORMAL);
 
         if (prepEnabled) {
             const lastId = await getLastDevice();
@@ -166,11 +167,11 @@ export default function Custom({ navigation }: { navigation: any }) {
                 setCountdown(c => {
                     const next = c - 1;
                     if (next > 0 && next <= 3) {
-                        vibrate(VibrationPattern.BUZZ_SHORT);
+                        vibrate(VibrationPatterns.BUZZ_SHORT);
                     }
                     if (next === 0) {
                         clearInterval(prepRef.current!);
-                        vibrate(VibrationPattern.BUZZ_LONG);
+                        vibrate(VibrationPatterns.BUZZ_LONG);
                         begin();
                     }
                     return next;
@@ -196,7 +197,7 @@ export default function Custom({ navigation }: { navigation: any }) {
         setStarted(false); setRunning(false); setPaused(false); setDone(false);
         setCurrent(0); setLeft(0); setCountdown(10);
     };
-    const finish = () => { setRunning(false); setDone(true); vibrate(VibrationPattern.BUZZ_LONG); };
+    const finish = () => { setRunning(false); setDone(true); vibrate(VibrationPatterns.BUZZ_LONG); };
 
     const clearPhases = () => setPhases([]);
 

@@ -13,6 +13,7 @@ import {
 import * as Progress from 'react-native-progress';
 import { getLastDevice, softReconnect, vibrate } from '../ble';
 import { input, styles } from '../styles';
+import VibrationPatterns from '../vibrationPatterns';
 
 export default function Emom({ navigation }: { navigation: any }) {
     const [rounds, setRounds] = useState('10');
@@ -27,8 +28,8 @@ export default function Emom({ navigation }: { navigation: any }) {
 
     const roundRef = useRef(1);
     const startRef = useRef(0);
-    const tickRef = useRef<NodeJS.Timeout | null>(null);
-    const switchRef = useRef<NodeJS.Timeout | null>(null);
+    const tickRef = useRef<number | null>(null);
+    const switchRef = useRef<number | null>(null);
     const [circleKey, setCircleKey] = useState(0);
 
     const bg = useRef(new Animated.Value(0)).current;
@@ -84,7 +85,7 @@ export default function Emom({ navigation }: { navigation: any }) {
     const startMinute = (total: number) => {
         setCircleKey(k => k + 1);
         if (roundRef.current > 1) {
-            vibrate(VibrationPattern.BUZZ_NORMAL);
+            vibrate(VibrationPatterns.BUZZ_NORMAL);
         }
         setExerciseDone(false);
         setRecordedTime('');
@@ -97,7 +98,7 @@ export default function Emom({ navigation }: { navigation: any }) {
             clearInterval(tickRef.current!);
 
             if (roundRef.current >= total) {
-                vibrate(VibrationPattern.BUZZ_LONG);
+                vibrate(VibrationPatterns.BUZZ_LONG);
                 setRunning(false);
                 setDone(true);
             } else {
@@ -129,17 +130,17 @@ export default function Emom({ navigation }: { navigation: any }) {
             const prep = setInterval(() => {
                 setCountdown(c => {
                     const next = c - 1;
-                    if (next > 0 && next <= 3) vibrate(VibrationPattern.BUZZ_SHORT);
+                    if (next > 0 && next <= 3) vibrate(VibrationPatterns.BUZZ_SHORT);
                     if (next === 0) {
                         clearInterval(prep);
-                        vibrate(VibrationPattern.BUZZ_LONG);
+                        vibrate(VibrationPatterns.BUZZ_LONG);
                         beginEmom(total);
                     }
                     return next;
                 });
             }, 1000);
         } else {
-            vibrate(VibrationPattern.BUZZ_LONG);
+            vibrate(VibrationPatterns.BUZZ_LONG);
             beginEmom(total);
         }
     };
@@ -161,7 +162,7 @@ export default function Emom({ navigation }: { navigation: any }) {
         switchRef.current = setTimeout(() => {
             clearInterval(tickRef.current!);
             if (roundRef.current >= parseInt(rounds)) {
-                vibrate(VibrationPattern.BUZZ_LONG);
+                vibrate(VibrationPatterns.BUZZ_LONG);
                 setRunning(false);
                 setDone(true);
             } else {
@@ -189,7 +190,7 @@ export default function Emom({ navigation }: { navigation: any }) {
 
     const markExerciseDone = () => {
         if (exerciseDone) return;
-        vibrate(VibrationPattern.BUZZ_LONG);
+        vibrate(VibrationPatterns.BUZZ_LONG);
         setRecordedTime(timeStr(elapsed));
         setExerciseDone(true);
     };

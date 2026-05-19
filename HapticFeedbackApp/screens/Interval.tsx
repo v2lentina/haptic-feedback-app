@@ -39,8 +39,8 @@ export default function Interval({ navigation }: { navigation: any }) {
     const [timeValue, setTimeValue] = useState(0);     // ms (up oder down)
 
     const phaseStartRef = useRef<number>(0);
-    const tickRef       = useRef<NodeJS.Timeout|null>(null);
-    const prepRef       = useRef<NodeJS.Timeout|null>(null);
+    const tickRef       = useRef<number|null>(null);
+    const prepRef       = useRef<number|null>(null);
     const roundRef      = useRef(1);
     const curPhaseDur   = useRef(1);
 

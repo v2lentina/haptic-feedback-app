@@ -1,9 +1,9 @@
 
-# Ble Protocol v1.0
+# BLE Protocol v1.0
 
 This is the communication protocol used for communication between the [phone](./readme.md#phone) and [watches](./readme.md#watch).
 
-It is a plain-text protocol transmitted via BLE messages.
+It is a plain-text (JSON) protocol transmitted via BLE messages.
 
 <!-- JSON version -->
 ```
@@ -55,5 +55,14 @@ One can also think of it in terms of
 ```
 
 **VibrationBody** is simply defined as [Garmin](https://developer.garmin.com/connect-iq/api-docs/Toybox/Attention/VibeProfile.html) uses:
+
+```json
+[
+	DUTYCYCLE, DURATION,
+	DUTYCYCLE, DURATION,
+	DUTYCYCLE, DURATION,
+	// ...
+]
+```
 
 > To see all available vibration patterns see [`vibrationPatterns.ts`](./HapticFeedbackApp/vibrationPatterns.ts).

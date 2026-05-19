@@ -30,7 +30,7 @@ export default function Tabata({ navigation }: { navigation: any }) {
     const [remaining, setRemaining] = useState(0);
     const [currentRound, setCurrentRound] = useState(1);
 
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const intervalRef = useRef<number | null>(null);
     const phaseStartRef = useRef<number>(0);
     const currentRoundRef = useRef<number>(1);
     const currentPhaseMS = useRef(WORK_MS);

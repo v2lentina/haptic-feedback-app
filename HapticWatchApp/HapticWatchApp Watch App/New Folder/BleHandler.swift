@@ -154,9 +154,9 @@ class BLECentralManager: NSObject, ObservableObject, CBCentralManagerDelegate, C
         let dataPayload = Data(stringMessage.utf8)
         
         // Check what the characteristic allows
-        let writeType: CBCharacteristicWriteType = characteristic.properties.contains(.writeWithoutResponse) ? .withoutResponse : .withResponse
+//        let writeType: CBCharacteristicWriteType = characteristic.properties.contains(.writeWithoutResponse) ? .withoutResponse : .withResponse
         
-        peripheral.writeValue(dataPayload, for: characteristic, type: writeType)
+        peripheral.writeValue(dataPayload, for: characteristic, type: .withResponse)
         print("Data sent: \(stringMessage)")
     }
     

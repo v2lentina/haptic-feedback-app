@@ -12,6 +12,7 @@ import {
 import * as Progress from 'react-native-progress';
 import { getLastDevice, softReconnect, vibrate } from '../ble';
 import { styles } from '../styles';
+import VibrationPatterns from '../vibrationPatterns';
 
 const TOTAL_ROUNDS = 3;
 const WORK_MS = 5 * 60_000;
@@ -28,8 +29,8 @@ export default function F9Bad({ navigation }: { navigation: any }) {
     const [remaining, setRemaining] = useState(0);
     const [currentRound, setCurrentRound] = useState(1);
 
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
-    const minuteRef = useRef<NodeJS.Timeout | null>(null);
+    const intervalRef = useRef<number | null>(null);
+    const minuteRef = useRef<number | null>(null);
     const phaseStartRef = useRef<number>(0);
     const currentRoundRef = useRef<number>(1);
     const currentPhaseMS = useRef(WORK_MS);
@@ -86,17 +87,17 @@ export default function F9Bad({ navigation }: { navigation: any }) {
             const prep = setInterval(() => {
                 setCountdown(c => {
                     const next = c - 1;
-                    if (next > 0 && next <= 3) vibrate(VibrationPattern.BUZZ_SHORT);
+                    if (next > 0 && next <= 3) vibrate(VibrationPatterns.BUZZ_SHORT);
                     if (next === 0) {
                         clearInterval(prep);
-                        vibrate(VibrationPattern.BUZZ_LONG);
+                        vibrate(VibrationPatterns.BUZZ_LONG);
                         beginWorkout();
                     }
                     return next;
                 });
             }, 1000);
         } else {
-            vibrate(VibrationPattern.BUZZ_LONG);
+            vibrate(VibrationPatterns.BUZZ_LONG);
             beginWorkout();
         }
     };
@@ -119,7 +120,7 @@ export default function F9Bad({ navigation }: { navigation: any }) {
         setRemaining(currentPhaseMS.current);
         setInRest(phase === 'rest');
         setPaused(false);
-        vibrate(VibrationPattern.BUZZ_NORMAL);
+        vibrate(VibrationPatterns.BUZZ_NORMAL);
 
         if (intervalRef.current) clearInterval(intervalRef.current);
         intervalRef.current = setInterval(() => {
@@ -133,7 +134,7 @@ export default function F9Bad({ navigation }: { navigation: any }) {
 
                 if (phase === 'work') {
                     if (currentRoundRef.current >= TOTAL_ROUNDS) {
-                        vibrate(VibrationPattern.BUZZ_LONG);
+                        vibrate(VibrationPatterns.BUZZ_LONG);
                         setRunning(false);
                         setDone(true);
                     } else {
@@ -177,7 +178,7 @@ export default function F9Bad({ navigation }: { navigation: any }) {
                     startPhase('work');
                 } else {
                     if (currentRoundRef.current >= TOTAL_ROUNDS) {
-                        vibrate(VibrationPattern.BUZZ_LONG);
+                        vibrate(VibrationPatterns.BUZZ_LONG);
                         setRunning(false);
                         setDone(true);
                     } else {

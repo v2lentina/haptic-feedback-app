@@ -10,7 +10,7 @@ export default function StopwatchScreen({ navigation }: { navigation: any }) {
     const [running, setRunning] = useState(false);
     const [circleKey, setCircleKey] = useState(0);
 
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const intervalRef = useRef<number | null>(null);
     const startTimeRef = useRef<number>(0);
     const savedElapsedRef = useRef<number>(0);
 

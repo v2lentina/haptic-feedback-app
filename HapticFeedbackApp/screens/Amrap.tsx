@@ -27,7 +27,7 @@ export default function Amrap({ navigation }: { navigation: any }) {
     const [remaining, setRemaining] = useState(0);
     const [reps, setReps] = useState(0);
 
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const intervalRef = useRef<number | null>(null);
     const startRef = useRef<number>(0);
     const savedElapsedRef = useRef<number>(0);
     const totalMsRef = useRef<number>(0);
@@ -87,7 +87,7 @@ export default function Amrap({ navigation }: { navigation: any }) {
 
             if (left <= 0) {
                 clearInterval(intervalRef.current!);
-                vibrate(VibrationPatterns.VibrationPattern.BUZZ_LONG);
+                vibrate(VibrationPatterns.BUZZ_LONG);
                 setRunning(false);
                 setDone(true);
             }
@@ -106,17 +106,17 @@ export default function Amrap({ navigation }: { navigation: any }) {
             const prep = setInterval(() => {
                 setCountdown(c => {
                     const next = c - 1;
-                    if (next > 0 && next <= 3) vibrate(VibrationPatterns.VibrationPattern.BUZZ_SHORT);
+                    if (next > 0 && next <= 3) vibrate(VibrationPatterns.BUZZ_SHORT);
                     if (next === 0) {
                         clearInterval(prep);
-                        vibrate(VibrationPatterns.VibrationPattern.BUZZ_LONG);
+                        vibrate(VibrationPatterns.BUZZ_LONG);
                         runTimer();
                     }
                     return next;
                 });
             }, 1000);
         } else {
-            vibrate(VibrationPatterns.VibrationPattern.BUZZ_LONG);
+            vibrate(VibrationPatterns.BUZZ_LONG);
             runTimer();
         }
     };
@@ -137,7 +137,7 @@ export default function Amrap({ navigation }: { navigation: any }) {
             setRemaining(Math.max(0, left));
             if (left <= 0) {
                 clearInterval(intervalRef.current!);
-                vibrate(VibrationPatterns.VibrationPattern.BUZZ_LONG);
+                vibrate(VibrationPatterns.BUZZ_LONG);
                 setRunning(false);
                 setDone(true);
             }
@@ -226,7 +226,7 @@ export default function Amrap({ navigation }: { navigation: any }) {
                                 style={styles.startButton}
                                 onPress={() => {
                                     setReps(r => r + 1);
-                                    vibrate(VibrationPatterns.VibrationPattern.BUZZ_NORMAL);
+                                    vibrate(VibrationPatterns.BUZZ_NORMAL);
                                 }}>
                                 <Text style={styles.buttonText}>✅ Runde abgeschlossen</Text>
                             </TouchableOpacity>

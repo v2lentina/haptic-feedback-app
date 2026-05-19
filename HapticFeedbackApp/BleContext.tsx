@@ -5,7 +5,7 @@ import React, {
     useContext, useEffect, useState,
 } from 'react';
 import type { Device, State, Subscription } from 'react-native-ble-plx';
-import { clearLastDevice, getLastDevice, manager, reconnecting, saveLastDevice, SERVICE_UUID } from './ble.ts';
+import { clearLastDevice, getLastDevice, manager, reconnecting, saveLastDevice, SEARCHING_FOR_SERVICE_UUID } from './ble.ts';
 
 interface BleContextValue {
     bleState: State | null;
@@ -15,7 +15,8 @@ interface BleContextValue {
     isAdvertising: boolean;
     advertiseService: () => void;
     stopAdvertise: () => void;
-    getConnectedDevices: () => Promise<Device[]>
+    send: (message:string) => Promise<void>;
+    getConnectedDevices: () => Promise<Device[]>;
     scanForDevices: () => void;
     connect: (device: Device) => void;
     disconnect: () => void;
@@ -53,7 +54,7 @@ export function BleProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const interval = setInterval(async () => {
-            const current = await manager.connectedDevices([SERVICE_UUID]);
+            const current = await manager.connectedDevices([SEARCHING_FOR_SERVICE_UUID]);
             if (current.length > 0) {
                 if (!connectedDevice || connectedDevice.id !== current[0].id) {
                     setConnectedDevice(current[0]);
@@ -72,7 +73,7 @@ export function BleProvider({ children }: { children: ReactNode }) {
         setIsScanning(true);
         setDevices([]);
         manager.startDeviceScan(
-            [SERVICE_UUID],
+            [SEARCHING_FOR_SERVICE_UUID],
             { allowDuplicates: false },
             (err, dev) => {
                 if (err) {
@@ -105,7 +106,7 @@ export function BleProvider({ children }: { children: ReactNode }) {
 
     const getConnectedDevices = useCallback(async () => {
         await manager.requestPermissions();
-        if (bleState !== 'PoweredOn') return;
+        if (bleState !== 'PoweredOn') return [];
         return await manager.getConnectedDevices();
     }, [bleState])
 
@@ -154,9 +155,15 @@ export function BleProvider({ children }: { children: ReactNode }) {
         clearLastDevice();
     }, [connectedDevice]);
 
+    const send = useCallback(async (message: string) => {
+        if (bleState !== 'PoweredOn' || isAdvertising) return;
+
+        return await manager.sendToDevice(message);
+    }, [bleState])
+
     return (
         <BleContext.Provider
-            value={{ bleState, devices, connectedDevice, isScanning, isAdvertising, advertiseService, stopAdvertise, getConnectedDevices, scanForDevices, connect, disconnect }}
+            value={{ bleState, devices, connectedDevice, isScanning, isAdvertising, advertiseService, stopAdvertise, send, getConnectedDevices, scanForDevices, connect, disconnect }}
         >
             {children}
         </BleContext.Provider>

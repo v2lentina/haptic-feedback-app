@@ -13,6 +13,7 @@ import {
 import * as Progress from 'react-native-progress';
 import { getLastDevice, softReconnect, vibrate } from '../ble';
 import { input, styles } from '../styles';
+import VibrationPatterns from '../vibrationPatterns';
 
 export default function DownRd({ navigation }: { navigation: any }) {
     const [roundCount, setRoundCount] = useState('5');
@@ -28,7 +29,7 @@ export default function DownRd({ navigation }: { navigation: any }) {
     const [currentRound, setCurrentRound] = useState(1);
     const [done, setDone] = useState(false);
 
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const intervalRef = useRef<number | null>(null);
     const roundStartRef = useRef<number>(0);
     const roundMillisRef = useRef<number>(0);
     const currentRoundRef = useRef<number>(1);
@@ -74,17 +75,17 @@ export default function DownRd({ navigation }: { navigation: any }) {
             const prep = setInterval(() => {
                 setCountdown(c => {
                     const next = c - 1;
-                    if (next > 0 && next <= 3) vibrate(VibrationPattern.BUZZ_SHORT);
+                    if (next > 0 && next <= 3) vibrate(VibrationPatterns.BUZZ_SHORT);
                     if (next === 0) {
                         clearInterval(prep);
-                        vibrate(VibrationPattern.BUZZ_LONG);
+                        vibrate(VibrationPatterns.BUZZ_LONG);
                         beginRounds();
                     }
                     return next;
                 });
             }, 1000);
         } else {
-            vibrate(VibrationPattern.BUZZ_LONG);
+            vibrate(VibrationPatterns.BUZZ_LONG);
             beginRounds();
         }
     };
@@ -117,7 +118,7 @@ export default function DownRd({ navigation }: { navigation: any }) {
             if (left <= 0) {
                 clearInterval(intervalRef.current!);
                 const finalRound = currentRoundRef.current >= parseInt(roundCount);
-                vibrate(finalRound ? VibrationPattern.BUZZ_LONG : VibrationPattern.BUZZ_NORMAL);
+                vibrate(finalRound ? VibrationPatterns.BUZZ_LONG : VibrationPatterns.BUZZ_NORMAL);
 
                 if (finalRound) {
                     setRunning(false);
@@ -151,7 +152,7 @@ export default function DownRd({ navigation }: { navigation: any }) {
             if (left <= 0) {
                 clearInterval(intervalRef.current!);
                 const finalRound = currentRoundRef.current >= parseInt(roundCount);
-                vibrate(finalRound ? VibrationPattern.BUZZ_LONG : VibrationPattern.BUZZ_NORMAL);
+                vibrate(finalRound ? VibrationPatterns.BUZZ_LONG : VibrationPatterns.BUZZ_NORMAL);
 
                 if (finalRound) {
                     setRunning(false);

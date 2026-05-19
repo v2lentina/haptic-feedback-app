@@ -1,20 +1,28 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Buffer } from 'buffer';
-import { addWriteListener, setServices, startAdvertising, stopAdvertising } from 'munim-bluetooth';
-import { PermissionsAndroid, Platform } from 'react-native';
+import { addEventListener, requestBluetoothPermission, setServices, startAdvertising, stopAdvertising, updateCharacteristicValue } from 'munim-bluetooth';
 import { BleManager as BlePlxManager } from 'react-native-ble-plx';
-global.Buffer = global.Buffer || Buffer;
+import { VibrationPattern } from './vibrationPatterns';
+// global.Buffer = global.Buffer || Buffer;
 
-export const SERVICE_UUID = '19b10001-e8f2-537e-4f6c-d104768a1214';
-export const CHAR_UUID = '19b10002-e8f2-537e-4f6c-d104768a1214';
+/** Service UUID for peripherals that support peripheral mode */
+export const SEARCHING_FOR_SERVICE_UUID = '19b10001-e8f2-537e-4f6c-d104768a1214';
+/** Characteristic UUID for peripherals that support peripheral mode */
+export const SEARCHING_FOR_CHARACTERISTIC_UUID = '19b10002-e8f2-537e-4f6c-d104768a1214';
+
+/** Service UUID to emit for peripherals in central mode to connect to */
+export const EMITTING_SERVICE_UUID = "F89D9611-39A3-4777-868D-FB31E94B382A";
+export const EMITTING_CHARACTERISTIC_UUID = "40489038-888A-4BFB-9C4B-11660B9B6BE0";
 const LAST_DEVICE_KEY = 'lastDeviceId';
 
 /**
  * Allows for both advertising and scanning using `plx` and `advertise`
  */
 export class BleManager extends BlePlxManager {
-    serviceUUID = "F89D9611-39A3-4777-868D-FB31E94B382A";
-    characteristicUUID = "40489038-888A-4BFB-9C4B-11660B9B6BE0"
+    // TODO: store identifier of device
+    connectedDevice: boolean = false;
+
+    // TODO: Keep a map of id and connected device to be able to connect multiple devices.
 
     constructor() {
         super();
@@ -22,33 +30,32 @@ export class BleManager extends BlePlxManager {
     }
 
     requestPermissions() {
-        if (Platform.OS === 'android') {
-            const permissionsRequiredToBeAccepted = [
-                PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE,
-                PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
-            ];
-
-            console.log("Requesting permissions: " + permissionsRequiredToBeAccepted);
-            return PermissionsAndroid.requestMultiple(permissionsRequiredToBeAccepted);
-        }
-
-        // nothing to request on iOS
-        return Promise.resolve(true);
+        console.log("requesting Permissions")
+        return requestBluetoothPermission();
     }
 
-    advertise() {
-        console.log("Starting advertising");
+    async advertise() {
+        console.info("Starting advertising");
 
+        // TODO: somehow check from which device the message came from (using the device map)
+        addEventListener('peripheralWriteRequest', ({ centralId, value }) => {
+            const msg = Buffer.from(value, "base64").toString();
+            console.log('Peer wrote', centralId, msg)
+            // updateCharacteristicValue(SERVICE_UUID, CHARACTERISTIC_UUID, value, true)
+        })
+
+        console.debug("setting services");
         setServices([{
-            uuid: this.serviceUUID,
+            uuid: EMITTING_SERVICE_UUID,
             characteristics: [{
-                uuid: this.characteristicUUID,
+                uuid: EMITTING_CHARACTERISTIC_UUID,
                 properties: ['read', 'write', 'notify'],
             }],
         }]);
 
+        console.debug("Starting advertising");
         startAdvertising({
-            serviceUUIDs: [this.serviceUUID],
+            serviceUUIDs: [EMITTING_SERVICE_UUID],
             localName: 'HFA', // not to be confused with L-FA ;-)
 
             // // manufacturerId is handled by HybridMunimBluetooth.kt:812
@@ -61,19 +68,25 @@ export class BleManager extends BlePlxManager {
             // }
         });
 
-        addWriteListener((val, char) => {
-            const msg = Buffer.from(val, "base64").toString();
-            console.log(`Write request '${msg}' on '${char}'`);
-        });
-    }
-
-    async getConnectedDevices() {
-        const connectedDevices = await this.connectedDevices([this.serviceUUID]);
-        return connectedDevices
     }
 
     stopAdvertise() {
         stopAdvertising();
+    }
+
+    async getConnectedDevices() {
+        const connectedDevices = await this.connectedDevices([EMITTING_SERVICE_UUID]);
+        return connectedDevices
+    }
+
+    /** Sends a `message`.
+     *
+     * Resolves after the send was successful (doesn't necessarily mean that the transmission was successful) */
+    async sendToDevice(
+        // TODO: require device identifier to support multiple devices (if null do a broadcast to all connected devices)
+        message: string
+    ): Promise<void> {
+        updateCharacteristicValue(SERVICE_UUID, CHARACTERISTIC_UUID, message, true);
     }
 }
 
@@ -107,7 +120,7 @@ export function enqueueVibration(deviceId: string, payloadBase64: string) {
         .catch(() => { })
         .then(() => {
             return manager.writeCharacteristicWithResponseForDevice(
-                deviceId, SERVICE_UUID, CHAR_UUID, payloadBase64
+                deviceId, SEARCHING_FOR_SERVICE_UUID, SEARCHING_FOR_CHARACTERISTIC_UUID, payloadBase64
             );
         })
         .then(() => {
@@ -117,12 +130,12 @@ export function enqueueVibration(deviceId: string, payloadBase64: string) {
                 return softReconnect(deviceId);
             }
         })
-        .then(() => new Promise(res => setTimeout(res, 50)));
+        .then(() => new Promise<void>(res => setTimeout(() => res(), 50)));
     return writeQueue;
 }
 
-export async function vibrate(pattern: VibrationPatterns) {
-    const devs = await manager.connectedDevices([SERVICE_UUID]);
+export async function vibrate(pattern: VibrationPattern) {
+    const devs = await manager.connectedDevices([SEARCHING_FOR_SERVICE_UUID]);
     if (!devs.length) return;
     const deviceId = devs[0].id;
     const data = Buffer.from(pattern).toString('base64');

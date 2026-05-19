@@ -21,6 +21,7 @@ export default function HomeScreen({ navigation }: any) {
         isAdvertising,
         advertiseService,
         stopAdvertise,
+        send,
         getConnectedDevices,
         scanForDevices,
         connect,
@@ -57,8 +58,16 @@ export default function HomeScreen({ navigation }: any) {
                                 <Text style={styles.scanButtonText}>Stop</Text>
                             </TouchableOpacity>
                         }
+                        {
+                            !isAdvertising && <TouchableOpacity style={styles.scanButton} onPress={async e => {
+                                e.preventDefault();
+                                send("HELLOW")
+                            }}>
+                                <Text style={styles.scanButtonText}>Change Data</Text>
+                            </TouchableOpacity>
+                        }
                         <TouchableOpacity style={styles.scanButton} onPress={async () => {
-                            setDevices(getConnectedDevices());
+                            setDevices(await getConnectedDevices());
                         }}>
                             <Text style={styles.scanButtonText}>Geräte</Text>
                         </TouchableOpacity>
