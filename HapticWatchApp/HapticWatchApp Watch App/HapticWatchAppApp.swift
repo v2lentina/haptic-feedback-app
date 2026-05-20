@@ -15,7 +15,7 @@ struct HapticWatchApp_Watch_AppApp: App {
         WindowGroup {
             ContentView()
                 // This makes the object available to all child views
-                //   via "@EnvironmentObject var bleManager: BLECentralManager"
+                //   via "@EnvironmentObject var logic: Logic"
                 .environmentObject(logic)
         }
     }

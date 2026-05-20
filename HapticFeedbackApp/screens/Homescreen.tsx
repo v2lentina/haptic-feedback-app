@@ -8,9 +8,22 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { Device } from 'react-native-ble-plx';
+import { sendVibrationPattern } from '../action';
+import { screens } from '../App';
 import { useBle } from '../BleContext';
 import { styles } from '../styles';
+
+export type BleDevice = {
+    name: string | null;
+}
+
+const chunkArray = (array: any[], chunkSize: number = 2) => {
+    const result = [];
+    for (let i = 0; i < array.length; i += chunkSize) {
+        result.push(array.slice(i, i + chunkSize));
+    }
+    return result;
+}
 
 export default function HomeScreen({ navigation }: any) {
     const {
@@ -28,13 +41,16 @@ export default function HomeScreen({ navigation }: any) {
         disconnect,
     } = useBle();
 
-    const [devices, setDevices] = useState<Device[]>([]);
+    const [devices, setDevices] = useState<BleDevice[]>([]);
 
     const connectionStatus = connectedDevice
         ? { color: '#34C759', text: `Verbunden mit ${connectedDevice.name ?? "Gerät"}` }
         : isScanning
             ? { color: '#007AFF', text: 'Scannen...' }
-            : { color: '#8e8e93', text: 'Nicht verbunden' };
+            : isAdvertising ? { color: '#007AFF', text: 'Scannen...' }
+                : { color: '#8e8e93', text: 'Nicht verbunden' };
+
+    const twoColumnScreens = chunkArray(screens.map(def => def.label), 2)
 
     return (
         <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -56,14 +72,6 @@ export default function HomeScreen({ navigation }: any) {
                             <TouchableOpacity style={styles.scanButton} onPress={stopAdvertise}>
                                 <ActivityIndicator size="small" color="#007AFF" style={{ marginVertical: 20 }} />
                                 <Text style={styles.scanButtonText}>Stop</Text>
-                            </TouchableOpacity>
-                        }
-                        {
-                            !isAdvertising && <TouchableOpacity style={styles.scanButton} onPress={async e => {
-                                e.preventDefault();
-                                send("HELLOW")
-                            }}>
-                                <Text style={styles.scanButtonText}>Change Data</Text>
                             </TouchableOpacity>
                         }
                         <TouchableOpacity style={styles.scanButton} onPress={async () => {
@@ -107,18 +115,22 @@ export default function HomeScreen({ navigation }: any) {
 
                 {connectedDevice && (
                     <View style={styles.connectedActions}>
-                        <TouchableOpacity
-                            style={styles.scanButtonEx}
-                            onPress={() => {
-                                Alert.alert(
-                                    "Verbindung trennen",
-                                    "Möchtest du die Verbindung wirklich trennen?",
-                                    [
-                                        { text: "Abbrechen", style: "cancel" },
-                                        { text: "Trennen", style: "destructive", onPress: disconnect }
-                                    ]
-                                );
-                            }}
+                        <TouchableOpacity style={styles.scanButton} onPress={() => {
+                            e.preventDefault();
+                            sendVibrationPattern([100, 100], send);
+                        }}>
+                            <Text style={styles.scanButtonText}>Vibrations Test</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.scanButtonEx} onPress={() => {
+                            Alert.alert(
+                                "Verbindung trennen",
+                                "Möchtest du die Verbindung wirklich trennen?",
+                                [
+                                    { text: "Abbrechen", style: "cancel" },
+                                    { text: "Trennen", style: "destructive", onPress: disconnect }
+                                ]
+                            );
+                        }}
                         >
                             <Text style={styles.scanButtonText}>Verbindung trennen</Text>
                         </TouchableOpacity>
@@ -134,26 +146,31 @@ export default function HomeScreen({ navigation }: any) {
                 <Text style={[styles.h1, { marginTop: 40 }]}>Wähle deinen Modus</Text>
 
                 <View style={styles.grid}>
-                    {[
-                        ["⏱ Stoppuhr", "🔄 Interval"],
-                        ["⬆️ Hochzählen", "⬇️ Runterzählen"],
-                        ["🔃 Hoch in Runden", "🔃 Runter in Runden"],
-                        ["🧨 Tabata", "🥊 F9Bad"],
-                        ["🔥 Amrap", "⏰ Emom"],
-                        ["🏃 Beeptest", "🎛️ Custom"]
-                    ].map((row, rowIndex) => (
-                        <View style={styles.row} key={rowIndex}>
-                            {row.map((label) => (
-                                <TouchableOpacity
-                                    key={label}
-                                    style={styles.gridBtn}
-                                    onPress={() => navigation.navigate(label)}
-                                >
-                                    <Text style={styles.gridBtnText}>{label}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    ))}
+                    {
+                        // [
+                        //     ["⏱ Stoppuhr", "🔄 Interval"],
+                        //     ["⬆️ Hochzählen", "⬇️ Runterzählen"],
+                        //     ["🔃 Hoch in Runden", "🔃 Runter in Runden"],
+                        //     ["🧨 Tabata", "🥊 F9Bad"],
+                        //     ["🔥 Amrap", "⏰ Emom"],
+                        //     ["🏃 Beeptest", "🎛️ Custom"]
+                        // ]
+
+                        twoColumnScreens
+                            .map((row, rowIndex) => (
+                                <View style={styles.row} key={rowIndex}>
+                                    {row.map((label) => (
+                                        <TouchableOpacity
+                                            key={label}
+                                            style={styles.gridBtn}
+                                            onPress={() => navigation.navigate(label)}
+                                        >
+                                            <Text style={styles.gridBtnText}>{label}</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            ))
+                    }
                 </View>
             </View>
         </ScrollView>

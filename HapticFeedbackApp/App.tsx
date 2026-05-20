@@ -18,25 +18,28 @@ import UpRd from './screens/UpRd.tsx';
 
 const Stack = createNativeStackNavigator();
 
+export const screens = [
+    { label: "Home", component: HomeScreen },
+    { label: "⏱ Stoppuhr", component: StopwatchScreen },
+    { label: "🔄 Interval", component: Interval },
+    { label: "⬆️ Hochzählen", component: Up },
+    { label: "🔃 Hoch in Runden", component: UpRd },
+    { label: "⬇️ Runterzählen", component: Down },
+    { label: "🔃 Runter in Runden", component: DownRd },
+    { label: "🧨 Tabata", component: Tabata },
+    { label: "🥊 F9Bad", component: F9Bad },
+    { label: "🔥 Amrap", component: Amrap },
+    { label: "⏰ Emom", component: Emom },
+    { label: "🏃 Beeptest", component: Beeptest },
+    { label: "🎛️ Custom", component: Custom },
+]
+
 export default function App() {
     return (
         <BleProvider>
             <NavigationContainer>
                 <Stack.Navigator>
-                    <Stack.Screen name="Home" component={HomeScreen} />
-                    <Stack.Screen name="⏱ Stoppuhr" component={StopwatchScreen} />
-                    <Stack.Screen name="🔄 Interval" component={Interval} />
-                    <Stack.Screen name="⬆️ Hochzählen" component={Up} />
-                    <Stack.Screen name="🔃 Hoch in Runden" component={UpRd} />
-                    <Stack.Screen name="⬇️ Runterzählen" component={Down} />
-                    <Stack.Screen name="🔃 Runter in Runden" component={DownRd} />
-                    <Stack.Screen name="🧨 Tabata" component={Tabata} />
-                    <Stack.Screen name="🥊 F9Bad" component={F9Bad} />
-                    <Stack.Screen name="🔥 Amrap" component={Amrap} />
-                    <Stack.Screen name="⏰ Emom" component={Emom} />
-                    <Stack.Screen name="🏃 Beeptest" component={Beeptest} />
-                    <Stack.Screen name="🎛️ Custom" component={Custom} />
-
+                    {screens.map(def => <Stack.Screen name={def.label} component={def.component} />)}
                 </Stack.Navigator>
             </NavigationContainer>
         </BleProvider>

@@ -5,18 +5,21 @@ import React, {
     useContext, useEffect, useState,
 } from 'react';
 import type { Device, State, Subscription } from 'react-native-ble-plx';
-import { clearLastDevice, getLastDevice, manager, reconnecting, saveLastDevice, SEARCHING_FOR_SERVICE_UUID } from './ble.ts';
+import { handleOther, handleVibration } from './action.ts';
+import { BleManager, clearLastDevice, getLastDevice, reconnecting, saveLastDevice, SEARCHING_FOR_SERVICE_UUID } from './ble.ts';
+import { handleMessage } from './protocol.ts';
+import { BleDevice } from './screens/Homescreen.tsx';
 
 interface BleContextValue {
     bleState: State | null;
-    devices: Device[];
-    connectedDevice: Device | null;
+    devices: BleDevice[];
+    connectedDevice: BleDevice | null;
     isScanning: boolean;
     isAdvertising: boolean;
     advertiseService: () => void;
     stopAdvertise: () => void;
-    send: (message:string) => Promise<void>;
-    getConnectedDevices: () => Promise<Device[]>;
+    send: (message: string) => Promise<void>;
+    getConnectedDevices: () => Promise<BleDevice[]>;
     scanForDevices: () => void;
     connect: (device: Device) => void;
     disconnect: () => void;
@@ -24,13 +27,28 @@ interface BleContextValue {
 
 const BleContext = createContext<BleContextValue | undefined>(undefined);
 
-export function BleProvider({ children }: { children: ReactNode }) {
+
+export function BleProvider({ children, onHandshake }: { children: ReactNode, onHandshake: () => void }) {
+    const manager = new BleManager();
+    manager.onMessage((msg, deviceId) => {
+        handleMessage(msg, deviceId, {
+            "VIBRATION": handleVibration,
+            "OTHER": handleOther,
+            "HANDSHAKE": (msg, deviceId) => {
+                manager.handleHandshake(msg, deviceId);
+
+                // indicate connection in UI
+                setDevices([manager.connectedDevice]);
+                setConnectedDevice(manager.connectedDevice);
+            },
+        })
+    });
 
     // console.log("manager: " + manager.requestPermissions);
 
     const [bleState, setBleState] = useState<State | null>(null);
-    const [devices, setDevices] = useState<Device[]>([]);
-    const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
+    const [devices, setDevices] = useState<BleDevice[]>([]);
+    const [connectedDevice, setConnectedDevice] = useState<BleDevice | null>(null);
     const [isScanning, setIsScanning] = useState(false);
     const [isAdvertising, setIsAdvertising] = useState(false);
     // TODO: Doesn't a useRef suffice??
@@ -91,7 +109,7 @@ export function BleProvider({ children }: { children: ReactNode }) {
         }, 6000);
     }, [bleState, isScanning, devices]);
 
-    const advertiseService = useCallback(async() => {
+    const advertiseService = useCallback(async () => {
         await manager.requestPermissions();
         if (bleState !== 'PoweredOn' || isAdvertising) return;
         setIsAdvertising(true);
@@ -158,7 +176,7 @@ export function BleProvider({ children }: { children: ReactNode }) {
     const send = useCallback(async (message: string) => {
         if (bleState !== 'PoweredOn' || isAdvertising) return;
 
-        return await manager.sendToDevice(message);
+        return await manager.send(message);
     }, [bleState])
 
     return (

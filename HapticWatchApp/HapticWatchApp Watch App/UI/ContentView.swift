@@ -15,7 +15,7 @@ struct ContentView: View {
             switch logic.ble.isConnected {
                 // This text updates automatically when statusMessage changes
                 case false: Text(logic.ble.statusMessage)
-                    .font(.footnote)
+                    .font(.headline)
                     .multilineTextAlignment(.center)
                     .padding()
                 case true: ReadyStateView()
@@ -33,7 +33,7 @@ struct ContentView: View {
     let mockManager = BLECentralManager()
     
     // 2. Manually set a state so you can see how it looks in the canvas
-    mockManager.statusMessage = "Found: Your iPhone"
+    mockManager.statusMessage = "Found: HFA"
     
     // 3. Return the view with the environment object attached
     return ContentView()

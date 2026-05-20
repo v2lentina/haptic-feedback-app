@@ -12,7 +12,7 @@ struct ReadyStateView: View {
     @EnvironmentObject var logic: Logic
     
     var body: some View {
-        Text("Ready")
+        Text("Ready").font(.largeTitle)
     }
 }
 

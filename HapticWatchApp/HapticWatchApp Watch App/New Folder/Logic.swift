@@ -16,6 +16,8 @@ class Logic : ObservableObject {
     
     private var _bleSubscription: AnyCancellable?
     
+    private var cancellables = Set<AnyCancellable>()
+    
     init() {
         ble.onConnected = { [self] in
             ble.sendData(stringMessage: _protocol.getHandshakeMessage())
@@ -32,10 +34,18 @@ class Logic : ObservableObject {
             print("Got vibration message")
             _actions.playVibrationPattern(vibrationMessage: msg)
         }
+        
+        // Forward the child's objectWillChange event to the parent
+        ble.objectWillChange
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
     }
     
     /// Called when a connection has been established
     func _onReady() {
+        ble.isConnected = true;
         _bleSubscription = ble.responseStream.sink { [self] msg in
             do {
                 try _protocol.handleMessage(bleMessageText: msg)

@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Buffer } from 'buffer';
 import { addEventListener, requestBluetoothPermission, setServices, startAdvertising, stopAdvertising, updateCharacteristicValue } from 'munim-bluetooth';
 import { BleManager as BlePlxManager } from 'react-native-ble-plx';
+import { ProtocolMessage } from './protocol';
 import { VibrationPattern } from './vibrationPatterns';
 // global.Buffer = global.Buffer || Buffer;
 
@@ -15,14 +16,28 @@ export const EMITTING_SERVICE_UUID = "F89D9611-39A3-4777-868D-FB31E94B382A";
 export const EMITTING_CHARACTERISTIC_UUID = "40489038-888A-4BFB-9C4B-11660B9B6BE0";
 const LAST_DEVICE_KEY = 'lastDeviceId';
 
-/**
+type MessageEventHandler = (msg: string, deviceId: string) => void | Promise<void>;
+
+/** Allows for establishing a connection with another device and receiving and sending string messages.
+ * 
+ * For anything protocol related see [`protocol.ts`](./protocol.ts)
+ * 
  * Allows for both advertising and scanning using `plx` and `advertise`
  */
 export class BleManager extends BlePlxManager {
     // TODO: store identifier of device
-    connectedDevice: boolean = false;
+    connectedDevice: BleDevice | null = null;
+
+    messageListeners: Set<MessageEventHandler> = new Set<MessageEventHandler>();
 
     // TODO: Keep a map of id and connected device to be able to connect multiple devices.
+
+    onMessage(callback: MessageEventHandler) {
+        this.messageListeners = this.messageListeners.add(callback);
+    }
+    stopOnMessage(callback: MessageEventHandler) {
+        this.messageListeners = this.messageListeners.delete(callback);
+    }
 
     constructor() {
         super();
@@ -34,14 +49,24 @@ export class BleManager extends BlePlxManager {
         return requestBluetoothPermission();
     }
 
+    handleHandshake(msg: ProtocolMessage) {
+        // TODO: indicate in the UI that an connection has been established
+        // TODO: stop BLE advertising
+        connectedDevice = {
+            name: msg.body,
+            id: msg.deviceID,
+        }
+    }
+
     async advertise() {
         console.info("Starting advertising");
 
         // TODO: somehow check from which device the message came from (using the device map)
-        addEventListener('peripheralWriteRequest', ({ centralId, value }) => {
-            const msg = Buffer.from(value, "base64").toString();
-            console.log('Peer wrote', centralId, msg)
+        addEventListener('peripheralWriteRequest', ({ centralId, value }: {centralId: string, value: string}) => {
+            const msg = Buffer.from(value, "hex").toString();
+            console.log('Peer wrote', centralId, msg);
             // updateCharacteristicValue(SERVICE_UUID, CHARACTERISTIC_UUID, value, true)
+            this.messageListeners.forEach(eh => eh(msg, centralId));
         })
 
         console.debug("setting services");
@@ -82,15 +107,26 @@ export class BleManager extends BlePlxManager {
     /** Sends a `message`.
      *
      * Resolves after the send was successful (doesn't necessarily mean that the transmission was successful) */
-    async sendToDevice(
+    async send(
         // TODO: require device identifier to support multiple devices (if null do a broadcast to all connected devices)
         message: string
     ): Promise<void> {
         updateCharacteristicValue(SERVICE_UUID, CHARACTERISTIC_UUID, message, true);
     }
-}
 
-export const manager = new BleManager();
+    /** Waits for a response */
+    async nextMessage(): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+
+            const nextMsg = (message: string) => {
+                resolve(message);
+                this.messageListeners.delete(nextMsg);
+            }
+
+            this.onMessage(nextMsg);
+        });
+    }
+}
 
 //helper functions
 export async function getLastDevice() { return AsyncStorage.getItem(LAST_DEVICE_KEY); }

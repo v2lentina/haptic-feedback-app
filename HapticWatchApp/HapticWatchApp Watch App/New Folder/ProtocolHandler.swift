@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftyJSON
+import WatchKit
 
 class ProtocolHandler : ObservableObject {
     var onHandshakeMessage: (() -> Void)?
@@ -35,7 +36,7 @@ class ProtocolHandler : ObservableObject {
     
     /// Defines the message sent to the connected Phone, such that it acknowledges the connection as established.
     func getHandshakeMessage() -> String {
-        return "HANDSHAKE"
+        return "{\"type\":\"HANDSHAKE\",\"body\":\"Apple Watch\"}"
     }
     
     func _handleHandshakeMessage(bleMessage: BleMessage) throws {
