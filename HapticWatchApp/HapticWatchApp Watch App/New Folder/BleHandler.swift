@@ -168,7 +168,7 @@ class BLECentralManager: NSObject, ObservableObject, CBCentralManagerDelegate, C
                 .sink { msg in
                     print("waitForData")
                     promise(.success(msg))
-            }
+                }
                 .store(in: &self._cancelables_waitForData)
         }
     }

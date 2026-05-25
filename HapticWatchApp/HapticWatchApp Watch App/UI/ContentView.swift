@@ -24,7 +24,6 @@ struct ContentView: View {
         .onAppear() {
             logic.ble.startScan()
         }
-        .padding()
     }
 }
 

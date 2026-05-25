@@ -12,6 +12,7 @@ import { sendVibrationPattern } from '../action';
 import { screens } from '../App';
 import { useBle } from '../BleContext';
 import { styles } from '../styles';
+import { VibrationPattern } from '../vibrationPatterns';
 
 export type BleDevice = {
     name: string | null;
@@ -50,7 +51,15 @@ export default function HomeScreen({ navigation }: any) {
             : isAdvertising ? { color: '#007AFF', text: 'Scannen...' }
                 : { color: '#8e8e93', text: 'Nicht verbunden' };
 
-    const twoColumnScreens = chunkArray(screens.map(def => def.label), 2)
+    const twoColumnScreens = chunkArray(screens.slice(1, screens.length).map(def => def.label), 2)
+
+    function Vibrate({ pattern }: { pattern: VibrationPattern }) {
+        return <TouchableOpacity style={styles.scanButton} onPress={() => {
+            sendVibrationPattern(pattern, { send });
+        }}>
+            <Text style={styles.scanButtonText}>Vibrations Test {JSON.stringify(pattern)}</Text>
+        </TouchableOpacity>
+    }
 
     return (
         <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -115,12 +124,15 @@ export default function HomeScreen({ navigation }: any) {
 
                 {connectedDevice && (
                     <View style={styles.connectedActions}>
-                        <TouchableOpacity style={styles.scanButton} onPress={() => {
-                            e.preventDefault();
-                            sendVibrationPattern([100, 100], send);
-                        }}>
-                            <Text style={styles.scanButtonText}>Vibrations Test</Text>
-                        </TouchableOpacity>
+                        <Vibrate pattern={[100, 100]}/>
+                        <Vibrate pattern={[100, 2000, 45, 100]}/>
+                        <Vibrate pattern={[50, 100]}/>
+                        <Vibrate pattern={[50, 2000]}/>
+                        <Vibrate pattern={[35, 100]}/>
+                        <Vibrate pattern={[35, 2000]}/>
+                        <Vibrate pattern={[25, 100]}/>
+                        <Vibrate pattern={[25, 2000]}/>
+                            
                         <TouchableOpacity style={styles.scanButtonEx} onPress={() => {
                             Alert.alert(
                                 "Verbindung trennen",
@@ -137,42 +149,42 @@ export default function HomeScreen({ navigation }: any) {
                     </View>
                 )}
 
-                {bleState !== "PoweredOn" && (
-                    <Text style={styles.error}>
-                        Bluetooth {bleState === "PoweredOff" ? "ist aus" : "nicht bereit"}.
-                    </Text>
-                )}
+            {bleState !== "PoweredOn" && (
+                <Text style={styles.error}>
+                    Bluetooth {bleState === "PoweredOff" ? "ist aus" : "nicht bereit"}.
+                </Text>
+            )}
 
-                <Text style={[styles.h1, { marginTop: 40 }]}>Wähle deinen Modus</Text>
+            <Text style={[styles.h1, { marginTop: 40 }]}>Wähle deinen Modus</Text>
 
-                <View style={styles.grid}>
-                    {
-                        // [
-                        //     ["⏱ Stoppuhr", "🔄 Interval"],
-                        //     ["⬆️ Hochzählen", "⬇️ Runterzählen"],
-                        //     ["🔃 Hoch in Runden", "🔃 Runter in Runden"],
-                        //     ["🧨 Tabata", "🥊 F9Bad"],
-                        //     ["🔥 Amrap", "⏰ Emom"],
-                        //     ["🏃 Beeptest", "🎛️ Custom"]
-                        // ]
+            <View style={styles.grid}>
+                {
+                    // [
+                    //     ["⏱ Stoppuhr", "🔄 Interval"],
+                    //     ["⬆️ Hochzählen", "⬇️ Runterzählen"],
+                    //     ["🔃 Hoch in Runden", "🔃 Runter in Runden"],
+                    //     ["🧨 Tabata", "🥊 F9Bad"],
+                    //     ["🔥 Amrap", "⏰ Emom"],
+                    //     ["🏃 Beeptest", "🎛️ Custom"]
+                    // ]
 
-                        twoColumnScreens
-                            .map((row, rowIndex) => (
-                                <View style={styles.row} key={rowIndex}>
-                                    {row.map((label) => (
-                                        <TouchableOpacity
-                                            key={label}
-                                            style={styles.gridBtn}
-                                            onPress={() => navigation.navigate(label)}
-                                        >
-                                            <Text style={styles.gridBtnText}>{label}</Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            ))
-                    }
-                </View>
+                    twoColumnScreens
+                        .map((row, rowIndex) => (
+                            <View style={styles.row} key={rowIndex}>
+                                {row.map((label) => (
+                                    <TouchableOpacity
+                                        key={label}
+                                        style={styles.gridBtn}
+                                        onPress={() => navigation.navigate(label)}
+                                    >
+                                        <Text style={styles.gridBtnText}>{label}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        ))
+                }
             </View>
+        </View>
         </ScrollView >
     );
 }
