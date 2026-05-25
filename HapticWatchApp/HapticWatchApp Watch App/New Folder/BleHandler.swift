@@ -56,9 +56,7 @@ class BLECentralManager: NSObject, ObservableObject, CBCentralManagerDelegate, C
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         guard central.state == .poweredOn else {
             print("BLE is unavailable or powered off.")
-
             DispatchQueue.main.async {self.statusMessage = "Bluetooth is Off"}
-
             return
         }
 
@@ -66,10 +64,9 @@ class BLECentralManager: NSObject, ObservableObject, CBCentralManagerDelegate, C
     }
 
     func startScan() {
-        print("BLE is unavailable or powered off.")
-
-        DispatchQueue.main.async { self.statusMessage = "Bluetooth is Off" }
         guard centralManager.state == .poweredOn else {
+            print("BLE is unavailable or powered off.")
+            DispatchQueue.main.async { self.statusMessage = "Bluetooth is Off" }
             return
         }
 
@@ -160,13 +157,19 @@ class BLECentralManager: NSObject, ObservableObject, CBCentralManagerDelegate, C
         print("Data sent: \(stringMessage)")
     }
 
+    private var _cancelables_waitForData = Set<AnyCancellable>()
     func waitForData() -> Future<String, Never> {
-        return Future() { promise in
-            _ = self.responseStream
+        return Future() { [weak self] promise in
+            guard let self = self else { return }
+            
+            self.responseStream
                 .first()
+                .receive(on: DispatchQueue.main)
                 .sink { msg in
-                promise(Result<String, Never>.success(msg))
+                    print("waitForData")
+                    promise(.success(msg))
             }
+                .store(in: &self._cancelables_waitForData)
         }
     }
 
@@ -180,7 +183,7 @@ class BLECentralManager: NSObject, ObservableObject, CBCentralManagerDelegate, C
         // Decode the data buffer back into a usable format
         if let receivedString = String(data: data, encoding: .utf8) {
             print("Received from phone: \(receivedString)")
-            responseStream.send(receivedString)
+            DispatchQueue.main.async { self.responseStream.send(receivedString) }
             self.statusMessage = "Connection complete"
         }
     }

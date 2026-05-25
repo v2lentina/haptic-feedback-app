@@ -37,6 +37,7 @@ class Logic : ObservableObject {
         
         // Forward the child's objectWillChange event to the parent
         ble.objectWillChange
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.objectWillChange.send()
             }
@@ -46,7 +47,9 @@ class Logic : ObservableObject {
     /// Called when a connection has been established
     func _onReady() {
         ble.isConnected = true;
-        _bleSubscription = ble.responseStream.sink { [self] msg in
+        _bleSubscription = ble.responseStream
+            .receive(on: DispatchQueue.main)
+            .sink { [self] msg in
             do {
                 try _protocol.handleMessage(bleMessageText: msg)
             } catch {
