@@ -187,4 +187,15 @@ class BLECentralManager: NSObject, ObservableObject, CBCentralManagerDelegate, C
             self.statusMessage = "Connection complete"
         }
     }
+    
+    func reset() {
+        isConnected = false
+        if (self.connectedPhone != nil) {
+            self.centralManager.cancelPeripheralConnection(self.connectedPhone!)
+        }
+    
+        self.connectedPhone = nil
+        
+        startScan()
+    }
 }

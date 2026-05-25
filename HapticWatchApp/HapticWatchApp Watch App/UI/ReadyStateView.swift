@@ -12,7 +12,10 @@ struct ReadyStateView: View {
     @EnvironmentObject var logic: Logic
     
     var body: some View {
-        Text("Ready").font(.largeTitle)
+                Text("Ready").font(.largeTitle);
+                Button(action: logic.reset) {
+                    Text("Stop")
+                }
     }
 }
 

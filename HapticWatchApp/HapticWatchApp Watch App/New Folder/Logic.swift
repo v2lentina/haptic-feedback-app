@@ -57,4 +57,9 @@ class Logic : ObservableObject {
             }
         }
     }
+    
+    /// Resets the state and connection to initial state, making sure everything is cleaned up for re-use
+    func reset() {
+        ble.reset()
+    }
 }
