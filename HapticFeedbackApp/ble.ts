@@ -3,6 +3,7 @@ import { Buffer } from 'buffer';
 import { addEventListener, requestBluetoothPermission, setServices, startAdvertising, stopAdvertising, updateCharacteristicValue } from 'munim-bluetooth';
 import { BleManager as BlePlxManager } from 'react-native-ble-plx';
 import { ProtocolMessage } from './protocol';
+import { BleDevice } from './screens/Homescreen';
 import { VibrationPattern } from './vibrationPatterns';
 // global.Buffer = global.Buffer || Buffer;
 
@@ -49,12 +50,12 @@ export class BleManager extends BlePlxManager {
         return requestBluetoothPermission();
     }
 
-    handleHandshake(msg: ProtocolMessage) {
+    handleHandshake(msg: ProtocolMessage, deviceId: string) {
         // TODO: indicate in the UI that an connection has been established
         // TODO: stop BLE advertising
-        connectedDevice = {
+        this.connectedDevice = {
             name: msg.body,
-            id: msg.deviceID,
+            id: msg.deviceID ?? deviceId,
         }
     }
 
@@ -65,7 +66,6 @@ export class BleManager extends BlePlxManager {
         addEventListener('peripheralWriteRequest', ({ centralId, value }: {centralId: string, value: string}) => {
             const msg = Buffer.from(value, "hex").toString();
             console.log('Peer wrote', centralId, msg);
-            // updateCharacteristicValue(SERVICE_UUID, CHARACTERISTIC_UUID, value, true)
             this.messageListeners.forEach(eh => eh(msg, centralId));
         })
 
@@ -99,6 +99,16 @@ export class BleManager extends BlePlxManager {
         stopAdvertising();
     }
 
+    async connectedDevices(UUIDs: string[]) {
+        const res = await super.connectedDevices(UUIDs);
+
+        if (!this.connectedDevice) {
+            return res;
+        }
+
+        return  [this.connectedDevice, ...res];
+    }
+
     async getConnectedDevices() {
         const connectedDevices = await this.connectedDevices([EMITTING_SERVICE_UUID]);
         return connectedDevices
@@ -111,7 +121,7 @@ export class BleManager extends BlePlxManager {
         // TODO: require device identifier to support multiple devices (if null do a broadcast to all connected devices)
         message: string
     ): Promise<void> {
-        updateCharacteristicValue(SERVICE_UUID, CHARACTERISTIC_UUID, message, true);
+        updateCharacteristicValue(EMITTING_SERVICE_UUID, EMITTING_CHARACTERISTIC_UUID, Buffer.from(message).toString("hex"), true);
     }
 
     /** Waits for a response */

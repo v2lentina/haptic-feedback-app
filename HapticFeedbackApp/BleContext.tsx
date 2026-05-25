@@ -40,6 +40,8 @@ export function BleProvider({ children, onHandshake }: { children: ReactNode, on
                 // indicate connection in UI
                 setDevices([manager.connectedDevice]);
                 setConnectedDevice(manager.connectedDevice);
+                // stopAdvertise();
+                // manager.stopDeviceScan();
             },
         })
     });
@@ -70,21 +72,21 @@ export function BleProvider({ children, onHandshake }: { children: ReactNode, on
         return () => sub.remove();
     }, []);
 
-    useEffect(() => {
-        const interval = setInterval(async () => {
-            const current = await manager.connectedDevices([SEARCHING_FOR_SERVICE_UUID]);
-            if (current.length > 0) {
-                if (!connectedDevice || connectedDevice.id !== current[0].id) {
-                    setConnectedDevice(current[0]);
-                    await saveLastDevice(current[0].id);
-                }
-            } else if (connectedDevice) {
-                setConnectedDevice(null);
-                await clearLastDevice();
-            }
-        }, 2000);
-        return () => clearInterval(interval);
-    }, [connectedDevice]);
+    // useEffect(() => {
+    //     const interval = setInterval(async () => {
+    //         const current = await manager.connectedDevices([SEARCHING_FOR_SERVICE_UUID]);
+    //         if (current.length > 0) {
+    //             if (!connectedDevice || connectedDevice.id !== current[0].id) {
+    //                 setConnectedDevice(current[0]);
+    //                 await saveLastDevice(current[0].id);
+    //             }
+    //         } else if (connectedDevice) {
+    //             setConnectedDevice(null);
+    //             await clearLastDevice();
+    //         }
+    //     }, 2000);
+    //     return () => clearInterval(interval);
+    // }, [connectedDevice]);
 
     const scanForDevices = useCallback(() => {
         if (bleState !== 'PoweredOn' || isScanning) return;

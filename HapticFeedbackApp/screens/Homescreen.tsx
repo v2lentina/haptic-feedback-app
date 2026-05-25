@@ -173,6 +173,6 @@ export default function HomeScreen({ navigation }: any) {
                     }
                 </View>
             </View>
-        </ScrollView>
+        </ScrollView >
     );
 }
