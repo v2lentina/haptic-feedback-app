@@ -2,7 +2,7 @@
 //
 // This is Business Logic Level
 
-import { ProtocolException } from "./protocol";
+import { ProtocolException, ProtocolMessage } from "./protocol";
 import { VibrationPattern } from "./vibrationPatterns";
 
 export async function sendVibrationPattern(pattern: VibrationPattern, { send }: { send: (msg: string) => void | Promise<void> }) {

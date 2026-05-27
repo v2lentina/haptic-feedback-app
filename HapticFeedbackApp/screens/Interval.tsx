@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { default as React, useEffect, useRef, useState } from 'react';
 import {
     Animated, Easing, Keyboard,
     Switch,
@@ -8,13 +8,13 @@ import {
     View,
 } from 'react-native';
 import * as Progress from 'react-native-progress';
-import { getLastDevice, softReconnect, vibrate } from '../ble';
+import { useBle } from '../BleContext';
 import { input, styles } from '../styles';
 import VibrationPatterns from '../vibrationPatterns';
 
-const WORK_COLOR  = '#007AFF'; //blue
-const REST_COLOR  = '#FF9500'; //orange
-const IDLE_COLOR  = '#f5f5f5';
+const WORK_COLOR = '#007AFF'; //blue
+const REST_COLOR = '#FF9500'; //orange
+const IDLE_COLOR = '#f5f5f5';
 
 type PhaseType = 'work' | 'rest';
 
@@ -23,29 +23,31 @@ export default function Interval({ navigation }: { navigation: any }) {
     const [workSec, setWorkSec] = useState('20');
     const [restMin, setRestMin] = useState('0');
     const [restSec, setRestSec] = useState('10');
-    const [rounds,   setRounds] = useState('8');
+    const [rounds, setRounds] = useState('8');
     const [countDownMode, setCountDown] = useState(false);
 
     const [prepEnabled, setPrepEnabled] = useState(true);
     const [countdown, setCountdown] = useState(10);
 
-    const [started,  setStarted]  = useState(false);
-    const [running,  setRunning]  = useState(false);
-    const [paused,   setPaused]   = useState(false);
-    const [done,     setDone]     = useState(false);
+    const [started, setStarted] = useState(false);
+    const [running, setRunning] = useState(false);
+    const [paused, setPaused] = useState(false);
+    const [done, setDone] = useState(false);
 
-    const [inRest,   setInRest]   = useState(false);
+    const [inRest, setInRest] = useState(false);
     const [currentRound, setCurrentRound] = useState(1);
     const [timeValue, setTimeValue] = useState(0);     // ms (up oder down)
 
     const phaseStartRef = useRef<number>(0);
-    const tickRef       = useRef<number|null>(null);
-    const prepRef       = useRef<number|null>(null);
-    const roundRef      = useRef(1);
-    const curPhaseDur   = useRef(1);
+    const tickRef = useRef<number | null>(null);
+    const prepRef = useRef<number | null>(null);
+    const roundRef = useRef(1);
+    const curPhaseDur = useRef(1);
 
     const bgAnim = useRef(new Animated.Value(0)).current;
     const [circleKey, setCircleKey] = useState(0);
+
+    const { vibrate } = useBle();
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', () => {
@@ -74,16 +76,16 @@ export default function Interval({ navigation }: { navigation: any }) {
     });
 
     const format = (ms: number) => {
-        const totalSec = Math.ceil(ms/1000);
-        const m = Math.floor(totalSec/60).toString().padStart(2,'0');
-        const s = (totalSec % 60).toString().padStart(2,'0');
+        const totalSec = Math.ceil(ms / 1000);
+        const m = Math.floor(totalSec / 60).toString().padStart(2, '0');
+        const s = (totalSec % 60).toString().padStart(2, '0');
         return `${m}:${s}`;
     };
 
-    const getDuration = (phase:PhaseType) => {
-        const min = phase==='work' ? parseInt(workMin)||0 : parseInt(restMin)||0;
-        const sec = phase==='work' ? parseInt(workSec)||0 : parseInt(restSec)||0;
-        return (min*60 + sec)*1000;
+    const getDuration = (phase: PhaseType) => {
+        const min = phase === 'work' ? parseInt(workMin) || 0 : parseInt(restMin) || 0;
+        const sec = phase === 'work' ? parseInt(workSec) || 0 : parseInt(restSec) || 0;
+        return (min * 60 + sec) * 1000;
     };
 
     const runPhase = (phase: PhaseType, doBuzz = true) => {
@@ -99,39 +101,39 @@ export default function Interval({ navigation }: { navigation: any }) {
             }
         }
         curPhaseDur.current = getDuration(phase);
-        setInRest(phase==='rest');
-        setCircleKey(k=>k+1);
+        setInRest(phase === 'rest');
+        setCircleKey(k => k + 1);
 
         if (!countDownMode) setTimeValue(0);
-        else                setTimeValue(curPhaseDur.current);
+        else setTimeValue(curPhaseDur.current);
 
         phaseStartRef.current = Date.now();
         clearInterval(tickRef.current!);
-        tickRef.current = setInterval(()=>{
-            const elapsed = Date.now()-phaseStartRef.current;
-            const left    = curPhaseDur.current - elapsed;
+        tickRef.current = setInterval(() => {
+            const elapsed = Date.now() - phaseStartRef.current;
+            const left = curPhaseDur.current - elapsed;
 
             setTimeValue(countDownMode ? left : elapsed);
 
-            if(elapsed>=curPhaseDur.current){
+            if (elapsed >= curPhaseDur.current) {
                 clearInterval(tickRef.current!);
 
-                if(phase==='work'){
-                    if(roundRef.current >= parseInt(rounds)){
+                if (phase === 'work') {
+                    if (roundRef.current >= parseInt(rounds)) {
                         finish();
-                    }else{
+                    } else {
                         runPhase('rest');
                     }
-                }else{
-                    roundRef.current +=1;
+                } else {
+                    roundRef.current += 1;
                     setCurrentRound(roundRef.current);
                     runPhase('work');
                 }
             }
-        },50);
+        }, 50);
     };
 
-    const begin = ()=>{ setRunning(true); runPhase('work', false); };
+    const begin = () => { setRunning(true); runPhase('work', false); };
 
     const start = async () => {
         if (parseInt(rounds) <= 0 || getDuration('work') <= 0) return;
@@ -145,8 +147,6 @@ export default function Interval({ navigation }: { navigation: any }) {
         setCurrentRound(1);
 
         if (prepEnabled) {
-            const lastId = await getLastDevice();
-            if (lastId) softReconnect(lastId);
             setCountdown(10);
             prepRef.current = setInterval(() => {
                 setCountdown(c => {
@@ -168,98 +168,98 @@ export default function Interval({ navigation }: { navigation: any }) {
         }
     };
 
-    const pause = ()=>{
+    const pause = () => {
         clearInterval(tickRef.current!);
         setRunning(false); setPaused(true);
     };
 
-    const resume = ()=>{
+    const resume = () => {
         setPaused(false); setRunning(true);
         const already = countDownMode
             ? curPhaseDur.current - timeValue
             : timeValue;
-        phaseStartRef.current = Date.now()-already;
-        tickRef.current = setInterval(()=>{
-            const elapsed = Date.now()-phaseStartRef.current;
-            const left    = curPhaseDur.current - elapsed;
+        phaseStartRef.current = Date.now() - already;
+        tickRef.current = setInterval(() => {
+            const elapsed = Date.now() - phaseStartRef.current;
+            const left = curPhaseDur.current - elapsed;
             setTimeValue(countDownMode ? left : elapsed);
-            if(elapsed>=curPhaseDur.current){
+            if (elapsed >= curPhaseDur.current) {
                 clearInterval(tickRef.current!);
-                if(inRest){
-                    roundRef.current +=1; setCurrentRound(roundRef.current);
+                if (inRest) {
+                    roundRef.current += 1; setCurrentRound(roundRef.current);
                     runPhase('work');
-                }else{
-                    if(roundRef.current>=parseInt(rounds)) finish();
+                } else {
+                    if (roundRef.current >= parseInt(rounds)) finish();
                     else runPhase('rest');
                 }
             }
-        },50);
+        }, 50);
     };
 
-    const reset = ()=>{
+    const reset = () => {
         clearInterval(tickRef.current!); clearInterval(prepRef.current!);
         setStarted(false); setRunning(false); setPaused(false); setDone(false);
-        setCountdown(10); setTimeValue(0); setInRest(false); roundRef.current=1; setCurrentRound(1);
+        setCountdown(10); setTimeValue(0); setInRest(false); roundRef.current = 1; setCurrentRound(1);
     };
 
-    const finish=()=>{ setRunning(false); setDone(true); vibrate(VibrationPatterns.BUZZ_LONG); };
+    const finish = () => { setRunning(false); setDone(true); vibrate(VibrationPatterns.BUZZ_LONG); };
 
-    const prog = running||paused
+    const prog = running || paused
         ? (countDownMode
-            ? 1 - Math.max(0,timeValue)/curPhaseDur.current
-            : Math.min(timeValue/curPhaseDur.current,1))
+            ? 1 - Math.max(0, timeValue) / curPhaseDur.current
+            : Math.min(timeValue / curPhaseDur.current, 1))
         : 0;
 
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <Animated.View style={[styles.stopwatchContainer,{backgroundColor}]}>
-                <View style={{flex:1,justifyContent:'center',alignItems:'center'}}>
+            <Animated.View style={[styles.stopwatchContainer, { backgroundColor }]}>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
 
                     {!started ? (
                         <>
-                            <Text style={[styles.h1,{marginBottom:20}]}>Intervall</Text>
+                            <Text style={[styles.h1, { marginBottom: 20 }]}>Intervall</Text>
 
-                            <Text style={[styles.subLabel,{color:'#666'}]}>Arbeitszeit</Text>
-                            <View style={{flexDirection:'row',marginBottom:16}}>
-                                <View style={{alignItems:'center',marginHorizontal:10}}>
-                                    <Text style={[styles.subLabel,{color:'#666'}]}>Min</Text>
+                            <Text style={[styles.subLabel, { color: '#666' }]}>Arbeitszeit</Text>
+                            <View style={{ flexDirection: 'row', marginBottom: 16 }}>
+                                <View style={{ alignItems: 'center', marginHorizontal: 10 }}>
+                                    <Text style={[styles.subLabel, { color: '#666' }]}>Min</Text>
                                     <TextInput value={workMin} onChangeText={setWorkMin} keyboardType="numeric"
-                                               style={[input,{width:80,height:60,fontSize:24,textAlign:'center'}]}/>
+                                        style={[input, { width: 80, height: 60, fontSize: 24, textAlign: 'center' }]} />
                                 </View>
-                                <View style={{alignItems:'center',marginHorizontal:10}}>
-                                    <Text style={[styles.subLabel,{color:'#666'}]}>Sek</Text>
+                                <View style={{ alignItems: 'center', marginHorizontal: 10 }}>
+                                    <Text style={[styles.subLabel, { color: '#666' }]}>Sek</Text>
                                     <TextInput value={workSec} onChangeText={setWorkSec} keyboardType="numeric"
-                                               style={[input,{width:80,height:60,fontSize:24,textAlign:'center'}]}/>
+                                        style={[input, { width: 80, height: 60, fontSize: 24, textAlign: 'center' }]} />
                                 </View>
                             </View>
 
-                            <Text style={[styles.subLabel,{color:'#666'}]}>Pausenzeit</Text>
-                            <View style={{flexDirection:'row',marginBottom:16}}>
-                                <View style={{alignItems:'center',marginHorizontal:10}}>
-                                    <Text style={[styles.subLabel,{color:'#666'}]}>Min</Text>
+                            <Text style={[styles.subLabel, { color: '#666' }]}>Pausenzeit</Text>
+                            <View style={{ flexDirection: 'row', marginBottom: 16 }}>
+                                <View style={{ alignItems: 'center', marginHorizontal: 10 }}>
+                                    <Text style={[styles.subLabel, { color: '#666' }]}>Min</Text>
                                     <TextInput value={restMin} onChangeText={setRestMin} keyboardType="numeric"
-                                               style={[input,{width:80,height:60,fontSize:24,textAlign:'center'}]}/>
+                                        style={[input, { width: 80, height: 60, fontSize: 24, textAlign: 'center' }]} />
                                 </View>
-                                <View style={{alignItems:'center',marginHorizontal:10}}>
-                                    <Text style={[styles.subLabel,{color:'#666'}]}>Sek</Text>
+                                <View style={{ alignItems: 'center', marginHorizontal: 10 }}>
+                                    <Text style={[styles.subLabel, { color: '#666' }]}>Sek</Text>
                                     <TextInput value={restSec} onChangeText={setRestSec} keyboardType="numeric"
-                                               style={[input,{width:80,height:60,fontSize:24,textAlign:'center'}]}/>
+                                        style={[input, { width: 80, height: 60, fontSize: 24, textAlign: 'center' }]} />
                                 </View>
                             </View>
 
-                            <Text style={[styles.subLabel,{color:'#666'}]}>Runden</Text>
+                            <Text style={[styles.subLabel, { color: '#666' }]}>Runden</Text>
                             <TextInput value={rounds} onChangeText={setRounds} keyboardType="numeric"
-                                       style={[input,{width:100,height:60,fontSize:24,textAlign:'center',marginBottom:20}]}/>
+                                style={[input, { width: 100, height: 60, fontSize: 24, textAlign: 'center', marginBottom: 20 }]} />
 
-                            <View style={{flexDirection:'row',alignItems:'center',marginBottom:12}}>
-                                <Text style={[styles.subLabel,{color:'#666',marginRight:8}]}>Zählrichtung</Text>
-                                <Switch value={countDownMode} onValueChange={setCountDown}/>
-                                <Text style={[styles.subLabel,{marginLeft:8}]}>{countDownMode?'⬇️':'⬆️'}</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                                <Text style={[styles.subLabel, { color: '#666', marginRight: 8 }]}>Zählrichtung</Text>
+                                <Switch value={countDownMode} onValueChange={setCountDown} />
+                                <Text style={[styles.subLabel, { marginLeft: 8 }]}>{countDownMode ? '⬇️' : '⬆️'}</Text>
                             </View>
 
-                            <View style={{flexDirection:'row',alignItems:'center',marginBottom:30}}>
-                                <Text style={[styles.subLabel,{color:'#666',marginRight:10}]}>10 s Vorbereitung</Text>
-                                <Switch value={prepEnabled} onValueChange={setPrepEnabled}/>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 30 }}>
+                                <Text style={[styles.subLabel, { color: '#666', marginRight: 10 }]}>10 s Vorbereitung</Text>
+                                <Switch value={prepEnabled} onValueChange={setPrepEnabled} />
                             </View>
 
                             <TouchableOpacity style={styles.startButton} onPress={start}>
@@ -268,24 +268,24 @@ export default function Interval({ navigation }: { navigation: any }) {
                         </>
                     ) : (
                         <>
-                            {(running||paused) ? (
+                            {(running || paused) ? (
                                 <>
-                                    <Text style={[styles.subLabel,{color:'#fff',marginBottom:8}]}>
-                                        Runde {currentRound}/{rounds} – {inRest?'Pause':'Work'}
+                                    <Text style={[styles.subLabel, { color: '#fff', marginBottom: 8 }]}>
+                                        Runde {currentRound}/{rounds} – {inRest ? 'Pause' : 'Work'}
                                     </Text>
 
                                     <View style={styles.progressContainer}>
                                         <Progress.Circle key={circleKey} size={250} progress={prog}
-                                                         color="#fff" borderWidth={4} thickness={8}
-                                                         unfilledColor="rgba(255,255,255,0.2)" animated direction="clockwise" />
+                                            color="#fff" borderWidth={4} thickness={8}
+                                            unfilledColor="rgba(255,255,255,0.2)" animated direction="clockwise" />
                                         <View style={styles.timerOverlay}>
-                                            <Animated.Text style={[styles.time,{color:textColor}]}>
+                                            <Animated.Text style={[styles.time, { color: textColor }]}>
                                                 {format(timeValue)}
                                             </Animated.Text>
                                         </View>
                                     </View>
 
-                                    <View style={{flexDirection:'row',marginTop:30,gap:20}}>
+                                    <View style={{ flexDirection: 'row', marginTop: 30, gap: 20 }}>
                                         <TouchableOpacity style={styles.stopButton} onPress={reset}>
                                             <Text style={styles.buttonText}>Abbrechen</Text>
                                         </TouchableOpacity>
@@ -302,7 +302,7 @@ export default function Interval({ navigation }: { navigation: any }) {
                                 </>
                             ) : done ? (
                                 <>
-                                    <Animated.Text style={[styles.time,{color:textColor,marginBottom:20}]}>
+                                    <Animated.Text style={[styles.time, { color: textColor, marginBottom: 20 }]}>
                                         ✅ Fertig!
                                     </Animated.Text>
                                     <TouchableOpacity style={styles.startButton} onPress={reset}>
@@ -311,7 +311,7 @@ export default function Interval({ navigation }: { navigation: any }) {
                                 </>
                             ) : (
                                 <>
-                                    <Animated.Text style={[styles.time,{color:textColor}]}>{countdown}</Animated.Text>
+                                    <Animated.Text style={[styles.time, { color: textColor }]}>{countdown}</Animated.Text>
                                     <Text style={styles.subLabel}>Vorbereitung</Text>
                                 </>
                             )}

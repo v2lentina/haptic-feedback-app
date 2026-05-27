@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { default as React, useEffect, useRef, useState } from 'react';
 import {
     Animated,
     Easing,
@@ -11,7 +11,7 @@ import {
     View,
 } from 'react-native';
 import * as Progress from 'react-native-progress';
-import { getLastDevice, softReconnect, vibrate } from '../ble';
+import { useBle } from '../BleContext';
 import { input, styles } from '../styles';
 import VibrationPatterns from '../vibrationPatterns';
 
@@ -34,6 +34,8 @@ export default function Amrap({ navigation }: { navigation: any }) {
 
     const [circleKey, setCircleKey] = useState(0);
     const bg = useRef(new Animated.Value(0)).current;
+
+    const { vibrate } = useBle();
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', () => {
@@ -100,8 +102,6 @@ export default function Amrap({ navigation }: { navigation: any }) {
         setReps(0);
 
         if (prepEnabled) {
-            const lastId = await getLastDevice();
-            if (lastId) softReconnect(lastId);
             setCountdown(10);
             const prep = setInterval(() => {
                 setCountdown(c => {

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, TouchableOpacity, View } from 'react-native';
 import * as Progress from 'react-native-progress';
-import { vibrate } from '../ble';
+import { useBle } from '../BleContext';
 import { styles } from '../styles';
 import VibrationPatterns from '../vibrationPatterns';
 
@@ -15,6 +15,8 @@ export default function StopwatchScreen({ navigation }: { navigation: any }) {
     const savedElapsedRef = useRef<number>(0);
 
     const backgroundAnim = useRef(new Animated.Value(0)).current;
+
+    const { vibrate } = useBle();
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', () => {

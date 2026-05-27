@@ -11,7 +11,7 @@ import {
     View,
 } from 'react-native';
 import * as Progress from 'react-native-progress';
-import { getLastDevice, softReconnect, vibrate } from '../ble';
+import { useBle } from '../BleContext';
 import { input, styles } from '../styles';
 import VibrationPatterns from '../vibrationPatterns';
 
@@ -36,6 +36,8 @@ export default function Emom({ navigation }: { navigation: any }) {
 
     const [exerciseDone, setExerciseDone] = useState(false);
     const [recordedTime, setRecordedTime] = useState('');
+
+    const { vibrate } = useBle();
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', () => {
@@ -124,8 +126,6 @@ export default function Emom({ navigation }: { navigation: any }) {
         setStarted(true);
 
         if (prepEnabled) {
-            const lastId = await getLastDevice();
-            if (lastId) softReconnect(lastId);
             setCountdown(10);
             const prep = setInterval(() => {
                 setCountdown(c => {
@@ -248,7 +248,7 @@ export default function Emom({ navigation }: { navigation: any }) {
                                 </View>
                             </View>
 
-                            <TouchableOpacity   style={[{ backgroundColor: '#4CD964', padding: 15, borderRadius: 30, marginBottom: 20, opacity: exerciseDone ? 0.5 : 1}]} onPress={markExerciseDone}>
+                            <TouchableOpacity style={[{ backgroundColor: '#4CD964', padding: 15, borderRadius: 30, marginBottom: 20, opacity: exerciseDone ? 0.5 : 1 }]} onPress={markExerciseDone}>
                                 <Text style={styles.buttonText}>Übung done</Text>
                             </TouchableOpacity>
 

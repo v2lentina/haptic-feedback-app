@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { default as React, useEffect, useRef, useState } from 'react';
 import {
     Animated, Easing, Keyboard, Switch,
     Text, TouchableOpacity,
@@ -6,7 +6,7 @@ import {
     View,
 } from 'react-native';
 import * as Progress from 'react-native-progress';
-import { vibrate } from '../ble';
+import { useBle } from '../BleContext';
 import { styles } from '../styles';
 import VibrationPatterns from '../vibrationPatterns';
 
@@ -44,6 +44,8 @@ export default function Beeptest ({ navigation }: { navigation: any }) {
 
     const bg = useRef(new Animated.Value(0)).current;
     const [circleKey, setCircleKey] = useState(0);
+
+    const {vibrate} = useBle();
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', () => {

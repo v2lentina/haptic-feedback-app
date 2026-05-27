@@ -9,6 +9,7 @@ type ProtocolMessagePayload = {
 	type: 'VIBRATION' | 'HANDSHAKE' | 'OTHER';
 	body: VibrationPattern | string,
 }
+type MessageType = ProtocolMessage['type'];
 
 /** Data only required by the protocol, that doesn't have to do with the payload */
 type ProtocolMessageMetadata = {
@@ -19,10 +20,10 @@ type ProtocolMessageMetadata = {
 /** How a message in the protocol looks like, as response and request when received or when it is sent */
 export type ProtocolMessage = ProtocolMessagePayload & ProtocolMessageMetadata;
 
-export type ProtocolMessageHandler = (message: ProtocolMessage) => void | Promise<void>;
+export type ProtocolMessageHandler = (message: ProtocolMessage, deviceId: string) => void | Promise<void>;
 
 type ActionMap = {
-	[key: typeof ProtocolMessage['type']]: ProtocolMessageHandler;
+	[key in ProtocolMessagePayload['type']]: ProtocolMessageHandler;
 }
 
 /** Defines how a received message should be interpreted
@@ -42,12 +43,13 @@ export function handleMessage(msg: string, deviceId: string, actionMap: ActionMa
 	if (!VALID_TYPES.includes(msgObject['type'])) {
 		return new ProtocolException(msg, `Message.type was not an allowed value: ${JSON.stringify(VALID_TYPES)}`);
 	}
+	const protMsg = msgObject as ProtocolMessagePayload;
 
-	const action = actionMap[msgObject['type']];
+	const action = actionMap[protMsg.type];
 
-	if (!action) throw ProtocolError({ actionMap, msgObject }, `actionMap did not have an entry for '${msgObject['type']}'`);
+	if (!action) throw new ProtocolError({ actionMap, protMsg }, `actionMap did not have an entry for '${protMsg.type}'`);
 
-	return action(msgObject as ProtocolMessage, deviceId);
+	return action(protMsg as ProtocolMessage, deviceId);
 }
 
 // /** Generates an ID unique for at least one minute

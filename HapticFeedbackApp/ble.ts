@@ -1,10 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Buffer } from 'buffer';
 import { addEventListener, requestBluetoothPermission, setServices, startAdvertising, stopAdvertising, updateCharacteristicValue } from 'munim-bluetooth';
-import { BleManager as BlePlxManager } from 'react-native-ble-plx';
 import { ProtocolMessage } from './protocol';
-import { BleDevice } from './screens/Homescreen';
-import { VibrationPattern } from './vibrationPatterns';
 // global.Buffer = global.Buffer || Buffer;
 
 /** Service UUID for peripherals that support peripheral mode */
@@ -19,13 +16,17 @@ const LAST_DEVICE_KEY = 'lastDeviceId';
 
 type MessageEventHandler = (msg: string, deviceId: string) => void | Promise<void>;
 
+export type BleDevice = {
+    /** A way to identify multiple BleDevices, can either be arbitrary or the Bluetooth-MAC */
+    id: string;
+    name: string | null;
+}
+
 /** Allows for establishing a connection with another device and receiving and sending string messages.
  * 
  * For anything protocol related see [`protocol.ts`](./protocol.ts)
- * 
- * Allows for both advertising and scanning using `plx` and `advertise`
  */
-export class BleManager extends BlePlxManager {
+export class BleManager {
     // TODO: store identifier of device
     connectedDevice: BleDevice | null = null;
 
@@ -37,12 +38,11 @@ export class BleManager extends BlePlxManager {
         this.messageListeners = this.messageListeners.add(callback);
     }
     stopOnMessage(callback: MessageEventHandler) {
-        this.messageListeners = this.messageListeners.delete(callback);
+        this.messageListeners.delete(callback);
     }
 
     constructor() {
-        super();
-        console.log("Custom BleManager created.");
+        console.log("BleManager created");
     }
 
     requestPermissions() {
@@ -54,8 +54,8 @@ export class BleManager extends BlePlxManager {
         // TODO: indicate in the UI that an connection has been established
         // TODO: stop BLE advertising
         this.connectedDevice = {
-            name: msg.body,
-            id: msg.deviceID ?? deviceId,
+            name: msg.body as string,
+            id: deviceId,
         }
     }
 
@@ -63,7 +63,7 @@ export class BleManager extends BlePlxManager {
         console.info("Starting advertising");
 
         // TODO: somehow check from which device the message came from (using the device map)
-        addEventListener('peripheralWriteRequest', ({ centralId, value }: {centralId: string, value: string}) => {
+        addEventListener('peripheralWriteRequest', ({ centralId, value }: { centralId: string, value: string }) => {
             const msg = Buffer.from(value, "hex").toString();
             console.log('Peer wrote', centralId, msg);
             this.messageListeners.forEach(eh => eh(msg, centralId));
@@ -99,19 +99,9 @@ export class BleManager extends BlePlxManager {
         stopAdvertising();
     }
 
-    async connectedDevices(UUIDs: string[]) {
-        const res = await super.connectedDevices(UUIDs);
-
-        if (!this.connectedDevice) {
-            return res;
-        }
-
-        return  [this.connectedDevice, ...res];
-    }
-
     async getConnectedDevices() {
-        const connectedDevices = await this.connectedDevices([EMITTING_SERVICE_UUID]);
-        return connectedDevices
+        if (!this.connectedDevice) return [];
+        return [this.connectedDevice];
     }
 
     /** Sends a `message`.
@@ -142,52 +132,53 @@ export class BleManager extends BlePlxManager {
 export async function getLastDevice() { return AsyncStorage.getItem(LAST_DEVICE_KEY); }
 export async function saveLastDevice(id: string) { return AsyncStorage.setItem(LAST_DEVICE_KEY, id); }
 export async function clearLastDevice() { return AsyncStorage.removeItem(LAST_DEVICE_KEY); }
+// Functions that use PLX package, retained for future backwards-compatibility
 export let reconnecting = false;
-export async function softReconnect(deviceId: string) {
-    if (reconnecting) return;
-    reconnecting = true;
-    try {
-        await manager.cancelDeviceConnection(deviceId);
-        const dev = await manager.connectToDevice(deviceId, { timeout: 8000 });
-        await dev.discoverAllServicesAndCharacteristics();
-        await saveLastDevice(deviceId);
-    } catch (e) {
-        console.warn("BLE> Soft-Reconnect failed", e);
-    }
-    reconnecting = false;
-}
-
-let writeQueue: Promise<any> = Promise.resolve();
-let writeCount = 0;
-const RECONNECT_EVERY = 5; //soft reconnect after every 5 vibrations
-
-export function enqueueVibration(deviceId: string, payloadBase64: string) {
-    writeQueue = writeQueue
-        .catch(() => { })
-        .then(() => {
-            return manager.writeCharacteristicWithResponseForDevice(
-                deviceId, SEARCHING_FOR_SERVICE_UUID, SEARCHING_FOR_CHARACTERISTIC_UUID, payloadBase64
-            );
-        })
-        .then(() => {
-            writeCount++;
-            if (writeCount >= RECONNECT_EVERY) {
-                writeCount = 0;
-                return softReconnect(deviceId);
-            }
-        })
-        .then(() => new Promise<void>(res => setTimeout(() => res(), 50)));
-    return writeQueue;
-}
-
-export async function vibrate(pattern: VibrationPattern) {
-    const devs = await manager.connectedDevices([SEARCHING_FOR_SERVICE_UUID]);
-    if (!devs.length) return;
-    const deviceId = devs[0].id;
-    const data = Buffer.from(pattern).toString('base64');
-    try {
-        await enqueueVibration(deviceId, data);
-    } catch (e) {
-        console.warn('BLE> Sending vibration pattern failed', e);
-    }
-}
+// export async function softReconnect(deviceId: string) {
+//     if (reconnecting) return;
+//     reconnecting = true;
+//     try {
+//         await manager.cancelDeviceConnection(deviceId);
+//         const dev = await manager.connectToDevice(deviceId, { timeout: 8000 });
+//         await dev.discoverAllServicesAndCharacteristics();
+//         await saveLastDevice(deviceId);
+//     } catch (e) {
+//         console.warn("BLE> Soft-Reconnect failed", e);
+//     }
+//     reconnecting = false;
+// }
+//
+// let writeQueue: Promise<any> = Promise.resolve();
+// let writeCount = 0;
+// const RECONNECT_EVERY = 5; //soft reconnect after every 5 vibrations
+//
+// export async function vibrate(pattern: VibrationPattern) {
+// 	const devs = await manager.connectedDevices([SEARCHING_FOR_SERVICE_UUID]);
+// 	if (!devs.length) return;
+// 	const deviceId = devs[0].id;
+// 	const data = Buffer.from(pattern).toString('base64');
+// 	try {
+// 		await enqueueVibration(deviceId, data);
+// 	} catch (e) {
+// 		console.warn('BLE> Sending vibration pattern failed', e);
+// 	}
+// }
+//
+// export function enqueueVibration(deviceId: string, payloadBase64: string) {
+//     writeQueue = writeQueue
+//         .catch(() => { })
+//         .then(() => {
+//             return manager.writeCharacteristicWithResponseForDevice(
+//                 deviceId, SEARCHING_FOR_SERVICE_UUID, SEARCHING_FOR_CHARACTERISTIC_UUID, payloadBase64
+//             );
+//         })
+//         .then(() => {
+//             writeCount++;
+//             if (writeCount >= RECONNECT_EVERY) {
+//                 writeCount = 0;
+//                 return softReconnect(deviceId);
+//             }
+//         })
+//         .then(() => new Promise<void>(res => setTimeout(() => res(), 50)));
+//     return writeQueue;
+// }
