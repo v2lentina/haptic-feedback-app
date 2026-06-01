@@ -40,9 +40,22 @@
 		0FED1AE52F9B7B6800947471 /* HapticWatchApp Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "HapticWatchApp Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		0FF436262FCD80FF005B5769 /* Exceptions for "HapticWatchApp Watch App" folder in "HapticWatchApp Watch App" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"HapticWatchApp-Watch-App-Info.plist",
+			);
+			target = 0FED1AE42F9B7B6800947471 /* HapticWatchApp Watch App */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0FED1AE92F9B7B6800947471 /* HapticWatchApp Watch App */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				0FF436262FCD80FF005B5769 /* Exceptions for "HapticWatchApp Watch App" folder in "HapticWatchApp Watch App" target */,
+			);
 			path = "HapticWatchApp Watch App";
 			sourceTree = "<group>";
 		};
@@ -328,6 +341,7 @@
 				DEVELOPMENT_TEAM = HAKF48LCNZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "HapticWatchApp-Watch-App-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = HapticWatchApp;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "This app uses Bluetooth for BLE communication";
@@ -362,6 +376,7 @@
 				DEVELOPMENT_TEAM = HAKF48LCNZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "HapticWatchApp-Watch-App-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = HapticWatchApp;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "This app uses Bluetooth for BLE communication";

@@ -47,12 +47,19 @@ export function BleProvider({ children }: { children: ReactNode }) {
 
     // console.log("manager: " + manager.requestPermissions);
 
-    const [bleState, setBleState] = useState<State | null>(null);
+    const [bleState, setBleState] = useState<State | null>("PoweredOn");
     const [devices, setDevices] = useState<BleDevice[]>([]);
     const [connectedDevice, setConnectedDevice] = useState<BleDevice | null>(null);
     const [isAdvertising, setIsAdvertising] = useState(false);
     // TODO: Doesn't a useRef suffice??
     const [disconnectSub, setDisconnectSub] = useState<Subscription | null>(null);
+
+    // useEffect(() => {
+    //     const sub = manager.onStateChange(async (state) => {
+    //         setBleState(state);
+    //     }, true);
+    //     return () => sub.remove();
+    // }, []);
 
     const advertiseService = useCallback(async () => {
         await manager.requestPermissions();

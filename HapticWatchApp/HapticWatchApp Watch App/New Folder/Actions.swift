@@ -4,11 +4,24 @@
 //
 //  Created by Felix on 15.05.26.
 //
+
 import WatchKit
 
-class Actions {
+class Actions : NSObject, WKExtendedRuntimeSessionDelegate {
+    func extendedRuntimeSession(_ extendedRuntimeSession: WKExtendedRuntimeSession, didInvalidateWith reason: WKExtendedRuntimeSessionInvalidationReason, error: (any Error)?) {}
+    
+    func extendedRuntimeSessionDidStart(_ extendedRuntimeSession: WKExtendedRuntimeSession) {}
+    
+    func extendedRuntimeSessionWillExpire(_ extendedRuntimeSession: WKExtendedRuntimeSession) {}
+    
+    var session: WKExtendedRuntimeSession?
+    
     /// Maps the pattern `[duration, delay, duration, delay...]`
     func playVibrationPattern(vibrationMessage: VibrationMessage) {
+        session = WKExtendedRuntimeSession()
+        session?.delegate = self
+        session?.start()
+        
         Task {
             var typ: WKHapticType = .click;
             for (index, value) in vibrationMessage.pattern.enumerated() {
@@ -33,6 +46,9 @@ class Actions {
                 
                 try? await Task.sleep(for: Duration.milliseconds(Double(playTime - currentMs)), tolerance: .zero)
             }
+            
+            session?.invalidate()
+            session = nil
         }
     }
     

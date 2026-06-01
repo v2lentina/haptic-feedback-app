@@ -40,6 +40,7 @@ export default function App() {
             <NavigationContainer>
                 <Stack.Navigator>
                     {screens.map(def => <Stack.Screen name={def.label} component={def.component} />)}
+                    <Stack.Screen name="Stop" component={StopwatchScreen} />
                 </Stack.Navigator>
             </NavigationContainer>
         </BleProvider>

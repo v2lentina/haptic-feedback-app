@@ -2,12 +2,12 @@
 
 ## Technical setup
 ### Roles
-There are two types of actors: **phone** and **watches**.
+There are two types of roles: **phone** and **watches**.
 
 #### Watch
 **Watch** may be an **Apple watch** or **bangle2.js with custom software**.
 
-As much as support for **Garmin Watches** was anticipated, because of its implementation details, it is impossible for the wanted setup.
+As much as support for **Garmin Watches** was anticipated, because of its implementation details, it is impossible for the desired setup.
 
 #### Phone
 There may only be one phone in a given context, but there may be multiple watches.

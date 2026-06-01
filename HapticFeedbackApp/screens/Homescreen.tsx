@@ -115,35 +115,37 @@ export default function HomeScreen({ navigation }: any) {
                     </Text>
                 )}
 
-                <Text style={[styles.h1, { marginTop: 40 }]}>Wähle deinen Modus</Text>
+                {connectedDevice && <>
+                    <Text style={[styles.h1, { marginTop: 40 }]}>Wähle deinen Modus</Text>
 
-                <View style={styles.grid}>
-                    {
-                        // [
-                        //     ["⏱ Stoppuhr", "🔄 Interval"],
-                        //     ["⬆️ Hochzählen", "⬇️ Runterzählen"],
-                        //     ["🔃 Hoch in Runden", "🔃 Runter in Runden"],
-                        //     ["🧨 Tabata", "🥊 F9Bad"],
-                        //     ["🔥 Amrap", "⏰ Emom"],
-                        //     ["🏃 Beeptest", "🎛️ Custom"]
-                        // ]
+                    <View style={styles.grid}>
+                        {
+                            // [
+                            //     ["⏱ Stoppuhr", "🔄 Interval"],
+                            //     ["⬆️ Hochzählen", "⬇️ Runterzählen"],
+                            //     ["🔃 Hoch in Runden", "🔃 Runter in Runden"],
+                            //     ["🧨 Tabata", "🥊 F9Bad"],
+                            //     ["🔥 Amrap", "⏰ Emom"],
+                            //     ["🏃 Beeptest", "🎛️ Custom"]
+                            // ]
 
-                        twoColumnScreens
-                            .map((row, rowIndex) => (
-                                <View style={styles.row} key={rowIndex}>
-                                    {row.map((label) => (
-                                        <TouchableOpacity
-                                            key={label}
-                                            style={styles.gridBtn}
-                                            onPress={() => navigation.navigate(label)}
-                                        >
-                                            <Text style={styles.gridBtnText}>{label}</Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            ))
-                    }
-                </View>
+                            twoColumnScreens
+                                .map((row, rowIndex) => (
+                                    <View style={styles.row} key={rowIndex}>
+                                        {row.map((label) => (
+                                            <TouchableOpacity
+                                                key={label}
+                                                style={styles.gridBtn}
+                                                onPress={() => navigation.navigate(label)}
+                                            >
+                                                <Text style={styles.gridBtnText}>{label}</Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                ))
+                        }
+                    </View>
+                </>}
             </View>
         </ScrollView >
     );
