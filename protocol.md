@@ -31,8 +31,7 @@ It is a plain-text (JSON) protocol transmitted via BLE messages.
 
 <VIBRATIONBODY> ::= "[" <VIBRATIONDEFINITION> "]"
 
-<VIBRATIONDEFINITION> ::= <DUTYCYCLE>","<DURATION_MS>
-	| <DUTYCYCLE>","<DURATION_MS>","<VIBRATIONDEFINITION>
+<VIBRATIONDEFINITION> ::= <DUTYCYCLE>","<DURATION_MS> | <DUTYCYCLE>","<DURATION\_MS>","<VIBRATIONDEFINITION>
 
 <OTHERMESSAGE> ::= "OTHER,"<BODY>
 
@@ -40,9 +39,10 @@ It is a plain-text (JSON) protocol transmitted via BLE messages.
 
 <DUTYCYCLE> ::= float(0..100)
 
-<DURATION_MS> ::= int(0..2000)
+<DURATION\_MS> ::= int(0..2000)
 
-<HANDSHAKEMESSAGE> ::= "HANDSHAKE,<ID>"
+<HANDSHAKEMESSAGE> ::= "HANDSHAKE,"<ID>
+<ID> ::= string()
 ```
 
 ## For human thinking

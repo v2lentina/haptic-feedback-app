@@ -47,6 +47,7 @@ class Logic : ObservableObject {
     /// Called when a connection has been established
     func _onReady() {
         ble.isConnected = true;
+		_actions.activateSession()
         _bleSubscription = ble.responseStream
             .receive(on: DispatchQueue.main)
             .sink { [self] msg in
@@ -60,6 +61,7 @@ class Logic : ObservableObject {
     
     /// Resets the state and connection to initial state, making sure everything is cleaned up for re-use
     func reset() {
+		_actions.stopSession()
         ble.reset()
     }
 }

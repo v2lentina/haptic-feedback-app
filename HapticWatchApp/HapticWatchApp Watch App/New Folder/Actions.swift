@@ -15,13 +15,19 @@ class Actions : NSObject, WKExtendedRuntimeSessionDelegate {
     func extendedRuntimeSessionWillExpire(_ extendedRuntimeSession: WKExtendedRuntimeSession) {}
     
     var session: WKExtendedRuntimeSession?
+	func activateSession() {
+		session = WKExtendedRuntimeSession()
+		session?.delegate = self
+		session?.start()
+	}
+	
+	func stopSession() {
+		session?.invalidate()
+		session = nil
+	}
     
     /// Maps the pattern `[duration, delay, duration, delay...]`
-    func playVibrationPattern(vibrationMessage: VibrationMessage) {
-        session = WKExtendedRuntimeSession()
-        session?.delegate = self
-        session?.start()
-        
+    func playVibrationPattern(vibrationMessage: VibrationMessage) {        
         Task {
             var typ: WKHapticType = .click;
             for (index, value) in vibrationMessage.pattern.enumerated() {
@@ -46,9 +52,6 @@ class Actions : NSObject, WKExtendedRuntimeSessionDelegate {
                 
                 try? await Task.sleep(for: Duration.milliseconds(Double(playTime - currentMs)), tolerance: .zero)
             }
-            
-            session?.invalidate()
-            session = nil
         }
     }
     

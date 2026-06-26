@@ -84,14 +84,14 @@ export default function HomeScreen({ navigation }: any) {
 
                 {connectedDevice && (
                     <View style={styles.connectedActions}>
-                        <Vibrate pattern={[100, 100]} />
+                        {/* <Vibrate pattern={[100, 100]} />
                         <Vibrate pattern={[100, 2000, 45, 100]} />
                         <Vibrate pattern={[50, 100]} />
                         <Vibrate pattern={[50, 2000]} />
                         <Vibrate pattern={[35, 100]} />
                         <Vibrate pattern={[35, 2000]} />
                         <Vibrate pattern={[25, 100]} />
-                        <Vibrate pattern={[25, 2000]} />
+                        <Vibrate pattern={[25, 2000]} /> */}
 
                         <TouchableOpacity style={styles.scanButtonEx} onPress={() => {
                             Alert.alert(

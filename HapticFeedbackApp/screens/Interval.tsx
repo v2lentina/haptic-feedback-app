@@ -154,9 +154,9 @@ export default function Interval({ navigation }: { navigation: any }) {
                     if (next > 0 && next <= 3) {
                         vibrate(VibrationPatterns.BUZZ_SHORT);
                     }
-                    if (next <== 0) {
+                    if (next === 0) {
                         clearInterval(prepRef.current!);
-                        await vibrate(VibrationPatterns.BUZZ_LONG);
+                        vibrate(VibrationPatterns.BUZZ_LONG);
                         begin();
                     }
                     return next;

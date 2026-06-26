@@ -4,6 +4,7 @@
 
 To start the app:
 ```sh
+npm install
 npm run andorid
 npm run ios
 ```
