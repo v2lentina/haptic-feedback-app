@@ -38,7 +38,7 @@ export default function Tabata({ navigation }: { navigation: any }) {
     const phaseAnim = useRef(new Animated.Value(0)).current;
     const [circleKey, setCircleKey] = useState(0);
 
-    const { vibrate } = useBle();
+    const { vibrate, startActivity, stopActivity } = useBle();
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', () => {
@@ -79,15 +79,18 @@ export default function Tabata({ navigation }: { navigation: any }) {
             : 0;
 
     const start = async () => {
+        await startActivity();
         Keyboard.dismiss();
         setStarted(true);
 
         if (preparationEnabled) {
             setCountdown(10);
-            const prep = setInterval(() => {
+            const prep = setInterval(async () => {
                 setCountdown(c => {
                     const next = c - 1;
-                    if (next > 0 && next <= 3) vibrate(VibrationPatterns.BUZZ_SHORT);
+                    if (next > 0 && next <= 3) {
+                        vibrate(VibrationPatterns.BUZZ_SHORT);
+                    }
                     if (next === 0) {
                         clearInterval(prep);
                         vibrate(VibrationPatterns.BUZZ_LONG);
@@ -97,7 +100,7 @@ export default function Tabata({ navigation }: { navigation: any }) {
                 });
             }, 1000);
         } else {
-            vibrate(VibrationPatterns.BUZZ_LONG);
+           await  vibrate(VibrationPatterns.BUZZ_LONG);
             beginTabata();
         }
     };
@@ -120,7 +123,7 @@ export default function Tabata({ navigation }: { navigation: any }) {
         setPaused(false);
         vibrate(phase === 'work' ? VibrationPatterns.BUZZ_NORMAL : VibrationPatterns.BUZZ_NORMAL);
 
-        intervalRef.current = setInterval(() => {
+        intervalRef.current = setInterval(async () => {
             const elapsed = Date.now() - phaseStartRef.current;
             const left = Math.max(currentPhaseMS.current - elapsed, 0);
             setRemaining(left);
@@ -130,9 +133,10 @@ export default function Tabata({ navigation }: { navigation: any }) {
 
                 if (phase === 'work') {
                     if (currentRoundRef.current >= TOTAL_ROUNDS) {
-                        vibrate(VibrationPatterns.BUZZ_LONG);
                         setRunning(false);
                         setDone(true);
+                        await vibrate(VibrationPatterns.BUZZ_LONG);
+                        await stopActivity();
                     } else {
                         startPhase('rest');
                     }
@@ -181,7 +185,7 @@ export default function Tabata({ navigation }: { navigation: any }) {
         }, 50);
     };
 
-    const reset = () => {
+    const reset = async () => {
         if (intervalRef.current) clearInterval(intervalRef.current);
         setStarted(false);
         setRunning(false);
@@ -193,6 +197,7 @@ export default function Tabata({ navigation }: { navigation: any }) {
         currentRoundRef.current = 1;
         setCurrentRound(1);
         setCircleKey(k => k + 1);
+        await stopActivity();
     };
 
     return (

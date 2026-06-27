@@ -35,7 +35,7 @@ export default function Amrap({ navigation }: { navigation: any }) {
     const [circleKey, setCircleKey] = useState(0);
     const bg = useRef(new Animated.Value(0)).current;
 
-    const { vibrate } = useBle();
+    const { vibrate, startActivity, stopActivity } = useBle();
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', () => {
@@ -88,6 +88,7 @@ export default function Amrap({ navigation }: { navigation: any }) {
             setRemaining(Math.max(0, left));
 
             if (left <= 0) {
+                stopActivity();
                 clearInterval(intervalRef.current!);
                 vibrate(VibrationPatterns.BUZZ_LONG);
                 setRunning(false);
@@ -97,6 +98,7 @@ export default function Amrap({ navigation }: { navigation: any }) {
     };
 
     const start = async () => {
+        await startActivity();
         Keyboard.dismiss();
         setStarted(true);
         setReps(0);
@@ -145,6 +147,7 @@ export default function Amrap({ navigation }: { navigation: any }) {
     };
 
     const reset = () => {
+        stopActivity()
         clearInterval(intervalRef.current!);
         setStarted(false);
         setRunning(false);

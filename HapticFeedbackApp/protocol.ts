@@ -6,7 +6,7 @@ const VALID_TYPES = ['VIBRATION', 'HANDSHAKE', 'OTHER'];
 
 /** The data of a messag */
 type ProtocolMessagePayload = {
-	type: 'VIBRATION' | 'HANDSHAKE' | 'OTHER';
+	type: 'START' | 'STOP' | 'VIBRATION' | 'HANDSHAKE' | 'OTHER';
 	body: VibrationPattern | string,
 }
 type MessageType = ProtocolMessage['type'];

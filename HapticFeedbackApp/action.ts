@@ -16,6 +16,26 @@ export async function sendVibrationPattern(pattern: VibrationPattern, { send }: 
 	// const response = await request(messageObj, mediumFromBle(ble));
 }
 
+export async function sendStart({ send }: { send: (msg: string) => void | Promise<void> }, body: String | undefined) {
+	console.log("sending START message");
+	const messageObj = {
+		type: 'START',
+		body: body ?? "START"
+	}
+	
+	await send(JSON.stringify(messageObj));
+}
+
+export async function sendStop({ send }: { send: (msg: string) => void | Promise<void> }, body: String | undefined) {
+	console.log("sending STOP message");
+	const messageObj = {
+		type: 'STOP',
+		body: body ?? "STOP"
+	}
+
+	await send(JSON.stringify(messageObj));
+}
+
 // export function mediumFromBle(ble: BleManager): MessageMedium {
 // 	return {
 // 		sendData(msg) {

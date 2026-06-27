@@ -6,7 +6,7 @@ import React, {
     useState
 } from 'react';
 import type { State, Subscription } from 'react-native-ble-plx';
-import { handleOther, handleVibration, sendVibrationPattern } from './action.ts';
+import { handleOther, handleVibration, sendStart, sendStop, sendVibrationPattern } from './action.ts';
 import { BleDevice, BleManager, clearLastDevice } from './ble.ts';
 import { handleMessage, ProtocolMessage } from './protocol.ts';
 import { VibrationPattern } from './vibrationPatterns.ts';
@@ -19,7 +19,9 @@ interface BleContextValue {
     advertiseService: () => void;
     stopAdvertise: () => void;
     send: (message: string) => Promise<void>;
-    vibrate: (pattern: VibrationPattern) => Promise<void>
+    vibrate: (pattern: VibrationPattern) => Promise<void>;
+    startActivity: (body: String|undefined) => Promise<void>;
+    stopActivity: (body: String|undefined) => Promise<void>;
     getConnectedDevices: () => Promise<BleDevice[]>;
     disconnect: () => void;
 }
@@ -31,6 +33,12 @@ export function BleProvider({ children }: { children: ReactNode }) {
     const manager = new BleManager();
     manager.onMessage((msg, deviceId) => {
         handleMessage(msg, deviceId, {
+            "START": (msg: ProtocolMessage, deviceId: string) => {
+                console.error("Shouldn't be sent to phone!")
+            },
+            "STOP": (msg: ProtocolMessage, deviceId: string) => {
+                console.error("Shouldn't be sent to phone!")
+            },
             "OTHER": handleOther,
             "VIBRATION": handleVibration,
             "HANDSHAKE": (msg: ProtocolMessage, deviceId: string) => {
@@ -98,9 +106,21 @@ export function BleProvider({ children }: { children: ReactNode }) {
         return sendVibrationPattern(pattern, { send: manager.send });
     }, [bleState]);
 
+    const startActivity = useCallback(async (body: String | undefined) => {
+        if (bleState !== 'PoweredOn' || isAdvertising) return;
+        
+        return sendStart({ send: manager.send }, body);
+    }, [bleState]);
+
+    const stopActivity = useCallback(async (body: String | undefined) => {
+        if (bleState !== 'PoweredOn' || isAdvertising) return;
+        
+        return sendStop({ send: manager.send }, body);
+    }, [bleState]);
+
     return (
         <BleContext.Provider
-            value={{ bleState, devices, connectedDevice, isAdvertising, advertiseService, stopAdvertise, send, vibrate, getConnectedDevices, disconnect }}
+            value={{ bleState, devices, connectedDevice, isAdvertising, advertiseService, stopAdvertise, send, vibrate, startActivity, stopActivity, getConnectedDevices, disconnect }}
         >
             {children}
         </BleContext.Provider>

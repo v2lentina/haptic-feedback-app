@@ -37,7 +37,7 @@ export default function Emom({ navigation }: { navigation: any }) {
     const [exerciseDone, setExerciseDone] = useState(false);
     const [recordedTime, setRecordedTime] = useState('');
 
-    const { vibrate } = useBle();
+    const { vibrate, startActivity, stopActivity } = useBle();
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', () => {
@@ -96,13 +96,14 @@ export default function Emom({ navigation }: { navigation: any }) {
         tickMinute();
 
         switchRef.current && clearTimeout(switchRef.current);
-        switchRef.current = setTimeout(() => {
+        switchRef.current = setTimeout(async () => {
             clearInterval(tickRef.current!);
 
             if (roundRef.current >= total) {
-                vibrate(VibrationPatterns.BUZZ_LONG);
+                await vibrate(VibrationPatterns.BUZZ_LONG);
                 setRunning(false);
                 setDone(true);
+                await stopActivity();
             } else {
                 roundRef.current += 1;
                 setCurrentRound(roundRef.current);
@@ -119,6 +120,7 @@ export default function Emom({ navigation }: { navigation: any }) {
     };
 
     const start = async () => {
+        await startActivity();
         const total = parseInt(rounds);
         if (!total || total < 1) return;
 
@@ -174,6 +176,7 @@ export default function Emom({ navigation }: { navigation: any }) {
     };
 
     const reset = () => {
+        stopActivity();
         clearInterval(tickRef.current!);
         clearTimeout(switchRef.current!);
         setStarted(false);

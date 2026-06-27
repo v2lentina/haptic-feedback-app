@@ -38,7 +38,7 @@ export default function F9Bad({ navigation }: { navigation: any }) {
     const phaseAnim = useRef(new Animated.Value(0)).current;
     const [circleKey, setCircleKey] = useState(0);
 
-    const { vibrate } = useBle();
+    const { vibrate, startActivity, stopActivity } = useBle();
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', () => {
@@ -79,6 +79,7 @@ export default function F9Bad({ navigation }: { navigation: any }) {
             : 0;
 
     const start = async () => {
+        await startActivity();
         Keyboard.dismiss();
         setStarted(true);
 
@@ -163,7 +164,7 @@ export default function F9Bad({ navigation }: { navigation: any }) {
 
 
 
-        intervalRef.current = setInterval(() => {
+        intervalRef.current = setInterval(async  () => {
             const elapsed = Date.now() - phaseStartRef.current;
             const left = Math.max(currentPhaseMS.current - elapsed, 0);
             setRemaining(left);
@@ -178,9 +179,10 @@ export default function F9Bad({ navigation }: { navigation: any }) {
                     startPhase('work');
                 } else {
                     if (currentRoundRef.current >= TOTAL_ROUNDS) {
-                        vibrate(VibrationPatterns.BUZZ_LONG);
                         setRunning(false);
                         setDone(true);
+                        await vibrate(VibrationPatterns.BUZZ_LONG);
+                        await stopActivity();
                     } else {
                         startPhase('rest');
                     }
@@ -190,6 +192,7 @@ export default function F9Bad({ navigation }: { navigation: any }) {
     };
 
     const reset = () => {
+        stopActivity();
         if (intervalRef.current) clearInterval(intervalRef.current);
         if (minuteRef.current) clearInterval(minuteRef.current);
         setStarted(false);

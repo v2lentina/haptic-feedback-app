@@ -38,7 +38,7 @@ export default function DownRd({ navigation }: { navigation: any }) {
     const [circleKey, setCircleKey] = useState(0);
     const backgroundAnim = useRef(new Animated.Value(0)).current;
 
-    const { vibrate } = useBle();
+    const { vibrate, startActivity, stopActivity } = useBle();
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', () => {
@@ -67,6 +67,7 @@ export default function DownRd({ navigation }: { navigation: any }) {
     });
 
     const start = async () => {
+        await startActivity();
         Keyboard.dismiss();
         setStarted(true);
 
@@ -110,7 +111,7 @@ export default function DownRd({ navigation }: { navigation: any }) {
         roundStartRef.current = Date.now();
         savedElapsedRef.current = 0;
 
-        intervalRef.current = setInterval(() => {
+        intervalRef.current = setInterval(async () => {
             const elapsed = Date.now() - roundStartRef.current;
             const left = Math.max(roundMillisRef.current - (elapsed + savedElapsedRef.current), 0);
             setRemaining(left);
@@ -118,8 +119,7 @@ export default function DownRd({ navigation }: { navigation: any }) {
             if (left <= 0) {
                 clearInterval(intervalRef.current!);
                 const finalRound = currentRoundRef.current >= parseInt(roundCount);
-                vibrate(finalRound ? VibrationPatterns.BUZZ_LONG : VibrationPatterns.BUZZ_NORMAL);
-
+                
                 if (finalRound) {
                     setRunning(false);
                     setDone(true);
@@ -128,6 +128,9 @@ export default function DownRd({ navigation }: { navigation: any }) {
                     setCurrentRound(currentRoundRef.current);
                     startNextRound();
                 }
+                
+                await vibrate(finalRound ? VibrationPatterns.BUZZ_LONG : VibrationPatterns.BUZZ_NORMAL);
+                stopActivity();
             }
         }, 50);
     };
@@ -168,6 +171,7 @@ export default function DownRd({ navigation }: { navigation: any }) {
     };
 
     const reset = () => {
+        stopActivity();
         if (intervalRef.current) clearInterval(intervalRef.current);
         setStarted(false);
         setRunning(false);

@@ -47,7 +47,7 @@ export default function Interval({ navigation }: { navigation: any }) {
     const bgAnim = useRef(new Animated.Value(0)).current;
     const [circleKey, setCircleKey] = useState(0);
 
-    const { vibrate } = useBle();
+    const { vibrate, startActivity, stopActivity } = useBle();
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', () => {
@@ -136,6 +136,7 @@ export default function Interval({ navigation }: { navigation: any }) {
     const begin = () => { setRunning(true); runPhase('work', false); };
 
     const start = async () => {
+        await startActivity();
         if (parseInt(rounds) <= 0 || getDuration('work') <= 0) return;
 
         Keyboard.dismiss();
@@ -196,13 +197,19 @@ export default function Interval({ navigation }: { navigation: any }) {
         }, 50);
     };
 
-    const reset = () => {
+    const reset = async () => {
         clearInterval(tickRef.current!); clearInterval(prepRef.current!);
         setStarted(false); setRunning(false); setPaused(false); setDone(false);
         setCountdown(10); setTimeValue(0); setInRest(false); roundRef.current = 1; setCurrentRound(1);
+        await stopActivity();
     };
 
-    const finish = () => { setRunning(false); setDone(true); vibrate(VibrationPatterns.BUZZ_LONG); };
+    const finish = async () => {
+        setRunning(false);
+        setDone(true);
+        await vibrate(VibrationPatterns.BUZZ_LONG);
+        await stopActivity()
+    };
 
     const prog = running || paused
         ? (countDownMode

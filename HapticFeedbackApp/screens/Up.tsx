@@ -22,7 +22,7 @@ export default function Up({ navigation }: { navigation: any }) {
 
     const backgroundAnim = useRef(new Animated.Value(0)).current;
 
-    const { vibrate } = useBle();
+    const { vibrate, startActivity, stopActivity } = useBle();
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', () => {
@@ -51,6 +51,7 @@ export default function Up({ navigation }: { navigation: any }) {
     });
 
     const startTimer = async () => {
+        await startActivity();
         Keyboard.dismiss();
         setStarted(true);
 
@@ -81,15 +82,16 @@ export default function Up({ navigation }: { navigation: any }) {
         startTimeRef.current = Date.now();
         savedElapsedRef.current = 0;
 
-        intervalRef.current = setInterval(() => {
+        intervalRef.current = setInterval(async () => {
             const elapsed = Date.now() - startTimeRef.current;
             setTime(elapsed + savedElapsedRef.current);
 
             if (elapsed + savedElapsedRef.current >= getTotalMillis()) {
                 clearInterval(intervalRef.current!);
-                vibrate(VibrationPatterns.BUZZ_LONG);
                 setRunning(false);
                 setDone(true);
+                await vibrate(VibrationPatterns.BUZZ_LONG);
+                await stopActivity();
             }
         }, 50);
     };
@@ -116,20 +118,21 @@ export default function Up({ navigation }: { navigation: any }) {
         setRunning(true);
         startTimeRef.current = Date.now();
 
-        intervalRef.current = setInterval(() => {
+        intervalRef.current = setInterval(async () => {
             const elapsed = Date.now() - startTimeRef.current;
             setTime(elapsed + savedElapsedRef.current);
 
             if (elapsed + savedElapsedRef.current >= getTotalMillis()) {
                 clearInterval(intervalRef.current!);
-                vibrate(VibrationPatterns.BUZZ_LONG);
                 setRunning(false);
                 setDone(true);
+                await vibrate(VibrationPatterns.BUZZ_LONG);
+                await stopActivity();
             }
         }, 50);
     };
 
-    const reset = () => {
+    const reset = async () => {
         setStarted(false);
         setRunning(false);
         setPaused(false);
@@ -138,6 +141,7 @@ export default function Up({ navigation }: { navigation: any }) {
         setDone(false);
         savedElapsedRef.current = 0;
         if (intervalRef.current) clearInterval(intervalRef.current);
+        await stopActivity();
     };
 
     const getTotalMillis = () => {

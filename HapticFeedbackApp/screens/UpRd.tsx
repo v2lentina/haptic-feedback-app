@@ -28,7 +28,7 @@ export default function UpRd({ navigation }: { navigation: any }) {
     const [circleKey, setCircleKey] = useState(0);
     const backgroundAnim = useRef(new Animated.Value(0)).current;
 
-    const { vibrate } = useBle();
+    const { vibrate, startActivity, stopActivity } = useBle();
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', () => {
@@ -57,6 +57,7 @@ export default function UpRd({ navigation }: { navigation: any }) {
     });
 
     const startTimer = async () => {
+        await startActivity();
         Keyboard.dismiss();
         setStarted(true);
 
@@ -92,7 +93,7 @@ export default function UpRd({ navigation }: { navigation: any }) {
         const sec = parseInt(roundSeconds) || 0;
         roundDurationMillisRef.current = (min * 60 + sec) * 1000;
 
-        intervalRef.current = setInterval(() => {
+        intervalRef.current = setInterval(async () => {
             const now = Date.now();
             const currentRoundElapsed = now - roundStartTimeRef.current + savedElapsedRef.current;
 
@@ -109,9 +110,10 @@ export default function UpRd({ navigation }: { navigation: any }) {
                     setTime(0);
                 } else {
                     clearInterval(intervalRef.current!);
-                    vibrate(VibrationPatterns.BUZZ_LONG);
                     setRunning(false);
                     setDone(true);
+                    await vibrate(VibrationPatterns.BUZZ_LONG);
+                    await stopActivity();
                 }
             }
         }, 50);
@@ -129,7 +131,7 @@ export default function UpRd({ navigation }: { navigation: any }) {
         setPaused(false);
         roundStartTimeRef.current = Date.now();
 
-        intervalRef.current = setInterval(() => {
+        intervalRef.current = setInterval(async () => {
             const now = Date.now();
             const currentRoundElapsed = now - roundStartTimeRef.current + savedElapsedRef.current;
 
@@ -146,15 +148,17 @@ export default function UpRd({ navigation }: { navigation: any }) {
                     setTime(0);
                 } else {
                     clearInterval(intervalRef.current!);
-                    vibrate(VibrationPatterns.BUZZ_LONG);
                     setRunning(false);
                     setDone(true);
+                    await vibrate(VibrationPatterns.BUZZ_LONG);
+                    await stopActivity();
                 }
             }
         }, 50);
     };
 
-    const reset = () => {
+    const reset = async () => {
+        await stopActivity();
         if (intervalRef.current) clearInterval(intervalRef.current);
         setStarted(false);
         setRunning(false);

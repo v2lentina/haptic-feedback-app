@@ -43,7 +43,7 @@ export default function Custom({ navigation }: { navigation: any }) {
     const bg = useRef(new Animated.Value(0)).current;
     const [bgColorTarget, setBgColorTarget] = useState('#007AFF');
 
-    const { vibrate } = useBle();
+    const { vibrate, startActivity, stopActivity } = useBle();
 
     useEffect(() => {
         Animated.timing(bg, {
@@ -154,6 +154,8 @@ export default function Custom({ navigation }: { navigation: any }) {
 
     const start = async () => {
         if (!phases.length) return;
+
+        await startActivity();
         Keyboard.dismiss();
         setStarted(true);
         setRunning(false);
@@ -182,7 +184,8 @@ export default function Custom({ navigation }: { navigation: any }) {
         }
     };
 
-    const pause = () => { clearInterval(tickRef.current!); setRunning(false); setPaused(true); };
+    const pause = () => {
+        clearInterval(tickRef.current!); setRunning(false); setPaused(true); };
     const resume = () => {
         setPaused(false); setRunning(true);
         tickRef.current = setInterval(() => {
@@ -193,12 +196,18 @@ export default function Custom({ navigation }: { navigation: any }) {
         }, 1000);
     };
 
-    const resetAllState = () => {
+    const resetAllState = async () => {
+        await stopActivity();
         clearInterval(tickRef.current!); clearInterval(prepRef.current!);
         setStarted(false); setRunning(false); setPaused(false); setDone(false);
         setCurrent(0); setLeft(0); setCountdown(10);
     };
-    const finish = () => { setRunning(false); setDone(true); vibrate(VibrationPatterns.BUZZ_LONG); };
+    const finish = async () => {
+        stopActivity();
+        setRunning(false); setDone(true);
+        await vibrate(VibrationPatterns.BUZZ_LONG);
+        await stopActivity();
+    };
 
     const clearPhases = () => setPhases([]);
 

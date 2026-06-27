@@ -16,13 +16,15 @@ class Actions : NSObject, WKExtendedRuntimeSessionDelegate {
     
     var session: WKExtendedRuntimeSession?
 	func activateSession() {
+		print("Started session")
 		session = WKExtendedRuntimeSession()
 		session?.delegate = self
 		session?.start()
 	}
 	
 	func stopSession() {
-		session?.invalidate()
+		print("Stopped session")
+		try session?.invalidate()
 		session = nil
 	}
     

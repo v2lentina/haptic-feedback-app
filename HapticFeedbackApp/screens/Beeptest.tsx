@@ -11,30 +11,30 @@ import { styles } from '../styles';
 import VibrationPatterns from '../vibrationPatterns';
 
 const levelData = [
-    { level: 1,  runs: 7,  pace: 9000 },
-    { level: 2,  runs: 8,  pace: 8700 },
-    { level: 3,  runs: 8,  pace: 8400 },
-    { level: 4,  runs: 9,  pace: 8100 },
-    { level: 5,  runs: 9,  pace: 7800 },
-    { level: 6,  runs: 10, pace: 7500 },
-    { level: 7,  runs: 10, pace: 7200 },
-    { level: 8,  runs: 11, pace: 6900 },
-    { level: 9,  runs: 11, pace: 6600 },
+    { level: 1, runs: 7, pace: 9000 },
+    { level: 2, runs: 8, pace: 8700 },
+    { level: 3, runs: 8, pace: 8400 },
+    { level: 4, runs: 9, pace: 8100 },
+    { level: 5, runs: 9, pace: 7800 },
+    { level: 6, runs: 10, pace: 7500 },
+    { level: 7, runs: 10, pace: 7200 },
+    { level: 8, runs: 11, pace: 6900 },
+    { level: 9, runs: 11, pace: 6600 },
     { level: 10, runs: 12, pace: 6300 },
 ];
 
-export default function Beeptest ({ navigation }: { navigation: any }) {
-    const [level, setLevel]       = useState(1);
+export default function Beeptest({ navigation }: { navigation: any }) {
+    const [level, setLevel] = useState(1);
     const [runState, setRunState] = useState(1);
-    const [running, setRunning]   = useState(false);
-    const [done, setDone]         = useState(false);
-    const [timeLeft, setLeft]     = useState(0);
+    const [running, setRunning] = useState(false);
+    const [done, setDone] = useState(false);
+    const [timeLeft, setLeft] = useState(0);
 
-    const timeoutRef     = useRef<number|null>(null);
-    const clockRef       = useRef<number|null>(null);
-    const idxRef         = useRef(0);
-    const runRef         = useRef(1);
-    const runStartRef    = useRef<number>(0);
+    const timeoutRef = useRef<number | null>(null);
+    const clockRef = useRef<number | null>(null);
+    const idxRef = useRef(0);
+    const runRef = useRef(1);
+    const runStartRef = useRef<number>(0);
 
     const [prepEnabled, setPrepEnabled] = useState(true);
     const [countdown, setCountdown] = useState(10);
@@ -45,7 +45,7 @@ export default function Beeptest ({ navigation }: { navigation: any }) {
     const bg = useRef(new Animated.Value(0)).current;
     const [circleKey, setCircleKey] = useState(0);
 
-    const {vibrate} = useBle();
+    const { vibrate, startActivity, stopActivity } = useBle();
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', () => {
@@ -80,6 +80,7 @@ export default function Beeptest ({ navigation }: { navigation: any }) {
     };
 
     const start = () => {
+        startActivity()
         Keyboard.dismiss();
         stoppedRef.current = false;
         setStarted(true);
@@ -147,6 +148,7 @@ export default function Beeptest ({ navigation }: { navigation: any }) {
                 nextRun();
             } else {
                 vibrate(VibrationPatterns.BUZZ_NORMAL);
+                stopActivity();
                 if (idxRef.current >= levelData.length - 1) {
                     stop();
                     return;
@@ -162,6 +164,7 @@ export default function Beeptest ({ navigation }: { navigation: any }) {
     };
 
     const stop = () => {
+        stopActivity();
         stoppedRef.current = true;
         clearTimeout(timeoutRef.current!);
         clearInterval(clockRef.current!);
@@ -171,6 +174,7 @@ export default function Beeptest ({ navigation }: { navigation: any }) {
     };
 
     const resetToStartScreen = () => {
+        stopActivity();
         setDone(false);
         setStarted(false);
         setRunning(false);

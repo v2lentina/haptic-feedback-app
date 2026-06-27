@@ -16,7 +16,7 @@ export default function StopwatchScreen({ navigation }: { navigation: any }) {
 
     const backgroundAnim = useRef(new Animated.Value(0)).current;
 
-    const { vibrate } = useBle();
+    const { vibrate, startActivity, stopActivity } = useBle();
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', () => {
@@ -44,9 +44,10 @@ export default function StopwatchScreen({ navigation }: { navigation: any }) {
         outputRange: ['#000000', '#ffffff'],
     });
 
-    const start = () => {
+    const start = async () => {
         if (running) return;
-        vibrate(VibrationPatterns.BUZZ_NORMAL);
+        await startActivity();
+        await vibrate(VibrationPatterns.BUZZ_NORMAL);
         setRunning(true);
         startTimeRef.current = Date.now();
         savedElapsedRef.current = 0;
@@ -57,14 +58,16 @@ export default function StopwatchScreen({ navigation }: { navigation: any }) {
         }, 50);
     };
 
-    const stop = () => {
+    const stop = async () => {
         if (intervalRef.current) clearInterval(intervalRef.current);
         savedElapsedRef.current += Date.now() - startTimeRef.current;
         setRunning(false);
-        vibrate(VibrationPatterns.BUZZ_NORMAL);
+        await vibrate(VibrationPatterns.BUZZ_NORMAL);
+        await stopActivity();
     };
 
-    const reset = () => {
+    const reset = async () => {
+        await stopActivity();
         if (intervalRef.current) clearInterval(intervalRef.current);
         setTime(0);
         setCircleKey(k => k + 1);

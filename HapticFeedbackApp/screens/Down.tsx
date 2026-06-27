@@ -35,7 +35,7 @@ export default function Down({ navigation }: { navigation: any }) {
 
     const backgroundAnim = useRef(new Animated.Value(0)).current;
 
-    const { vibrate } = useBle();
+    const { vibrate, startActivity, stopActivity } = useBle();
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', () => {
@@ -64,6 +64,7 @@ export default function Down({ navigation }: { navigation: any }) {
     });
 
     const start = async () => {
+        await startActivity();
         Keyboard.dismiss();
         setStarted(true);
 
@@ -106,6 +107,7 @@ export default function Down({ navigation }: { navigation: any }) {
             setRemaining(left);
 
             if (left <= 0) {
+                stopActivity();
                 clearInterval(intervalRef.current!);
                 vibrate(VibrationPatterns.BUZZ_LONG);
                 setRunning(false);
@@ -141,6 +143,7 @@ export default function Down({ navigation }: { navigation: any }) {
     };
 
     const reset = () => {
+        stopActivity()
         if (intervalRef.current) clearInterval(intervalRef.current);
         sessionId.current = Date.now();
         setStarted(false);
