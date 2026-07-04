@@ -57,7 +57,7 @@ export default function UpRd({ navigation }: { navigation: any }) {
     });
 
     const startTimer = async () => {
-        await startActivity();
+        await startActivity(`UpRd,`);
         Keyboard.dismiss();
         setStarted(true);
 
@@ -66,19 +66,18 @@ export default function UpRd({ navigation }: { navigation: any }) {
             const prepInterval = setInterval(() => {
                 setCountdown((c) => {
                     const next = c - 1;
-                    if (next > 0 && next <= 3) {
-                        vibrate(VibrationPatterns.BUZZ_SHORT);
-                    }
                     if (next === 0) {
                         clearInterval(prepInterval);
-                        vibrate(VibrationPatterns.BUZZ_LONG);
+                        vibrate(VibrationPatterns.BUZZ_ACTIVITY_START);
                         beginCountUp();
+                    } else if (next <= 5) {
+                        vibrate(VibrationPatterns.BUZZ_SHORT);
                     }
                     return next;
                 });
             }, 1000);
         } else {
-            vibrate(VibrationPatterns.BUZZ_LONG);
+            vibrate(VibrationPatterns.BUZZ_ACTIVITY_START);
             beginCountUp();
         }
     };
@@ -112,7 +111,7 @@ export default function UpRd({ navigation }: { navigation: any }) {
                     clearInterval(intervalRef.current!);
                     setRunning(false);
                     setDone(true);
-                    await vibrate(VibrationPatterns.BUZZ_LONG);
+                    await vibrate(VibrationPatterns.BUZZ_ACTIVITY_STOP);
                     await stopActivity();
                 }
             }
@@ -150,7 +149,7 @@ export default function UpRd({ navigation }: { navigation: any }) {
                     clearInterval(intervalRef.current!);
                     setRunning(false);
                     setDone(true);
-                    await vibrate(VibrationPatterns.BUZZ_LONG);
+                    await vibrate(VibrationPatterns.BUZZ_ACTIVITY_STOP);
                     await stopActivity();
                 }
             }

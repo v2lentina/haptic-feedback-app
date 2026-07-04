@@ -64,7 +64,10 @@ export default function Down({ navigation }: { navigation: any }) {
     });
 
     const start = async () => {
-        await startActivity();
+        const min = parseInt(durationMin) || 0;
+        const sec = parseInt(durationSec) || 0;
+
+        await startActivity(`Down,${min}:${sec< 10?"0":""}${sec}s`);
         Keyboard.dismiss();
         setStarted(true);
 
@@ -73,17 +76,16 @@ export default function Down({ navigation }: { navigation: any }) {
             const prep = setInterval(() => {
                 setCountdown(c => {
                     const next = c - 1;
-                    if (next > 0 && next <= 3) vibrate(VibrationPatterns.BUZZ_SHORT);
                     if (next === 0) {
                         clearInterval(prep);
-                        vibrate(VibrationPatterns.BUZZ_LONG);
+                        vibrate(VibrationPatterns.BUZZ_ACTIVITY_START);
                         beginCountdown();
-                    }
+                    } else if (next <= 5) vibrate(VibrationPatterns.BUZZ_SHORT);
                     return next;
                 });
             }, 1000);
         } else {
-            vibrate(VibrationPatterns.BUZZ_LONG);
+            vibrate(VibrationPatterns.BUZZ_ACTIVITY_START);
             beginCountdown();
         }
     };
@@ -109,7 +111,7 @@ export default function Down({ navigation }: { navigation: any }) {
             if (left <= 0) {
                 stopActivity();
                 clearInterval(intervalRef.current!);
-                vibrate(VibrationPatterns.BUZZ_LONG);
+                vibrate(VibrationPatterns.BUZZ_ACTIVITY_STOP);
                 setRunning(false);
                 setDone(true);
             }

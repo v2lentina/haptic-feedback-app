@@ -46,8 +46,8 @@ export default function StopwatchScreen({ navigation }: { navigation: any }) {
 
     const start = async () => {
         if (running) return;
-        await startActivity();
-        await vibrate(VibrationPatterns.BUZZ_NORMAL);
+        await startActivity(`Stopwatch,`);
+        await vibrate(VibrationPatterns.BUZZ_ACTIVITY_START);
         setRunning(true);
         startTimeRef.current = Date.now();
         savedElapsedRef.current = 0;
@@ -62,7 +62,7 @@ export default function StopwatchScreen({ navigation }: { navigation: any }) {
         if (intervalRef.current) clearInterval(intervalRef.current);
         savedElapsedRef.current += Date.now() - startTimeRef.current;
         setRunning(false);
-        await vibrate(VibrationPatterns.BUZZ_NORMAL);
+        await vibrate(VibrationPatterns.BUZZ_ACTIVITY_STOP);
         await stopActivity();
     };
 

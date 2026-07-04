@@ -79,26 +79,25 @@ export default function F9Bad({ navigation }: { navigation: any }) {
             : 0;
 
     const start = async () => {
-        await startActivity();
+        await startActivity(`F9Bad,`);
         Keyboard.dismiss();
         setStarted(true);
-
+        
         if (preparationEnabled) {
             setCountdown(10);
             const prep = setInterval(() => {
                 setCountdown(c => {
                     const next = c - 1;
-                    if (next > 0 && next <= 3) vibrate(VibrationPatterns.BUZZ_SHORT);
                     if (next === 0) {
                         clearInterval(prep);
-                        vibrate(VibrationPatterns.BUZZ_LONG);
+                        vibrate(VibrationPatterns.BUZZ_ACTIVITY_START);
                         beginWorkout();
-                    }
+                    } if (next <= 3) vibrate(VibrationPatterns.BUZZ_SHORT);
                     return next;
                 });
             }, 1000);
         } else {
-            vibrate(VibrationPatterns.BUZZ_LONG);
+            vibrate(VibrationPatterns.BUZZ_ACTIVITY_START);
             beginWorkout();
         }
     };
@@ -181,7 +180,7 @@ export default function F9Bad({ navigation }: { navigation: any }) {
                     if (currentRoundRef.current >= TOTAL_ROUNDS) {
                         setRunning(false);
                         setDone(true);
-                        await vibrate(VibrationPatterns.BUZZ_LONG);
+                        await vibrate(VibrationPatterns.BUZZ_ACTIVITY_STOP);
                         await stopActivity();
                     } else {
                         startPhase('rest');

@@ -16,8 +16,8 @@ import VibrationPatterns from '../vibrationPatterns';
 
 /* ------------ Fixe Tabata-Parameter -------------------------------- */
 const TOTAL_ROUNDS = 8;
-const WORK_MS      = 20_000;   // 20 s
-const REST_MS      = 10_000;   // 10 s
+const WORK_MS = 20_000;   // 20 s
+const REST_MS = 10_000;   // 10 s
 
 export default function Tabata({ navigation }: { navigation: any }) {
     const [preparationEnabled, setPreparationEnabled] = useState(true);
@@ -79,7 +79,7 @@ export default function Tabata({ navigation }: { navigation: any }) {
             : 0;
 
     const start = async () => {
-        await startActivity();
+        await startActivity(`Tabata,`);
         Keyboard.dismiss();
         setStarted(true);
 
@@ -88,19 +88,18 @@ export default function Tabata({ navigation }: { navigation: any }) {
             const prep = setInterval(async () => {
                 setCountdown(c => {
                     const next = c - 1;
-                    if (next > 0 && next <= 3) {
-                        vibrate(VibrationPatterns.BUZZ_SHORT);
-                    }
                     if (next === 0) {
                         clearInterval(prep);
-                        vibrate(VibrationPatterns.BUZZ_LONG);
+                        vibrate(VibrationPatterns.BUZZ_ACTIVITY_START);
                         beginTabata();
+                    } else if (next <= 5) {
+                        vibrate(VibrationPatterns.BUZZ_SHORT);
                     }
                     return next;
                 });
             }, 1000);
         } else {
-           await  vibrate(VibrationPatterns.BUZZ_LONG);
+            await vibrate(VibrationPatterns.BUZZ_ACTIVITY_START);
             beginTabata();
         }
     };
@@ -135,7 +134,7 @@ export default function Tabata({ navigation }: { navigation: any }) {
                     if (currentRoundRef.current >= TOTAL_ROUNDS) {
                         setRunning(false);
                         setDone(true);
-                        await vibrate(VibrationPatterns.BUZZ_LONG);
+                        await vibrate(VibrationPatterns.BUZZ_ACTIVITY_STOP);
                         await stopActivity();
                     } else {
                         startPhase('rest');

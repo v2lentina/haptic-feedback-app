@@ -136,8 +136,8 @@ export default function Interval({ navigation }: { navigation: any }) {
     const begin = () => { setRunning(true); runPhase('work', false); };
 
     const start = async () => {
-        await startActivity();
         if (parseInt(rounds) <= 0 || getDuration('work') <= 0) return;
+        await startActivity(`Interval,${rounds}x${getDuration('work')}s`);
 
         Keyboard.dismiss();
         setStarted(true);
@@ -152,19 +152,19 @@ export default function Interval({ navigation }: { navigation: any }) {
             prepRef.current = setInterval(() => {
                 setCountdown(c => {
                     const next = c - 1;
-                    if (next > 0 && next <= 3) {
+                    if (next > 0 && next <= 5) {
                         vibrate(VibrationPatterns.BUZZ_SHORT);
                     }
                     if (next === 0) {
                         clearInterval(prepRef.current!);
-                        vibrate(VibrationPatterns.BUZZ_LONG);
+                        vibrate(VibrationPatterns.BUZZ_ACTIVITY_START);
                         begin();
                     }
                     return next;
                 });
             }, 1000);
         } else {
-            vibrate(VibrationPatterns.BUZZ_LONG);
+            vibrate(VibrationPatterns.BUZZ_ACTIVITY_START);
             begin();
         }
     };
@@ -207,8 +207,8 @@ export default function Interval({ navigation }: { navigation: any }) {
     const finish = async () => {
         setRunning(false);
         setDone(true);
-        await vibrate(VibrationPatterns.BUZZ_LONG);
-        await stopActivity()
+        await vibrate(VibrationPatterns.BUZZ_ACTIVITY_STOP);
+        await stopActivity();
     };
 
     const prog = running || paused

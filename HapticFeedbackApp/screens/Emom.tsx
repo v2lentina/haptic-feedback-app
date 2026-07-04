@@ -100,7 +100,7 @@ export default function Emom({ navigation }: { navigation: any }) {
             clearInterval(tickRef.current!);
 
             if (roundRef.current >= total) {
-                await vibrate(VibrationPatterns.BUZZ_LONG);
+                await vibrate(VibrationPatterns.BUZZ_ACTIVITY_STOP);
                 setRunning(false);
                 setDone(true);
                 await stopActivity();
@@ -120,10 +120,11 @@ export default function Emom({ navigation }: { navigation: any }) {
     };
 
     const start = async () => {
-        await startActivity();
         const total = parseInt(rounds);
         if (!total || total < 1) return;
 
+        await startActivity(`Emom,${total} Rounds`);
+        
         Keyboard.dismiss();
         setStarted(true);
 
@@ -132,17 +133,16 @@ export default function Emom({ navigation }: { navigation: any }) {
             const prep = setInterval(() => {
                 setCountdown(c => {
                     const next = c - 1;
-                    if (next > 0 && next <= 3) vibrate(VibrationPatterns.BUZZ_SHORT);
                     if (next === 0) {
                         clearInterval(prep);
-                        vibrate(VibrationPatterns.BUZZ_LONG);
+                        vibrate(VibrationPatterns.BUZZ_ACTIVITY_START);
                         beginEmom(total);
-                    }
+                    } else if (next <= 5) vibrate(VibrationPatterns.BUZZ_SHORT);
                     return next;
                 });
             }, 1000);
         } else {
-            vibrate(VibrationPatterns.BUZZ_LONG);
+            vibrate(VibrationPatterns.BUZZ_ACTIVITY_START);
             beginEmom(total);
         }
     };

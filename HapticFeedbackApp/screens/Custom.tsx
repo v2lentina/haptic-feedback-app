@@ -155,7 +155,7 @@ export default function Custom({ navigation }: { navigation: any }) {
     const start = async () => {
         if (!phases.length) return;
 
-        await startActivity();
+        await startActivity(`Custom,${phases.length} Phases`);
         Keyboard.dismiss();
         setStarted(true);
         setRunning(false);
@@ -173,7 +173,7 @@ export default function Custom({ navigation }: { navigation: any }) {
                     }
                     if (next === 0) {
                         clearInterval(prepRef.current!);
-                        vibrate(VibrationPatterns.BUZZ_LONG);
+                        vibrate(VibrationPatterns.BUZZ_ACTIVITY_START);
                         begin();
                     }
                     return next;
@@ -203,9 +203,8 @@ export default function Custom({ navigation }: { navigation: any }) {
         setCurrent(0); setLeft(0); setCountdown(10);
     };
     const finish = async () => {
-        stopActivity();
         setRunning(false); setDone(true);
-        await vibrate(VibrationPatterns.BUZZ_LONG);
+        await vibrate(VibrationPatterns.BUZZ_ACTIVITY_STOP);
         await stopActivity();
     };
 

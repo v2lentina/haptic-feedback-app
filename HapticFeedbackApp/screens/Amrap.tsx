@@ -88,17 +88,17 @@ export default function Amrap({ navigation }: { navigation: any }) {
             setRemaining(Math.max(0, left));
 
             if (left <= 0) {
-                stopActivity();
                 clearInterval(intervalRef.current!);
-                vibrate(VibrationPatterns.BUZZ_LONG);
                 setRunning(false);
                 setDone(true);
+                vibrate(VibrationPatterns.BUZZ_ACTIVITY_STOP);
+                stopActivity();
             }
         }, 50);
     };
 
     const start = async () => {
-        await startActivity();
+        await startActivity("Amrap,");
         Keyboard.dismiss();
         setStarted(true);
         setReps(0);
@@ -108,17 +108,16 @@ export default function Amrap({ navigation }: { navigation: any }) {
             const prep = setInterval(() => {
                 setCountdown(c => {
                     const next = c - 1;
-                    if (next > 0 && next <= 3) vibrate(VibrationPatterns.BUZZ_SHORT);
                     if (next === 0) {
                         clearInterval(prep);
-                        vibrate(VibrationPatterns.BUZZ_LONG);
+                        vibrate(VibrationPatterns.BUZZ_ACTIVITY_START);
                         runTimer();
-                    }
+                    } else if (next <= 5) vibrate(VibrationPatterns.BUZZ_SHORT);
                     return next;
                 });
             }, 1000);
         } else {
-            vibrate(VibrationPatterns.BUZZ_LONG);
+            vibrate(VibrationPatterns.BUZZ_ACTIVITY_START);
             runTimer();
         }
     };
@@ -147,7 +146,7 @@ export default function Amrap({ navigation }: { navigation: any }) {
     };
 
     const reset = () => {
-        stopActivity()
+        stopActivity();
         clearInterval(intervalRef.current!);
         setStarted(false);
         setRunning(false);

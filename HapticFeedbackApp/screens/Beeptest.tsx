@@ -80,7 +80,7 @@ export default function Beeptest({ navigation }: { navigation: any }) {
     };
 
     const start = () => {
-        startActivity()
+        startActivity("Beeptest,")
         Keyboard.dismiss();
         stoppedRef.current = false;
         setStarted(true);
@@ -90,17 +90,17 @@ export default function Beeptest({ navigation }: { navigation: any }) {
             const prep = setInterval(() => {
                 setCountdown(c => {
                     const next = c - 1;
-                    if (next === 3 || next === 2 || next === 1) vibrate(VibrationPatterns.BUZZ_SHORT);
+                    if (next === 5 || next === 4 || next === 3 || next === 2 || next === 1) vibrate(VibrationPatterns.BUZZ_SHORT);
                     if (next === 0) {
                         clearInterval(prep);
-                        vibrate(VibrationPatterns.BUZZ_LONG);
+                        vibrate(VibrationPatterns.BUZZ_ACTIVITY_START);
                         doStart();
                     }
                     return next;
                 });
             }, 1000);
         } else {
-            vibrate(VibrationPatterns.BUZZ_LONG);
+            vibrate(VibrationPatterns.BUZZ_ACTIVITY_START);
             doStart();
         }
     };
@@ -147,7 +147,7 @@ export default function Beeptest({ navigation }: { navigation: any }) {
                 setRunState(runRef.current);
                 nextRun();
             } else {
-                vibrate(VibrationPatterns.BUZZ_NORMAL);
+                vibrate(VibrationPatterns.BUZZ_ACTIVITY_STOP);
                 stopActivity();
                 if (idxRef.current >= levelData.length - 1) {
                     stop();

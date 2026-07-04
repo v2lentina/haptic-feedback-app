@@ -67,7 +67,7 @@ export default function DownRd({ navigation }: { navigation: any }) {
     });
 
     const start = async () => {
-        await startActivity();
+        await startActivity(`DownRd,`);
         Keyboard.dismiss();
         setStarted(true);
 
@@ -76,17 +76,16 @@ export default function DownRd({ navigation }: { navigation: any }) {
             const prep = setInterval(() => {
                 setCountdown(c => {
                     const next = c - 1;
-                    if (next > 0 && next <= 3) vibrate(VibrationPatterns.BUZZ_SHORT);
                     if (next === 0) {
                         clearInterval(prep);
-                        vibrate(VibrationPatterns.BUZZ_LONG);
+                        vibrate(VibrationPatterns.BUZZ_ACTIVITY_STOP);
                         beginRounds();
-                    }
+                    } else if (next <= 5) vibrate(VibrationPatterns.BUZZ_SHORT);
                     return next;
                 });
             }, 1000);
         } else {
-            vibrate(VibrationPatterns.BUZZ_LONG);
+            vibrate(VibrationPatterns.BUZZ_ACTIVITY_STOP);
             beginRounds();
         }
     };
@@ -129,7 +128,7 @@ export default function DownRd({ navigation }: { navigation: any }) {
                     startNextRound();
                 }
                 
-                await vibrate(finalRound ? VibrationPatterns.BUZZ_LONG : VibrationPatterns.BUZZ_NORMAL);
+                await vibrate(finalRound ? VibrationPatterns.BUZZ_ACTIVITY_STOP : VibrationPatterns.BUZZ_NORMAL);
                 stopActivity();
             }
         }, 50);
