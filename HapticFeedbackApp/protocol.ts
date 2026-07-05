@@ -1,7 +1,7 @@
 import { VibrationPattern } from "./vibrationPatterns";
 
 /** All valid values for `type` in a JSON message */
-const VALID_TYPES = ['VIBRATION', 'HANDSHAKE', 'OTHER'];
+const VALID_TYPES = ['VIBRATION', 'HANDSHAKE', 'START', 'STOP', 'OTHER'];
 
 
 /** The data of a messag */

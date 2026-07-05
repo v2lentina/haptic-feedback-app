@@ -127,6 +127,7 @@ export default function Amrap({ navigation }: { navigation: any }) {
         savedElapsedRef.current += Date.now() - startRef.current;
         setRunning(false);
         setPaused(true);
+        vibrate(VibrationPatterns.BUZZ_ACTIVITY_PAUSE);
     };
 
     const resume = () => {

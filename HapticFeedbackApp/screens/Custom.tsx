@@ -129,8 +129,12 @@ export default function Custom({ navigation }: { navigation: any }) {
     const runPhase = (idx: number) => {
         if (idx >= phases.length) { finish(); return; }
 
-        vibrate(VibrationPatterns.BUZZ_NORMAL);
         const { duration, kind } = phases[idx];
+        if (kind === 'work') {
+            vibrate(VibrationPatterns.BUZZ_NORMAL);
+        } else if (kind === 'rest') {
+            vibrate(VibrationPatterns.BUZZ_ACTIVITY_PAUSE);
+        }
         setBgColorTarget(kind === 'work' ? '#007AFF' : '#FF9500');
         setCurrent(idx);
         setPhaseDur(duration);
@@ -185,7 +189,11 @@ export default function Custom({ navigation }: { navigation: any }) {
     };
 
     const pause = () => {
-        clearInterval(tickRef.current!); setRunning(false); setPaused(true); };
+        clearInterval(tickRef.current!);
+        setRunning(false);
+        setPaused(true);
+        vibrate(VibrationPatterns.BUZZ_ACTIVITY_PAUSE);
+    };
     const resume = () => {
         setPaused(false); setRunning(true);
         tickRef.current = setInterval(() => {

@@ -120,7 +120,7 @@ export default function Tabata({ navigation }: { navigation: any }) {
         setRemaining(currentPhaseMS.current);
         setInRest(phase === 'rest');
         setPaused(false);
-        vibrate(phase === 'work' ? VibrationPatterns.BUZZ_NORMAL : VibrationPatterns.BUZZ_NORMAL);
+        vibrate(phase === 'work' ? VibrationPatterns.BUZZ_NORMAL : VibrationPatterns.BUZZ_ACTIVITY_PAUSE);
 
         intervalRef.current = setInterval(async () => {
             const elapsed = Date.now() - phaseStartRef.current;
@@ -152,6 +152,7 @@ export default function Tabata({ navigation }: { navigation: any }) {
         if (intervalRef.current) clearInterval(intervalRef.current);
         setPaused(true);
         setRunning(false);
+        vibrate(VibrationPatterns.BUZZ_ACTIVITY_PAUSE);
     };
 
     const resume = () => {

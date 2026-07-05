@@ -123,6 +123,7 @@ export default function Down({ navigation }: { navigation: any }) {
         savedElapsedRef.current += Date.now() - startTimeRef.current;
         setRunning(false);
         setPaused(true);
+        vibrate(VibrationPatterns.BUZZ_ACTIVITY_PAUSE);
     };
 
     const resume = () => {

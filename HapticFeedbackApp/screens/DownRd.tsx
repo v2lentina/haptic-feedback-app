@@ -139,6 +139,7 @@ export default function DownRd({ navigation }: { navigation: any }) {
         savedElapsedRef.current += Date.now() - roundStartRef.current;
         setPaused(true);
         setRunning(false);
+        vibrate(VibrationPatterns.BUZZ_ACTIVITY_PAUSE);
     };
 
     const resume = () => {

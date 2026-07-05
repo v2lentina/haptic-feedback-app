@@ -15,6 +15,7 @@ const BUZZ_NORMAL: VibrationPattern = [50, 100];
 const BUZZ_SHORT_WEAK: VibrationPattern = [35, 150]
 const BUZZ_ACTIVITY_START: VibrationPattern = [...BUZZ_SHORT_WEAK, ...d(400), ...BUZZ_SHORT_WEAK, ...d(400), ...BUZZ_SHORT_WEAK];
 const BUZZ_ACTIVITY_STOP: VibrationPattern = [...BUZZ_LONG, ...d(250), ...BUZZ_LONG, ...d(250), ...BUZZ_LONG, ...d(250), 90, 800];
+const BUZZ_ACTIVITY_PAUSE: VibrationPattern = [...BUZZ_SHORT_WEAK, ...d(250), 90, 800];
 
 /**
  * Values are like [Garmin's API](https://developer.garmin.com/connect-iq/api-docs/Toybox/Attention/VibeProfile.html)
@@ -31,7 +32,8 @@ const VibrationPatterns = {
 	BUZZ_IMPORTANT: [100, 250, 0, 300, 100, 300, 0, 300, 100, 300, 0, 300, 100, 500] as VibrationPattern,
 	//
 	BUZZ_ACTIVITY_START,
-	BUZZ_ACTIVITY_STOP
+	BUZZ_ACTIVITY_STOP,
+	BUZZ_ACTIVITY_PAUSE,
 };
 
 export default VibrationPatterns;

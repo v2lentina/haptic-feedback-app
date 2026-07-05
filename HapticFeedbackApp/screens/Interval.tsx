@@ -97,7 +97,7 @@ export default function Interval({ navigation }: { navigation: any }) {
             } else if (phase === 'work' && roundRef.current === 1) {
                 vibrate(VibrationPatterns.BUZZ_LONG);
             } else {
-                vibrate(VibrationPatterns.BUZZ_NORMAL);
+                vibrate(VibrationPatterns.BUZZ_ACTIVITY_PAUSE);
             }
         }
         curPhaseDur.current = getDuration(phase);
@@ -171,7 +171,9 @@ export default function Interval({ navigation }: { navigation: any }) {
 
     const pause = () => {
         clearInterval(tickRef.current!);
-        setRunning(false); setPaused(true);
+        setRunning(false);
+        setPaused(true);
+        vibrate(VibrationPatterns.BUZZ_ACTIVITY_PAUSE);
     };
 
     const resume = () => {

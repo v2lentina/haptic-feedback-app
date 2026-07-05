@@ -123,6 +123,7 @@ export default function UpRd({ navigation }: { navigation: any }) {
         savedElapsedRef.current += Date.now() - roundStartTimeRef.current;
         setRunning(false);
         setPaused(true);
+        vibrate(VibrationPatterns.BUZZ_ACTIVITY_PAUSE);
     };
 
     const resume = () => {

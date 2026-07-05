@@ -82,7 +82,7 @@ export default function F9Bad({ navigation }: { navigation: any }) {
         await startActivity(`F9Bad,`);
         Keyboard.dismiss();
         setStarted(true);
-        
+
         if (preparationEnabled) {
             setCountdown(10);
             const prep = setInterval(() => {
@@ -120,7 +120,11 @@ export default function F9Bad({ navigation }: { navigation: any }) {
         setRemaining(currentPhaseMS.current);
         setInRest(phase === 'rest');
         setPaused(false);
-        vibrate(VibrationPatterns.BUZZ_NORMAL);
+        if (phase === 'work') {
+            vibrate(VibrationPatterns.BUZZ_NORMAL);
+        } else if (phase === 'rest') {
+            vibrate(VibrationPatterns.BUZZ_ACTIVITY_PAUSE);
+        }
 
         if (intervalRef.current) clearInterval(intervalRef.current);
         intervalRef.current = setInterval(() => {
@@ -154,6 +158,7 @@ export default function F9Bad({ navigation }: { navigation: any }) {
         if (minuteRef.current) clearInterval(minuteRef.current);
         setPaused(true);
         setRunning(false);
+        vibrate(VibrationPatterns.BUZZ_ACTIVITY_PAUSE);
     };
 
     const resume = () => {
@@ -163,7 +168,7 @@ export default function F9Bad({ navigation }: { navigation: any }) {
 
 
 
-        intervalRef.current = setInterval(async  () => {
+        intervalRef.current = setInterval(async () => {
             const elapsed = Date.now() - phaseStartRef.current;
             const left = Math.max(currentPhaseMS.current - elapsed, 0);
             setRemaining(left);

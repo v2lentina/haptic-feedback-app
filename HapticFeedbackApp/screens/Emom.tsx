@@ -152,6 +152,7 @@ export default function Emom({ navigation }: { navigation: any }) {
         clearTimeout(switchRef.current!);
         setPaused(true);
         setRunning(false);
+        vibrate(VibrationPatterns.BUZZ_ACTIVITY_PAUSE);
     };
 
     const resume = () => {
